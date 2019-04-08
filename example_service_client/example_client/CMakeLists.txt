@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(example_msg)
+project(example_client)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -17,18 +17,21 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 
-find_package(std_msgs REQUIRED)
+include_directories(example_msg/include)
+link_directories(example_msg/lib)
 
-find_package(builtin_interfaces REQUIRED)
-find_package(action_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+add_executable(example_client src/example_client.cpp)
+target_include_directories(example_client PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
-rosidl_generate_interfaces(example_msg
-  "msg/Contact.msg"
-  "srv/AddTwoFloats.srv"
-  DEPENDENCIES builtin_interfaces std_msgs
-)
+target_link_libraries(example_client example_msg__rosidl_typesupport_cpp)
+
+install(TARGETS example_client
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -41,5 +44,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_target_dependencies(example_client rclcpp std_msgs)
 ament_package()
