@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="rbo" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- variable --> 
+  <xacro:property name="PI" value="3.1415926"/> 
+  <xacro:property name="car_width" value="1.0"/> 
+  <xacro:property name="car_length" value="2.0"/> 
+  <xacro:property name="car_height" value="0.4"/> 
+
+  <!-- macro --> 
+  <xacro:macro name="default_inertial" params="mass"> 
+    <inertial> 
+      <mass value="${mass}" /> 
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" /> 
+    </inertial> 
+  </xacro:macro> 
+
+  <xacro:macro name="box_geometry" params="width length height"> 
+    <geometry> 
+      <box size="${width} ${length} ${height}"/> 
+    </geometry> 
+  </xacro:macro> 
+
+  <!-- links --> 
+  <link name="car_link"> 
+    <visual> 
+      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+    </visual> 
+    <collision> 
+      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+    </collision> 
+    <xacro:default_inertial mass="5.0"/> 
+  </link> 
+
+</robot>
+

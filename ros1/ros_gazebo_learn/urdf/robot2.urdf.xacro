@@ -1,0 +1,77 @@
+<?xml version="1.0"?> 
+<robot name="rbo" xmlns:xacro="http://www.ros.org/wiki/xacro"> 
+
+  <!-- variable --> 
+  <xacro:property name="PI" value="3.1415926"/> 
+  <xacro:property name="car_width" value="1.0"/> 
+  <xacro:property name="car_length" value="2.0"/> 
+  <xacro:property name="car_height" value="0.3"/> 
+  <xacro:property name="wheel_length" value="0.1"/> 
+  <xacro:property name="wheel_radius" value="0.2"/> 
+  <xacro:property name="wheel_origin_xyz" value="0.0 0.0 0.0"/> 
+  <xacro:property name="wheel_origin_rpy" value="0.0 ${PI/2} 0.0"/> 
+
+  <!-- macro --> 
+  <xacro:macro name="default_inertial" params="mass"> 
+    <inertial> 
+      <mass value="${mass}" /> 
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" /> 
+    </inertial> 
+  </xacro:macro> 
+
+  <xacro:macro name="box_geometry" params="width length height"> 
+    <geometry> 
+      <box size="${width} ${length} ${height}"/> 
+    </geometry> 
+  </xacro:macro> 
+
+  <xacro:macro name="cylinder_geometry" params="length radius"> 
+    <geometry> 
+      <cylinder length="${length}" radius="${radius}"/> 
+    </geometry> 
+  </xacro:macro> 
+
+  <xacro:macro name="default_origin" params="xyz rpyaw"> 
+    <origin xyz="${xyz}" rpy="${rpyaw}"/> 
+  </xacro:macro> 
+
+  <!-- base_link --> 
+  <link name="base_link"/> 
+  <joint name="base_link_car" type="fixed"> 
+    <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0.0 0.0 0.0"/> 
+    <parent link="base_link"/> 
+    <child link="car_link"/> 
+  </joint>
+
+  <!-- links --> 
+  <link name="car_link"> 
+    <visual> 
+      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+    </visual> 
+    <collision> 
+      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+    </collision> 
+    <xacro:default_inertial mass="5.0"/> 
+  </link> 
+
+  <link name="wheel"> 
+    <visual> 
+      <xacro:cylinder_geometry length="${wheel_length}" radius="${wheel_radius}"/> 
+      <xacro:default_origin xyz="${wheel_origin_xyz}" rpyaw="${wheel_origin_rpy}" /> 
+    </visual> 
+    <collision> 
+      <xacro:cylinder_geometry length="${wheel_length}" radius="${wheel_radius}"/> 
+      <xacro:default_origin xyz="${wheel_origin_xyz}" rpyaw="${wheel_origin_rpy}" /> 
+    </collision> 
+    <xacro:default_inertial mass="0.2"/> 
+  </link> 
+
+  <!-- joints --> 
+  <joint name="car_base_wheel" type="continuous"> 
+    <origin xyz="${(wheel_length+car_width)/2.0} 0.0 0.0" rpy="0.0 0.0 0.0"/> 
+    <parent link="car_link"/> 
+    <child link="wheel"/> 
+    <axis xyz="0.0 1.0 0.0"/> 
+  </joint> 
+
+</robot>
