@@ -1,0 +1,27 @@
+/: 
+  joint_state_controller:
+    type: "joint_state_controller/JointStateController"
+    publish_rate: 50 
+
+  mobile_base_controller: 
+    type: "diff_drive_controller/DiffDriveController" 
+    left_wheel : [ 'front_left_wheel', 'end_left_wheel' ] 
+    right_wheel : [ 'front_right_wheel', 'end_right_wheel' ] 
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03] 
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03] 
+
+    base_frame_id: base_link 
+
+    linear: 
+      x: 
+        has_velocity_limits : true 
+        max_velocity : 0.2 # m/s 
+        has_acceleration_limits: true 
+        max_acceleration : 0.6 # m/s^2 
+
+    angular: 
+      z: 
+        has_velocity_limits : true 
+        max_velocity : 2.0 # rad/s 
+        has_acceleration_limits: true 
+        max_acceleration : 6.0 # rad/s^2
