@@ -11,6 +11,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E sleep 30
+)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -18,16 +22,20 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-
-include_directories(example_msg/include)
-link_directories(example_msg/lib)
+find_package(example_msg REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_executable(example_client src/example_client.cpp)
 target_include_directories(example_client PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(example_client example_msg__rosidl_typesupport_cpp)
+ament_target_dependencies(
+  example_client
+  "rclcpp"
+  "example_msg"
+  "std_msgs"
+)
 
 install(TARGETS example_client
   EXPORT export_${PROJECT_NAME}

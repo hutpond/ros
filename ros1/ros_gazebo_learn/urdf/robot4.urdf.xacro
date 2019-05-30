@@ -51,19 +51,19 @@
   <joint name="base_link_car" type="fixed"> 
     <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0.0 0.0 0.0"/> 
     <parent link="base_link"/> 
-    <child link="car_link"/> 
+    <child link="imu_link"/> 
   </joint>
 
-  <!-- links --> 
-  <link name="car_link"> 
+  <link name="imu_link"> 
     <visual> 
-      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+      <xacro:box_geometry width="${imu_width}" length="${imu_length}" height="${imu_height}"/> 
+      <material name="yellow"/> 
     </visual> 
     <collision> 
-      <xacro:box_geometry width="${car_width}" length="${car_length}" height="${car_height}"/> 
+      <xacro:box_geometry width="${imu_width}" length="${imu_length}" height="${imu_height}"/> 
     </collision> 
-    <xacro:default_inertial mass="5.0"/> 
-  </link> 
+    <xacro:default_inertial mass="0.05"/> 
+  </link>
 
   <!-- wheel joint macro --> 
   <!-- right:1 left:-1 --> 
@@ -84,7 +84,7 @@
     <!-- joints --> 
     <joint name="car_base_${wheel_name}" type="continuous"> 
       <origin xyz="${left_right*(wheel_length+car_width)/2.0} ${front_end*car_length*0.6/2.0} 0.0" rpy="0.0 0.0 0.0"/> 
-      <parent link="car_link"/> 
+      <parent link="imu_link"/> 
       <child link="${wheel_name}"/> 
       <axis xyz="1.0 0.0 0.0"/> 
     </joint> 
