@@ -16,9 +16,13 @@ include_directories( ${catkin_INCLUDE_DIRS} )
 
 
 set(HEADERS
+  src/ReadDataRos.h
+  src/QSelfChecking.h
 )
 set(SOURCES
     src/main.cpp
+    src/ReadDataRos.cpp
+    src/QSelfChecking.cpp
 )
 set(RESOURCES
     src/sweeper_hmi.qrc

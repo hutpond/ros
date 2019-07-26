@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
+        <file>image/deepblue.png</file>
+        <file>subframes/Start.qml</file>
+        <file>subframes/Check.qml</file>
     </qresource>
 </RCC>
