@@ -3,6 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import "subframes" as SubFrames
+import Sweeper 1.0
 
 Window {
   id: root
@@ -34,12 +35,34 @@ Window {
     visible: false
   }
 
+  SubFrames.UserPage {
+    id: userPage
+    anchors.fill: parent
+    visible: false
+  }
+
   Item {
     Timer {
       interval: 2000; running: true; repeat: false
       onTriggered: {
         start.visible = false
         check.visible = true
+      }
+    }
+  }
+
+  SelfChecking {
+    Timer {
+      id: timerShowUserPage
+      interval: 800; running: false; repeat: false
+      onTriggered: {
+        check.visible = false
+        userPage.visible = true
+      }
+    }
+    onStepChanged: {
+      if (step === SelfChecking.StepEnvSucceed) {
+        timerShowUserPage.start()
       }
     }
   }

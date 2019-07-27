@@ -4,9 +4,9 @@
 
 QSelfChecking::QSelfChecking(QQuickItem *parent) : QQuickItem(parent)
 {
-  QTimer::singleShot(5000, this, &QSelfChecking::onCheckSys);
-  QTimer::singleShot(6000, this, &QSelfChecking::onCheckSensor);
-  QTimer::singleShot(8000, this, &QSelfChecking::onCheckEnv);
+  QTimer::singleShot(2000, this, &QSelfChecking::onCheckSys);
+  QTimer::singleShot(3000, this, &QSelfChecking::onCheckSensor);
+  QTimer::singleShot(3100, this, &QSelfChecking::onCheckEnv);
 }
 
 QSelfChecking::StepCheck QSelfChecking::step() const

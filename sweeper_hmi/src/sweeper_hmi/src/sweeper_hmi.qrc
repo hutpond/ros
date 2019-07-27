@@ -4,5 +4,8 @@
         <file>image/deepblue.png</file>
         <file>subframes/Start.qml</file>
         <file>subframes/Check.qml</file>
+        <file>subframes/Header.qml</file>
+        <file>subframes/TaskSelect.qml</file>
+        <file>subframes/UserPage.qml</file>
     </qresource>
 </RCC>

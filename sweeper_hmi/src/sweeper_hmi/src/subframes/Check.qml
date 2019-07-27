@@ -7,12 +7,11 @@ Item {
   property int pointSize: 30
 
   Image {
-    property double scaleValue: 0.25
-
-    x: -this.width * (1 - scaleValue * 3) / 2
-    y: -this.height * (1 - scaleValue * 2) / 2
+    x: parent.width * 0.02
+    y: x / 2
+    width: parent.width * 0.05
+    height: width
     source: "qrc:/image/deepblue.png"
-    scale: scaleValue
   }
 
   Text {
@@ -21,8 +20,8 @@ Item {
     font.pointSize: pointSize
     color: "black"
 
-    x: (parent.width - this.width) / 2
     y: parent.height * 0.15
+    anchors.horizontalCenter: parent.horizontalCenter
   }
 
   RowLayout {

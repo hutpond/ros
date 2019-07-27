@@ -7,6 +7,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(Qt5_DIR /opt/Qt5.9.5/5.9.5/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Qml Quick REQUIRED)
 
 # ros
@@ -14,23 +15,26 @@ find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
 catkin_package()
 include_directories( ${catkin_INCLUDE_DIRS} )
 
-
 set(HEADERS
   src/ReadDataRos.h
   src/QSelfChecking.h
-)
+  )
 set(SOURCES
-    src/main.cpp
-    src/ReadDataRos.cpp
-    src/QSelfChecking.cpp
-)
+  src/main.cpp
+  src/ReadDataRos.cpp
+  src/QSelfChecking.cpp
+  )
 set(RESOURCES
-    src/sweeper_hmi.qrc
-)
+  src/sweeper_hmi.qrc
+  )
 set(QMLS
-    src/main.qml
-)
-
+  src/main.qml
+  src/subframes/Check.qml
+  src/subframes/Header.qml
+  src/subframes/Start.qml
+  src/subframes/TaskSelect.qml
+  src/subframes/UserPage.qml
+  )
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${RESOURCES} ${QMLS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
