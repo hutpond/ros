@@ -2,84 +2,112 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import Sweeper 1.0
+import "../basic" as Basic
 
 Item {
-  property int pointSize: 30
+  property int pointSize: 24
 
   Image {
-    x: parent.width * 0.02
-    y: x / 2
-    width: parent.width * 0.05
-    height: width
+    anchors.fill: parent
+    source: "qrc:/image/check.png"
+  }
+
+  Image {
     source: "qrc:/image/deepblue.png"
+    x: 37
+    y: 30
+    width: 135
+    height: 132
   }
 
   Text {
-    text: "系统自检"
+    text: "系统自检中..."
     font.family: "SimHei"
-    font.pointSize: pointSize
-    color: "black"
+    font.pointSize: 30
+    color: "white"
 
-    y: parent.height * 0.15
+    y: 140
     anchors.horizontalCenter: parent.horizontalCenter
   }
 
-  RowLayout {
+  Item {
     y: parent.height * 0.8
     x: parent.width * 0.18
     width: parent.width * 0.7
-    Text {
+    height: parent.height * 0.08
+
+    Basic.CheckStateBox {
+      id: checkVehicle
       text: "车辆"
-      font.family: "SimHei"
-      font.pointSize: pointSize
-      color: "black"
+
+      width: parent.width * 0.22
+      height: parent.height
+
+      anchors.left: parent.left
+      anchors.leftMargin: 20
+      anchors.verticalCenter: parent.verticalCenter
     }
-    CheckBox {
+
+    Basic.CheckStateBox {
       id: checkBoxSys
       text: "系统"
-      font.family: "SimHei"
-      font.pointSize: pointSize
-      focusPolicy: Qt.NoFocus
 
-      MouseArea {
-        anchors.fill: parent
-      }
+      width: parent.width * 0.22
+      height: parent.height
+
+      anchors.left: checkVehicle.right
+      anchors.leftMargin: 20
+      anchors.verticalCenter: parent.verticalCenter
     }
-    CheckBox {
+
+    Basic.CheckStateBox {
       id: checkBoxSensor
       text: "传感器"
-      font.family: "SimHei"
-      font.pointSize: pointSize
-      focusPolicy: Qt.NoFocus
 
-      MouseArea {
-        anchors.fill: parent
-      }
+      width: parent.width * 0.22
+      height: parent.height
+
+      anchors.left: checkBoxSys.right
+      anchors.leftMargin: 20
+      anchors.verticalCenter: parent.verticalCenter
     }
-    CheckBox {
+
+    Basic.CheckStateBox {
       id: checkBoxEnv
       text: "算法"
-      font.family: "SimHei"
-      font.pointSize: pointSize
-      focusPolicy: Qt.NoFocus
 
-      MouseArea {
-        anchors.fill: parent
-      }
+      width: parent.width * 0.22
+      height: parent.height
+
+      anchors.left: checkBoxSensor.right
+      anchors.leftMargin: 20
+      anchors.verticalCenter: parent.verticalCenter
     }
+  }
+
+  Basic.CheckCanvas {
+    id: canvasCheck
+
+    width: parent.width
+    height: parent.height * 0.371
+    anchors.centerIn: parent
   }
 
   SelfChecking {
     onStepChanged: {
       if (step === SelfChecking.StepSysSucceed) {
-        checkBoxSys.checked = true
+        checkBoxSys.setState(Basic.CheckStateBox.Checked)
       }
       else if (step === SelfChecking.StepSensorFailed) {
-        checkBoxSensor.checked = false
+        checkBoxSensor.setState(Basic.CheckStateBox.UnChecked)
       }
       else if (step === SelfChecking.StepEnvSucceed) {
-        checkBoxEnv.checked = true
+        checkBoxEnv.setState(Basic.CheckStateBox.UnChecked)
       }
     }
+  }
+
+  function startTimer() {
+    canvasCheck.startTimer()
   }
 }

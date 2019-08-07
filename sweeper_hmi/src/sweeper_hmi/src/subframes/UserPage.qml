@@ -1,36 +1,43 @@
 import QtQuick 2.0
+import "../basic" as Basic
 
 Item {
-  Header {
-    id: header
+  id: itemUserPage
+
+  property double leftWidth: 0.65
+  property double xSpace: 10
+  property double ySpace: 10
+
+  signal startAutoPilot()
+
+  Basic.Header {
+    id: headerUserPage
+    title: "AI智能扫地机"
     width: parent.width
     height: parent.height * 0.08
   }
 
-  Rectangle {
-    id: startAutoPilot
-    width: parent.width * 0.26
-    height: parent.height * 0.18
-    x: parent.width - width - 15
-    y: parent.height - height - 30
-    radius: width * 0.2
+  Basic.UserPageState {
+    id: userPageState
 
-    color: "cyan"
+    anchors.left: parent.left
+    anchors.leftMargin: xSpace
+    anchors.top: headerUserPage.bottom
+    anchors.topMargin: ySpace
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: ySpace
 
-    Text {
-      text: qsTr("自动工作")
-      font.family: "SimHei"
-      font.pointSize: 26
-      anchors.centerIn: parent
+    width: parent.width * 0.6
+  }
 
-      color: "white"
-    }
+  Basic.UserPageBoard {
+    id: userPageBoard
 
-    MouseArea {
-      anchors.fill: parent
-      onClicked: {
-
-      }
-    }
+    anchors.left: userPageState.right
+    anchors.leftMargin: xSpace
+    anchors.top: userPageState.top
+    anchors.bottom: userPageState.bottom
+    anchors.right: parent.right
+    anchors.rightMargin: xSpace
   }
 }

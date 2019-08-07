@@ -4,8 +4,48 @@
         <file>image/deepblue.png</file>
         <file>subframes/Start.qml</file>
         <file>subframes/Check.qml</file>
-        <file>subframes/Header.qml</file>
         <file>subframes/TaskSelect.qml</file>
         <file>subframes/UserPage.qml</file>
+        <file>subframes/AutoPilot.qml</file>
+        <file>subframes/AutoPilotRun.qml</file>
+        <file>subframes/Debug.qml</file>
+        <file>subframes/ErrorMessage.qml</file>
+        <file>subframes/TaskReport.qml</file>
+        <file>subframes/UserLogin.qml</file>
+        <file>basic/Header.qml</file>
+        <file>basic/CarLocation.qml</file>
+        <file>basic/CarLocationState.qml</file>
+        <file>basic/CarDisplayZoom.qml</file>
+        <file>basic/AutoPilotPanel.qml</file>
+        <file>basic/AutoPilotRunPanel.qml</file>
+        <file>image/map_1.png</file>
+        <file>image/brake.png</file>
+        <file>image/dippedLight.png</file>
+        <file>image/fault.png</file>
+        <file>image/garbage.png</file>
+        <file>image/highBeam.png</file>
+        <file>image/pallet.png</file>
+        <file>image/positionLamp.png</file>
+        <file>image/spout.png</file>
+        <file>image/turnsigal.png</file>
+        <file>image/water.png</file>
+        <file>basic/DashBoard.qml</file>
+        <file>basic/PerceptionData.qml</file>
+        <file>basic/Gears.qml</file>
+        <file>basic/Camera.qml</file>
+        <file>basic/VehicleState.qml</file>
+        <file>basic/DashBoardUser.qml</file>
+        <file>basic/DashBoardMileage.qml</file>
+        <file>basic/DashBoardClean.qml</file>
+        <file>basic/BarBattary.qml</file>
+        <file>basic/BarMileage.qml</file>
+        <file>basic/UserPageState.qml</file>
+        <file>basic/UserPageBoard.qml</file>
+        <file>image/check.png</file>
+        <file>image/unchecked.png</file>
+        <file>image/checked.png</file>
+        <file>basic/CheckStateBox.qml</file>
+        <file>basic/CheckCanvas.qml</file>
+        <file>basic/Particles.qml</file>
     </qresource>
 </RCC>

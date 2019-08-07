@@ -18,39 +18,92 @@ Window {
   //visibility: Window.FullScreen
   flags: Qt.FramelessWindowHint
 
+  // quit
   Item {
     anchors.fill: parent
     focus: true
     Keys.onEscapePressed: Qt.quit()
   }
 
+  // start page
   SubFrames.Start {
     id: start
     anchors.fill: parent
   }
 
+  // check page
   SubFrames.Check {
     id: check
     anchors.fill: parent
     visible: false
   }
 
+  // user page
   SubFrames.UserPage {
     id: userPage
     anchors.fill: parent
     visible: false
+
+    onStartAutoPilot: {
+      userPage.visible = false
+      taskSelect.visible = true
+    }
   }
 
+  // task page
+  SubFrames.TaskSelect {
+    id: taskSelect
+    anchors.fill: parent
+    visible: false
+
+    onTaskSlecked: {
+      taskSelect.visible = false
+      autoPilot.visible = true
+    }
+  }
+
+  // auto pilot start
+  SubFrames.AutoPilot {
+    id: autoPilot
+    anchors.fill: parent
+    visible: false
+
+    onAuto: {
+      autoPilot.visible = false
+      autoPilotRun.visible = true
+    }
+
+    onManul: {
+      userPage.visible = true
+      autoPilot.visible = false
+    }
+  }
+
+  // auto pilot run
+  SubFrames.AutoPilotRun {
+    id: autoPilotRun
+    anchors.fill: parent
+    visible: false
+
+    onStop: {
+      autoPilotRun.visible = false
+      autoPilot.visible = true
+    }
+  }
+
+  // stop on start page for second
   Item {
     Timer {
-      interval: 2000; running: true; repeat: false
+      interval: 5000; running: true; repeat: false
       onTriggered: {
         start.visible = false
         check.visible = true
+        check.startTimer()
       }
     }
   }
 
+  // check function
   SelfChecking {
     Timer {
       id: timerShowUserPage
@@ -62,7 +115,7 @@ Window {
     }
     onStepChanged: {
       if (step === SelfChecking.StepEnvSucceed) {
-        timerShowUserPage.start()
+//        timerShowUserPage.start()
       }
     }
   }
