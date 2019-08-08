@@ -1,0 +1,49 @@
+float64 vehicle_latitude
+float64 vehicle_longitude
+float64 vehicle_altitude
+float64 vehicle_x
+float64 vehicle_y
+float64 vehicle_z
+float64 vehicle_s
+float64 vehicle_l
+float64 vehicle_width
+float64 vehicle_length
+float64 head_distance
+
+Radar28fTargetColl radar_results
+UltraSonicTargetColl ultrasonic_results
+TrackTargetColl fusion_results
+
+float64 trajectory_a0
+float64 trajectory_a1
+float64 trajectory_a2
+float64 trajectory_a3
+float64 trajectory_b0
+float64 trajectory_b1
+float64 trajectory_b2
+float64 trajectory_b3
+float64 trajectory_b4
+float64 trajectory_start_s
+float64 trajectory_start_l
+float64 trajectory_start_x
+float64 trajectory_start_y
+float64 trajectory_end_s
+float64 trajectory_end_l
+float64 trajectory_end_x
+float64 trajectory_end_y
+
+float64 safe_dis1
+float64 safe_dis2
+float64 max_planning_distance
+float64 left_half_road_width
+float64 right_half_road_width
+
+int8 num_reference_points
+ReferencePoint[100] reference_points
+
+int8 decision
+int8 ultrasonic_decision
+int8 radar_decision
+TargetPoint[5] decision_targets
+
+string debug_info
