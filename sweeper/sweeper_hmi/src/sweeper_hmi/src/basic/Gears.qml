@@ -2,19 +2,17 @@ import QtQuick 2.0
 
 Item {
 
-  property double itemWidth: height * 0.8
-  property double spacing: (width - itemWidth * 3) / 4
+  property double itemWidth: Math.min(height, width / 3.0)
 
   Rectangle {
 
     id: gearD
 
     anchors.left: parent.left
-    anchors.leftMargin: 20
     anchors.verticalCenter: parent.verticalCenter
 
-    width: 35
-    height: 35
+    width: itemWidth
+    height: itemWidth
 
     color: "#163465"
 
@@ -30,12 +28,11 @@ Item {
   Rectangle {
     id: gearN
 
-    anchors.left: gearD.right
-    anchors.leftMargin: 20
+    anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
-    width: 35
-    height: 35
+    width: itemWidth
+    height: itemWidth
 
     color: "#163465"
 
@@ -51,12 +48,11 @@ Item {
   Rectangle {
     id: gearR
 
-    anchors.left: gearN.right
-    anchors.leftMargin: 20
+    anchors.right: parent.right
     anchors.verticalCenter: parent.verticalCenter
 
-    width: 35
-    height: 35
+    width: itemWidth
+    height: itemWidth
 
     color: "#163465"
 

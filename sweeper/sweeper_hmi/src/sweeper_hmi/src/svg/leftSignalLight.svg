@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="57px" height="57px" viewBox="0 0 57 57" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>分组 11</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="38.2573439%" y1="-273.455869%" x2="58.4547732%" y2="168.243099%" id="linearGradient-1">
+            <stop stop-color="#0973FF" offset="0%"></stop>
+            <stop stop-color="#09B2FF" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="stella" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="05-操作主页" transform="translate(-466.000000, -651.000000)" fill-rule="nonzero">
+            <g id="分组-11" transform="translate(466.000000, 651.000000)">
+                <rect id="矩形-copy-9" stroke="#09A1FF" stroke-width="1.122" opacity="0.542736235" x="0.561" y="0.561" width="54.978" height="54.978" rx="6.732"></rect>
+                <g id="分组-6" transform="translate(14.000000, 16.000000)" fill="url(#linearGradient-1)">
+                    <polygon id="路径" points="10.125 6.54545455 27 6.54545455 27 17.4545455 10.125 17.4545455"></polygon>
+                    <polygon id="形状" points="0 12 14.625 24 14.625 0"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -139,7 +139,7 @@ Item {
     verticalAlignment: Text.AlignVCenter
 
     color: "#158DEE"
-    font.family: "Times"
+    font.family: "SimHei"
     font.pointSize: 20
 
     text: "  0 %"

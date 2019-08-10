@@ -13,12 +13,12 @@ Item {
     Image {
       id: backgroud
       anchors.fill: parent
-      source: "qrc:/image/header_back.png"
+      source: "qrc:/svg/headerBack.svg"
     }
 
     Image {
       id: img4G
-      source: "qrc:/image/4G.png"
+      source: "qrc:/svg/4G.svg"
 
       x: 25
       height: 22

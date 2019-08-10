@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="970px" height="87px" viewBox="0 0 970 87" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>分组 4</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="98.2325275%" y1="48.272962%" x2="3.49397145%" y2="48.272962%" id="linearGradient-1">
+            <stop stop-color="#7F7F7F" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#004BBD" offset="49.13069%"></stop>
+            <stop stop-color="#7F7F7F" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="87.1893189%" y1="50%" x2="11.0902973%" y2="50%" id="linearGradient-2">
+            <stop stop-color="#7F7F7F" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#004BBD" offset="49.5478382%"></stop>
+            <stop stop-color="#7F7F7F" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="stella" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="05-操作主页" transform="translate(-36.000000, 0.000000)" fill-rule="nonzero">
+            <g id="分组-4">
+                <path d="M0.0213166685,74.8025712 L0,0.620225828 C135.9781,-0.185168629 902.562882,-0.228041741 1024,0.620238166 L1023.97486,74.8025588 C902.62055,73.9548574 831.289704,73.9548574 810.063954,74.8011747 C781.447705,75.9421676 758.528779,77.1796839 716.301939,79.7131099 C714.782251,79.8042845 709.329243,80.1316954 709.579443,80.1166762 C706.883883,80.2784871 704.851489,80.400339 702.865111,80.5191655 C624.241676,85.222474 578.543679,87 511.999044,87 C446.354576,87 405.909584,85.2705585 334.204071,80.4607384 C332.591303,80.3525582 327.01458,79.9779975 326.858223,79.9675008 C285.701648,77.2045309 263.945538,75.9307585 234.898677,74.8012444 C214.234613,73.9977031 135.910538,73.9977031 0.0213166685,74.8025712 Z" id="路径-29-copy" fill="url(#linearGradient-1)" opacity="0.570661272"></path>
+                <path d="M0,70.7630297 C135.936744,69.7970772 214.257827,69.7970772 234.963249,70.7630297 C333.21393,75.3466353 385.626732,85.3968004 512,85.3968004 C638.373268,85.3968004 706.493962,75.7142828 810,70.7630297 C831.268199,69.7456568 902.601532,69.7456568 1024,70.7630297" id="路径-29-copy" stroke="url(#linearGradient-2)" stroke-width="3"></path>
+            </g>
+        </g>
+    </g>
+</svg>

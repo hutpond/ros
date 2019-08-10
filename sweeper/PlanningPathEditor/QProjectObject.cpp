@@ -17,6 +17,7 @@
 #include <QJsonDocument>
 #include <QtMath>
 #include <QMatrix4x4>
+#include <QMessageBox>
 #include "QProjectObject.h"
 #include "QReadDataObject.h"
 #include "QOpenDriveObject.h"
@@ -51,6 +52,11 @@ void QProjectObject::createProject(const QString &path, const QString &name)
     subdir.removeRecursively();
   }
   dir.mkpath(subpath);
+  m_strImuPath = subpath + "imudata/";
+  dir.mkpath(m_strImuPath);
+  m_nImuFileIndex = 100000;
+
+  this->closeProject();
 
   QString filename = subpath;
   filename.append(name);
@@ -179,6 +185,7 @@ void QProjectObject::setImuData(const DataPacket *data)
   pInfo->m_cGpsState = data->getStatus();
   pInfo->m_cUpdateFlag = 1;
 
+  this->saveImuData(*pInfo);
   if (m_vector3dOrigin(0) > 360) {
     m_vector3dOrigin = Eigen::Vector3d(pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude);
   }
@@ -274,6 +281,42 @@ QList<QSharedPointer<Point>> & QProjectObject::getPathPoints()
   return m_listReferensePoints;
 }
 
+void QProjectObject::saveImuData(const InfoPacket &info)
+{
+  QString strFileName = QString("%1.%2.txt").arg(m_strImuPath).arg(m_nImuFileIndex ++);
+
+  QFile saveFile(strFileName);
+  if (!saveFile.open(QIODevice::WriteOnly)) {
+    return;
+  }
+
+  QJsonObject dataObject;
+  dataObject["pitch"] = info.m_dPitch;
+  dataObject["roll"] = info.m_dRoll;
+  dataObject["yaw"] = info.m_dYaw;
+  dataObject["rotx"] = info.m_dGyroRotX;
+  dataObject["roty"] = info.m_dGyroRotY;
+  dataObject["rotz"] = info.m_dGyroRotZ;
+  dataObject["accelx"] = info.m_dAccelX;
+  dataObject["accely"] = info.m_dAccelY;
+  dataObject["accelz"] = info.m_dAccelZ;
+  dataObject["latitude"] = info.m_dLatitude;
+  dataObject["longtitude"] = info.m_dLongitude;
+  dataObject["altitude"] = info.m_dAltitude;
+  dataObject["north"] = info.m_dVelNorth;
+  dataObject["east"] = info.m_dVelEast;
+  dataObject["univer"] = info.m_dVelUniver;
+  dataObject["gpsms"] = info.m_llMsGps;
+  dataObject["gpsstate"] = info.m_cGpsState;
+  dataObject["flag"] = info.m_cUpdateFlag;
+
+  QJsonDocument jsonDoc(dataObject);
+  saveFile.write(jsonDoc.toJson());
+
+  saveFile.close();
+}
+
+
 
 QCreateProjectDialog::QCreateProjectDialog(QWidget *parent)
   : QDialog(parent)
@@ -353,7 +396,15 @@ void QCreateProjectDialog::onBtnOk()
   }
   path.append(name);
   if (dir.exists(path)) {
-    return;
+    int ret = QMessageBox::warning(
+          this, tr("create project"),
+          tr("工程已存在，是否覆盖?"),
+          QMessageBox::Yes | QMessageBox::No,
+          QMessageBox::No);
+    if (ret != QMessageBox::Yes) return;
+
+    dir.setPath(path);
+    dir.removeRecursively();
   }
 
   return QDialog::accept();

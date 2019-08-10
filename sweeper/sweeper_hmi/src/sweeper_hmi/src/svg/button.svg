@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="302px" height="93px" viewBox="0 0 302 93" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>矩形 copy 10</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="53.4490639%" y1="100%" x2="53.4490639%" y2="-38.9046784%" id="linearGradient-1">
+            <stop stop-color="#0C74FC" offset="0%"></stop>
+            <stop stop-color="#2BBCFF" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="stella" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="05-操作主页" transform="translate(-692.000000, -613.000000)" fill="url(#linearGradient-1)" fill-rule="nonzero">
+            <rect id="矩形-copy-10" x="692" y="613" width="302" height="93" rx="6"></rect>
+        </g>
+    </g>
+</svg>

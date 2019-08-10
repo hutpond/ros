@@ -28,10 +28,9 @@ Item {
     anchors.left: parent.left
     anchors.leftMargin: 30
     anchors.top: headerUserPage.bottom
-    anchors.topMargin: 35
 
     width: parent.width * 637.0 / 1024
-    height: parent.height * 449.0 / 768
+    height: parent.height * 480.0 / 768
   }
 
   Basic.UserPageBoard {
@@ -45,40 +44,43 @@ Item {
     anchors.rightMargin: 30
   }
 
+  Basic.UserPageDisplayBoard {
+    id: displayBoard
+
+    anchors.left: userPageState.left
+    anchors.right: userPageState.right
+    anchors.top: userPageState.bottom
+    anchors.topMargin: 40
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: 55
+  }
+
   Item {
     id: startAutoPilot
 
-    //anchors.top: gearsUserPage.bottom
-    //anchors.topMargin: ySpace
-    anchors.bottom: parent.bottom
-    anchors.bottomMargin: ySpace
-    width: parent.width
+    anchors.top: displayBoard.top
+    anchors.bottom: displayBoard.bottom
+    anchors.left: userPageBoard.left
+    anchors.right: userPageBoard.right
 
-    Rectangle {
-      id: pilotType
-
+    Image {
+      anchors.fill: parent
+      source: "qrc:/svg/button.svg"
     }
 
-    Rectangle {
-      height: parent.height * 0.1
-      //radius: width * 0.2
+    Text {
+      text: qsTr("自动工作")
+      font.family: "SimHei"
+      font.pointSize: 26
+      anchors.centerIn: parent
 
-      //color: "cyan"
+      color: "white"
+    }
 
-      Text {
-        text: qsTr("自动工作")
-        font.family: "SimHei"
-        font.pointSize: 26
-        anchors.centerIn: parent
-
-        color: "white"
-      }
-
-      MouseArea {
-        anchors.fill: parent
-        onClicked: {
-          //itemUserPage.startAutoPilot()
-        }
+    MouseArea {
+      anchors.fill: parent
+      onClicked: {
+        itemUserPage.startAutoPilot()
       }
     }
   }

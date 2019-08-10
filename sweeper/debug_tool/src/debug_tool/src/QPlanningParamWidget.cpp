@@ -205,14 +205,11 @@ QString QPlanningParamWidget::getDecisionText(int index)
 ********************************************************/
 void QPlanningParamWidget::showMousePosition(float x, float y, float s, float l)
 {
-  QString strText = QString("X:%1, Y:%2").
+  QString strText = QString("X:%1, Y:%2, S:%3, L%4").
       arg(x, 6, 'f', 2).
-      arg(y, 6, 'f', 2);
-  if (s < 1.0e6) {
-    strText += QString(", S:%1, L:%2").
-        arg(s, 6, 'f', 2).
-        arg(l, 6, 'f', 2);
-  }
+      arg(y, 6, 'f', 2).
+      arg(s, 6, 'f', 2).
+      arg(l, 6, 'f', 2);
   m_pLblMousePosValue->setText(strText);
 }
 

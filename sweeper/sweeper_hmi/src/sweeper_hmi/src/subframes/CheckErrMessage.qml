@@ -80,7 +80,7 @@ Item {
 
     Image {
       anchors.fill: parent
-      source: "qrc:/image/checkButton.png"
+      source: "qrc:/svg/button.svg"
     }
     Text {
       anchors.fill: parent

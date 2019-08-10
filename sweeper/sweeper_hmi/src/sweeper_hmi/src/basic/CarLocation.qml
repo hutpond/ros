@@ -7,37 +7,47 @@ Item {
   property var latitude: 31.47123
   property var longitude: 119.58345
 
-  Rectangle {
-    anchors.fill: parent
-    color: "lightGray"
+  Gears {
+    width: parent.width * 0.7
+    height: parent.height * 0.04
+
+    anchors.top: parent.top
+    anchors.topMargin: height
+    anchors.horizontalCenter: parent.horizontalCenter
   }
 
-  ColumnLayout {
-    property alias latitude: itemCarLocation.latitude
-    property alias longitude: itemCarLocation.longitude
+  Text {
+    id: textLatitude
 
     width: parent.width
-    height: parent.height * 0.08
-    x: 0
-    y: parent.height - height - 5
+    height: parent.height * 0.05
 
-    Text {
-      //anchors.horizontalCenter: parent.horizontalCenter
-      text: qsTr("经度: ") + fToS(longitude)
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: 30
+    horizontalAlignment: Text.AlignHCenter
+    verticalAlignment: Text.AlignVCenter
 
-      font.family: "SimHei"
-      font.pointSize: 12
-      color: "black"
-    }
+    text: qsTr("纬度: ") + fToS(latitude)
+    font.family: "SimHei"
+    font.pointSize: 12
+    color: "#7E7E7E"
+  }
 
-    Text {
-//      anchors.horizontalCenter: parent.horizontalCenter
-      text: qsTr("纬度: ") + fToS(latitude)
+  Text {
+    id: textLongtitude
 
-      font.family: "SimHei"
-      font.pointSize: 12
-      color: "black"
-    }
+    width: textLatitude.width
+    height: textLatitude.height
+
+    anchors.bottom: textLatitude.top
+    anchors.bottomMargin: 20
+    horizontalAlignment: Text.AlignHCenter
+    verticalAlignment: Text.AlignVCenter
+
+    text: qsTr("经度: ") + fToS(longitude)
+    font.family: "SimHei"
+    font.pointSize: 12
+    color: "#7E7E7E"
   }
 
   function fToS(value) {

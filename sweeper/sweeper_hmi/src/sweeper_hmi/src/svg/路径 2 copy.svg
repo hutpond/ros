@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="212px" height="249px" viewBox="0 0 212 249" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>路径 2 copy</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="100%" y1="50%" x2="6.71112333%" y2="50%" id="linearGradient-1">
+            <stop stop-color="#0077FF" offset="0%"></stop>
+            <stop stop-color="#0077FF" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="stella" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="05-操作主页" transform="translate(-78.000000, -222.000000)" fill="url(#linearGradient-1)" fill-rule="nonzero">
+            <g id="分组-21" transform="translate(63.000000, 144.000000)">
+                <polygon id="路径-2-copy" points="0 71.3383285 226.818848 165.288902 225.232543 244.549601 1.08894745e-13 332.323954"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

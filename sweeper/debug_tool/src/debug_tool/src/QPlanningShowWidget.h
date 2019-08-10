@@ -56,7 +56,7 @@ protected:
   void calcMapRect();
 
   int findReferenceIndex(const double s);
-  bool xyToSl(const QPointF &, double &s, double &l);
+  void xyToSl(const QPointF &, double &s, double &l);
   void slToXy(const double s, const double l, QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
 

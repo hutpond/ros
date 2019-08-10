@@ -3,180 +3,110 @@ import QtQuick.Layouts 1.3
 
 Item {
 
+  id: dashBoard
+  property int spacing: 20
+
   Row {
     id: firstRow
 
-    x: 0
-    y: 0
-    width: parent.width * 0.8
-    height: parent.height / 3
-    spacing: 20
+    width: parent.width
+    height: (parent.height - parent.spacing) / 2
+    anchors.top: parent.top
+    anchors.left: parent.left
 
-    property double itemWidth: Math.min((width - spacing * 6) / 5, height)
+    property double itemWidth: Math.min(width / 5, height)
+    spacing: (width - itemWidth * 5) / 4.0
 
     Image {
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/garbage.png"
+      source: "qrc:/svg/brake.svg"
     }
 
     Image {
-      id: water
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/water.png"
+      source: "qrc:/svg/leftSignalLight.svg"
     }
 
     Image {
-      id: brake
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/brake.png"
+      source: "qrc:/svg/rightSignalLight.svg"
     }
 
     Image {
-      id: fault
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/fault.png"
+      source: "qrc:/svg/setting.svg"
     }
 
     Image {
-      id: turnsigal
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/turnsigal.png"
+      source: "qrc:/svg/water.svg"
     }
   }
 
   Row {
     id: secondRow
 
-    x: 0
-    y: parent.height / 3
-    width: parent.width * 0.8
-    height: parent.height / 3
-    spacing: 20
+    width: firstRow.width
+    height: firstRow.height
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
 
-    property double itemWidth: Math.min((width - spacing * 6) / 5, height)
+    property double itemWidth: firstRow.itemWidth
+    spacing: firstRow.spacing
 
     Image {
-      id: pallet
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/pallet.png"
-    }
-
-    Image {
-      id: spout
-      width: parent.itemWidth
-      height: parent.itemWidth
-      anchors.verticalCenter: parent.verticalCenter
-
-      source: "qrc:/image/spout.png"
+      source: "qrc:/svg/spout.svg"
     }
 
     Image {
-      id: positionLamp
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/positionLamp.png"
+      source: "qrc:/svg/pallet.svg"
     }
 
     Image {
-      id: highBeam
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/highBeam.png"
+      source: "qrc:/svg/positionLamp.svg"
     }
 
     Image {
-      id: dippedLight
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
 
-      source: "qrc:/image/dippedLight.png"
-    }
-  }
-
-  Row {
-    id: thirdRow
-
-    x: 0
-    y: parent.height * 2 / 3
-    width: parent.width * 0.55
-    height: parent.height / 3
-    anchors.horizontalCenter: parent.horizontalCenter
-    spacing: 18
-
-    property double itemWidth: Math.min((width - spacing * 4) / 3, height)
-
-    Rectangle {
-      width: parent.itemWidth
-      height: parent.itemWidth
-      anchors.verticalCenter: parent.verticalCenter
-      radius: width * 0.5
-      color: "white"
-      border.color: "gray"
-      border.width: 2
-
-      Text {
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "black"
-        text: qsTr("D")
-        font.pointSize: 18
-      }
+      source: "qrc:/svg/highBeam.svg"
     }
 
-    Rectangle {
+    Image {
       width: parent.itemWidth
       height: parent.itemWidth
       anchors.verticalCenter: parent.verticalCenter
-      radius: width * 0.5
-      color: "black"
 
-      Text {
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "white"
-        text: "N"
-        font.pointSize: 18
-      }
-    }
-
-    Rectangle {
-      width: parent.itemWidth
-      height: parent.itemWidth
-      anchors.verticalCenter: parent.verticalCenter
-      radius: width * 0.5
-      color: "black"
-
-      Text {
-        anchors.centerIn: parent.Center
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "white"
-        text: qsTr("R")
-        font.pointSize: 20
-      }
+      source: "qrc:/svg/lowBeam.svg"
     }
   }
 }

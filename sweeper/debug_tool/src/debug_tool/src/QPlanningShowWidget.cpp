@@ -29,9 +29,7 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
   QTransform inverted = m_transform.inverted();
   QPointF ptf = inverted.map(m_ptfMouseMove);
   double s, l;
-  if (!this->xyToSl(ptf, s, l)) {
-    s = 1.0e8;
-  }
+  this->xyToSl(ptf, s, l);
   m_funPosition(ptf.x(), ptf.y(), s, l);
 }
 
@@ -1082,9 +1080,9 @@ int QPlanningShowWidget::findReferenceIndex(const double s)
  * @param s: sl坐标系, s, 参考线切线方向
  * @param s: sl坐标系, l, 参考线垂直向左
 
- * @return true: 转换成功, false: 无法转换
+ * @return
 */
-bool QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
+void QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
 {
   typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
@@ -1108,7 +1106,23 @@ bool QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
     }
   }
   if (index == -1) {
-    return false;
+    l = 1.0e8;
+    for (int i = 0; i < SIZE; ++i) {
+      double len = QLineF(REF_PTS[i].x, REF_PTS[i].y, ptfXy.x(), ptfXy.y()).length();
+      if (l > len) {
+        index = i;
+        l = len;
+      }
+    }
+    s = REF_PTS[index].s;
+    if (index > 1 && index < SIZE - 1) {
+      double angle = QLineF(ptfXy, QPointF(REF_PTS[index - 1].x, REF_PTS[index - 1].y)).angleTo(
+            QLineF(ptfXy, QPointF(REF_PTS[index + 1].x, REF_PTS[index + 1].y)));
+      if (angle < 180) {
+        l *= -1;
+      }
+    }
+    return;
   }
 
   QLineF linef(REF_PTS[index].x, REF_PTS[index].y, REF_PTS[index + 1].x, REF_PTS[index + 1].y);
@@ -1118,7 +1132,7 @@ bool QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
   QPointF ptfInter;
   QLineF::IntersectType type = linef.intersect(linef2, &ptfInter);
   if (type == QLineF::NoIntersection) {
-    return false;
+    return;
   }
 
   l = QLineF(ptfXy, ptfInter).length();
@@ -1130,7 +1144,7 @@ bool QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
   s = QLineF(REF_PTS[index].x, REF_PTS[index].y, ptfInter.x(), ptfInter.y()).length();
   s += REF_PTS[index].s;
 
-  return true;
+  return;
 }
 
 /**
@@ -1216,9 +1230,7 @@ QPolygonF QPlanningShowWidget::createSlPgf(const QPointF &center, double width, 
     l = center.y();
   }
   else {
-    if (!this->xyToSl(center, s, l)) {
-      return pgf;
-    }
+    this->xyToSl(center, s, l);
   }
   const int index = this->findReferenceIndex(s);
 

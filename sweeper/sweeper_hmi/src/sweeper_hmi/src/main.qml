@@ -70,7 +70,7 @@ Window {
 
     onStartAutoPilot: {
       userPage.visible = false
-      taskSelect.visible = true
+      autoPilot.visible = true
     }
   }
 
@@ -93,25 +93,11 @@ Window {
     visible: false
 
     onAuto: {
-      autoPilot.visible = false
-      autoPilotRun.visible = true
     }
 
     onManul: {
       userPage.visible = true
       autoPilot.visible = false
-    }
-  }
-
-  // auto pilot run
-  SubFrames.AutoPilotRun {
-    id: autoPilotRun
-    anchors.fill: parent
-    visible: false
-
-    onStop: {
-      autoPilotRun.visible = false
-      autoPilot.visible = true
     }
   }
 

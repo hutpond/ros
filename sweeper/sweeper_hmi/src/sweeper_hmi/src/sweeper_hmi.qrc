@@ -7,7 +7,6 @@
         <file>subframes/TaskSelect.qml</file>
         <file>subframes/UserPage.qml</file>
         <file>subframes/AutoPilot.qml</file>
-        <file>subframes/AutoPilotRun.qml</file>
         <file>subframes/Debug.qml</file>
         <file>subframes/ErrorMessage.qml</file>
         <file>subframes/TaskReport.qml</file>
@@ -17,18 +16,7 @@
         <file>basic/CarLocationState.qml</file>
         <file>basic/CarDisplayZoom.qml</file>
         <file>basic/AutoPilotPanel.qml</file>
-        <file>basic/AutoPilotRunPanel.qml</file>
         <file>image/map_1.png</file>
-        <file>image/brake.png</file>
-        <file>image/dippedLight.png</file>
-        <file>image/fault.png</file>
-        <file>image/garbage.png</file>
-        <file>image/highBeam.png</file>
-        <file>image/pallet.png</file>
-        <file>image/positionLamp.png</file>
-        <file>image/spout.png</file>
-        <file>image/turnsigal.png</file>
-        <file>image/water.png</file>
         <file>basic/DashBoard.qml</file>
         <file>basic/PerceptionData.qml</file>
         <file>basic/Gears.qml</file>
@@ -37,7 +25,6 @@
         <file>basic/DashBoardUser.qml</file>
         <file>basic/DashBoardMileage.qml</file>
         <file>basic/DashBoardClean.qml</file>
-        <file>basic/BarBattary.qml</file>
         <file>basic/BarMileage.qml</file>
         <file>basic/UserPageState.qml</file>
         <file>basic/UserPageBoard.qml</file>
@@ -48,12 +35,29 @@
         <file>basic/CheckCanvas.qml</file>
         <file>basic/Particles.qml</file>
         <file>subframes/CheckErrMessage.qml</file>
-        <file>image/checkButton.png</file>
         <file>image/warning.png</file>
         <file>basic/CheckErrorTableView.qml</file>
-        <file>image/4G.png</file>
-        <file>image/header_back.png</file>
         <file>image/vehicle.png</file>
+        <file>svg/button.svg</file>
+        <file>basic/UserPageDisplayBoard.qml</file>
+        <file>svg/battery.svg</file>
+        <file>svg/brake.svg</file>
+        <file>svg/positionLamp.svg</file>
+        <file>svg/lowBeam.svg</file>
+        <file>svg/highBeam.svg</file>
+        <file>svg/spout.svg</file>
+        <file>svg/setting.svg</file>
+        <file>svg/rightSignalLight.svg</file>
+        <file>svg/pallet.svg</file>
+        <file>svg/leftSignalLight.svg</file>
+        <file>svg/headerBack.svg</file>
+        <file>svg/4G.svg</file>
         <file>image/GPS.png</file>
+        <file>svg/water.svg</file>
+        <file>image/vehicle_v.png</file>
+        <file>image/space.png</file>
+        <file>svg/zoomOut.svg</file>
+        <file>svg/zoomIn.svg</file>
+        <file>svg/direction.svg</file>
     </qresource>
 </RCC>

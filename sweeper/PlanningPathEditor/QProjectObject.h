@@ -115,6 +115,7 @@ protected:
   Eigen::Vector3d Ecef2enu(const Eigen::Vector3d &, const Eigen::Vector3d &);
 
   void createPointsList();
+  void saveImuData(const InfoPacket &);
 
 signals:
 
@@ -127,6 +128,9 @@ private:
 
   QString m_strPathName;
   QString m_strProName;
+
+  QString m_strImuPath;
+  int m_nImuFileIndex;
 };
 
 class QCreateProjectDialog : public QDialog
