@@ -1,5 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 1.4
+import Sweeper.DataManager 1.0
+import Sweeper.MsgInfo 1.0
 
 Item {
 
@@ -11,12 +13,10 @@ Item {
   property var clrdeep: "#08FFFFFF"
   property var clrlight: "#08212127"
 
-  property int spaceText: 40
-  property double column0: 0.3
-  property double column1: 0.3
-  property double column2: 0.4
-
-  property var errmsgs: []
+  property int spaceText: 10
+  property double column0: 0.27
+  property double column1: 0.2
+  property double column2: 0.53
 
   Rectangle {
     id: rowheader
@@ -39,7 +39,7 @@ Item {
       verticalAlignment: Text.AlignVCenter
       horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 20
+      font.pointSize: 18
 
       text: "故障名称"
     }
@@ -55,7 +55,7 @@ Item {
       verticalAlignment: Text.AlignVCenter
       horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 20
+      font.pointSize: 18
 
       text: "故障代码"
     }
@@ -71,7 +71,7 @@ Item {
       verticalAlignment: Text.AlignVCenter
       horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 20
+      font.pointSize: 18
 
       text: "故障描述"
     }
@@ -89,44 +89,44 @@ Item {
       id: grid00
 
       height: parent.height
-      width: parent.width * column0
+      width: parent.width * column0 - spaceText
       anchors.left: parent.left
       anchors.leftMargin: spaceText
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
 
     }
     Text {
       id: grid01
 
       height: parent.height
-      width: parent.width * column1
+      width: parent.width * column1 - spaceText
       anchors.left: grid00.right
       anchors.leftMargin: spaceText
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid02
 
       height: parent.height
-      width: parent.width * column2
+      width: parent.width * column2 - spaceText
       anchors.left: grid01.right
       anchors.leftMargin: spaceText
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
   Rectangle {
@@ -148,9 +148,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid11
@@ -162,9 +162,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid12
@@ -176,9 +176,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
   Rectangle {
@@ -200,9 +200,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid21
@@ -214,9 +214,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid22
@@ -228,9 +228,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
   Rectangle {
@@ -252,9 +252,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid31
@@ -266,9 +266,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid32
@@ -280,9 +280,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
   Rectangle {
@@ -304,9 +304,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid41
@@ -316,6 +316,11 @@ Item {
       anchors.left: grid40.right
       anchors.leftMargin: spaceText
       color: "white"
+
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignLeft
+      font.family: "SimHei"
+      font.pointSize: 14
     }
     Text {
       id: grid42
@@ -327,9 +332,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
   Rectangle {
@@ -351,9 +356,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid51
@@ -365,9 +370,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
     Text {
       id: grid52
@@ -379,9 +384,9 @@ Item {
       color: "white"
 
       verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignLeft
       font.family: "SimHei"
-      font.pointSize: 18
+      font.pointSize: 14
     }
   }
 
@@ -409,18 +414,6 @@ Item {
     }
   }
 
-  function addErrMsg(msgs) {
-    errmsgs = msgs
-    spider.count = msgs.size() / 3
-    if (spider.count > 6) {
-      spider.visible = true
-    }
-    else {
-      spider.visible = false
-    }
-    showMsg(0)
-  }
-
   function showMsg(index) {
     if (index < 0 || index >= (spider.count - 6)) {
       spider.visible = false
@@ -428,37 +421,52 @@ Item {
     }
     spider.index = index
 
-    grid00.text = errmsgs[index * 3]
-    grid01.text = errmsgs[index * 3 + 1]
-    grid02.text = errmsgs[index * 3 + 2]
+    grid00.text = dataManager.infos[index].name
+    grid01.text = dataManager.infos[index].code
+    grid02.text = dataManager.infos[index].description
 
     if (spider.count - index > 1) {
-      grid10.text = errmsgs[(index + 1) * 3]
-      grid11.text = errmsgs[(index + 1) * 3 + 1]
-      grid12.text = errmsgs[(index + 1) * 3 + 2]
+      grid10.text = dataManager.infos[index + 1].name
+      grid11.text = dataManager.infos[index + 1].code
+      grid12.text = dataManager.infos[index + 1].description
     }
     if (spider.count - index > 2) {
-      grid20.text = errmsgs[(index + 2) * 3]
-      grid21.text = errmsgs[(index + 2) * 3 + 1]
-      grid22.text = errmsgs[(index + 2) * 3 + 2]
+      grid20.text = dataManager.infos[index + 2].name
+      grid21.text = dataManager.infos[index + 2].code
+      grid22.text = dataManager.infos[index + 2].description
     }
     if (spider.count - index > 3) {
-      grid30.text = errmsgs[(index + 3) * 3]
-      grid31.text = errmsgs[(index + 3) * 3 + 1]
-      grid32.text = errmsgs[(index + 3) * 3 + 2]
+      grid30.text = dataManager.infos[index + 3].name
+      grid31.text = dataManager.infos[index + 3].code
+      grid32.text = dataManager.infos[index + 3].description
     }
     if (spider.count - index > 4) {
-      grid40.text = errmsgs[(index + 4) * 3]
-      grid41.text = errmsgs[(index + 4) * 3 + 1]
-      grid42.text = errmsgs[(index + 4) * 3 + 2]
+      grid40.text = dataManager.infos[index + 4].name
+      grid41.text = dataManager.infos[index + 4].code
+      grid42.text = dataManager.infos[index + 4].description
     }
     if (spider.count - index > 5) {
-      grid50.text = errmsgs[(index + 5) * 3]
-      grid51.text = errmsgs[(index + 5) * 3 + 1]
-      grid52.text = errmsgs[(index + 5) * 3 + 2]
+      grid50.text = dataManager.infos[index + 5].name
+      grid51.text = dataManager.infos[index + 5].code
+      grid52.text = dataManager.infos[index + 5].description
     }
+  }
 
+  DataManager {
+    id: dataManager
+  }
 
+  onVisibleChanged: {
+    if (visible) {
+      spider.count = dataManager.infos.length
+      if (spider.count > 6) {
+        spider.visible = true
+      }
+      else {
+        spider.visible = false
+      }
+      showMsg(0)
+    }
   }
 
 }

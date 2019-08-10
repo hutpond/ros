@@ -1,11 +1,12 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
-import Sweeper 1.0
 import "../basic" as Basic
+import Sweeper.DataManager 1.0
 
 Item {
   id: check
+  property bool checkRet: true
   property int pointSize: 24
 
   Rectangle {
@@ -99,42 +100,35 @@ Item {
     anchors.centerIn: parent
   }
 
-  SelfChecking {
-    onStepChanged: {
-      if (step === SelfChecking.StepSysSucceed) {
-        checkBoxSys.setState(Basic.CheckStateBox.Checked)
-      }
-      else if (step === SelfChecking.StepSensorFailed) {
-        checkBoxSensor.setState(Basic.CheckStateBox.UnChecked)
-      }
-      else if (step === SelfChecking.StepEnvSucceed) {
-        checkBoxEnv.setState(Basic.CheckStateBox.UnChecked)
-      }
-    }
-  }
-
-  Timer {
-    id: timerRead
-    property int index: 0
-
-    interval: 1000; running: false; repeat: true
-    onTriggered: {
-      ++ index
-      if (index === 2) {
-        check.checked(true)
-      }
-    }
-  }
-
-  signal checked(bool flag)
-
   function startTimer() {
-    timerRead.index = 0
-    timerRead.start()
+    checkRet = true
+    checkVehicle.setState(Basic.CheckStateBox.None)
+    checkBoxSys.setState(Basic.CheckStateBox.None)
+    checkBoxSensor.setState(Basic.CheckStateBox.None)
+    checkBoxEnv.setState(Basic.CheckStateBox.None)
     canvasCheck.startTimer()
   }
   function stopTimer() {
-    timerRead.stop()
     canvasCheck.stopTimer()
+  }
+  function setCheckedResult(type, ret) {
+    if (checkRet && !ret) {
+      checkRet = ret
+    }
+    if (type === DataManager.CheckVehicle) {
+      checkVehicle.setState(ret ? Basic.CheckStateBox.Checked : Basic.CheckStateBox.UnChecked)
+    }
+    else if (type === DataManager.CheckSystem){
+      checkBoxSys.setState(ret ? Basic.CheckStateBox.Checked : Basic.CheckStateBox.UnChecked)
+    }
+    else if (type === DataManager.CheckSensor){
+      checkBoxSensor.setState(ret ? Basic.CheckStateBox.Checked : Basic.CheckStateBox.UnChecked)
+    }
+    else if (type === DataManager.CheckAlgorithm){
+      checkBoxEnv.setState(ret ? Basic.CheckStateBox.Checked : Basic.CheckStateBox.UnChecked)
+    }
+  }
+  function setCheckedStep(step) {
+    canvasCheck.setPercent(step)
   }
 }

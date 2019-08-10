@@ -11,7 +11,7 @@ set(CMAKE_C_COMPILER gcc-7)
 set(CMAKE_CXX_COMPILER g++-7)
 
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
-find_package(Qt5 COMPONENTS Core Gui Qml Quick WebView WebEngine REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Qml Quick REQUIRED)
 
 # ros
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
@@ -19,13 +19,13 @@ catkin_package()
 include_directories( ${catkin_INCLUDE_DIRS} )
 
 set(HEADERS
-  src/ReadDataRos.h
-  src/QSelfChecking.h
+  src/QDataManager.h
+  src/dbAdsApi4HMI.h
   )
 set(SOURCES
   src/main.cpp
-  src/ReadDataRos.cpp
-  src/QSelfChecking.cpp
+  src/QDataManager.cpp
+  src/dbAdsApi4HMI.cpp
   )
 set(RESOURCES
   src/sweeper_hmi.qrc
@@ -36,8 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick Qt5::WebView
-  Qt5::WebEngine)
+target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}

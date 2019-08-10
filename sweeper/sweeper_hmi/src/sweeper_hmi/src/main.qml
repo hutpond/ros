@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import "subframes" as SubFrames
-import Sweeper 1.0
+import Sweeper.DataManager 1.0
 
 Window {
   id: root
@@ -37,14 +37,13 @@ Window {
     anchors.fill: parent
     visible: false
 
-    onChecked: {
-      check.stopTimer()
-      check.visible = false
-      if (!flag) {
-        checkErrMsg.visible = true
+    onVisibleChanged: {
+      if (visible) {
+        dataManager.startCheck()
+        check.startTimer()
       }
       else {
-        userPage.visible = true
+        check.stopTimer()
       }
     }
   }
@@ -93,8 +92,13 @@ Window {
     visible: false
 
     onAuto: {
+      dataManager.startAuto()
     }
-
+    onStopAuto: {
+      dataManager.stopAuto()
+      userPage.visible = true
+      autoPilot.visible = false
+    }
     onManul: {
       userPage.visible = true
       autoPilot.visible = false
@@ -108,24 +112,29 @@ Window {
       onTriggered: {
         start.visible = false
         check.visible = true
-        check.startTimer()
       }
     }
   }
 
   // check function
-  SelfChecking {
-    Timer {
-      id: timerShowUserPage
-      interval: 800; running: false; repeat: false
-      onTriggered: {
-        check.visible = false
+  DataManager {
+    id: dataManager
+
+    onCheckEnd: {
+      check.setCheckedResult(type, ret)
+    }
+
+    onStepChanged: {
+      check.setCheckedStep(step)
+    }
+
+    onStopCheck: {
+      check.visible = false
+      if (check.checkRet) {
         userPage.visible = true
       }
-    }
-    onStepChanged: {
-      if (step === SelfChecking.StepEnvSucceed) {
-//        timerShowUserPage.start()
+      else {
+        checkErrMsg.visible = true
       }
     }
   }

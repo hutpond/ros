@@ -23,9 +23,6 @@
         <file>basic/Camera.qml</file>
         <file>basic/VehicleState.qml</file>
         <file>basic/DashBoardUser.qml</file>
-        <file>basic/DashBoardMileage.qml</file>
-        <file>basic/DashBoardClean.qml</file>
-        <file>basic/BarMileage.qml</file>
         <file>basic/UserPageState.qml</file>
         <file>basic/UserPageBoard.qml</file>
         <file>image/check.png</file>

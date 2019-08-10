@@ -6,6 +6,7 @@ Item {
   id: itemAutoPilot
   property double space: 10
   signal auto()
+  signal stopAuto()
   signal manul()
 
   Rectangle {
@@ -57,7 +58,7 @@ Item {
       itemAutoPilot.manul()
     }
     onStopAuto: {
-      itemAutoPilot.manul()
+      itemAutoPilot.stopAuto()
     }
 
     onVisibleChanged: {
@@ -106,12 +107,18 @@ Item {
         timerStartAuto.stop()
         waitStartAuto.visible = false
         itemAutoPilot.auto()
-        autoPilotPanel.changeToAutoRun()
+        autoPilotPanel.changeToAutoRun(true)
       }
       else {
         waitStartAuto.setText(index)
         -- index
       }
+    }
+  }
+
+  onVisibleChanged: {
+    if (visible) {
+      autoPilotPanel.changeToAutoRun(false)
     }
   }
 }

@@ -155,23 +155,6 @@ Item {
 
       canvas.index = (++ canvas.index) % canvas.indexMax
       canvas.requestPaint()
-
-      ++ percent.value;
-      if ( (percent.value % 10) == 0) {
-        var val = percent.value / 10
-        var text = val + " %"
-        if (val < 10) {
-          text = "  " + text;
-          percent.text = text
-        }
-        else if (val < 100) {
-          text = " " + text
-          percent.text = text
-        }
-        else {
-          //stop()
-        }
-      }
     }
   }
 
@@ -181,5 +164,16 @@ Item {
   }
   function stopTimer() {
     timer.stop()
+  }
+  function setPercent(step) {
+    percent.value = step;
+    var text = step + " %"
+    if (step < 10) {
+      text = "  " + text;
+    }
+    else if (step < 100) {
+      text = " " + text
+    }
+    percent.text = text
   }
 }

@@ -59,7 +59,7 @@ Item {
   }
 
   Basic.CheckErrorTableView {
-    width: parent.width * 0.7
+    width: parent.width * 0.9
     anchors.horizontalCenter: parent.horizontalCenter
 
     anchors.top: imageLog.bottom

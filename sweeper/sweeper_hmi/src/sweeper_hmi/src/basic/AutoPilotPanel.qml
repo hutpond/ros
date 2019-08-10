@@ -64,7 +64,6 @@ Item {
 
   Item {
     id: buttonManul
-    property bool manulRun: true
 
     anchors.left: buttonAuto.left
     anchors.right: buttonAuto.right
@@ -77,7 +76,7 @@ Item {
       source: "qrc:/svg/button.svg"
     }
     Text {
-      text: buttonManul.manulRun ? qsTr("人工驾驶") : qsTr("停止")
+      text: qsTr("人工驾驶")
       font.family: "SimHei"
       font.pointSize: 26
       anchors.centerIn: parent
@@ -93,26 +92,52 @@ Item {
       onExited: {
       }
       onClicked: {
-        if (buttonManul.manulRun)
-          autoPilotPanel.manul()
-        else
-        {
-          autoPilotPanel.stopAuto()
-        }
+        autoPilotPanel.manul()
+      }
+    }
+  }
+
+
+  Item {
+    id: buttonStopAuto
+
+    anchors.fill: buttonManul
+    visible: false
+
+    Image {
+      anchors.fill: parent
+      source: "qrc:/svg/button.svg"
+    }
+    Text {
+      text: qsTr("停止")
+      font.family: "SimHei"
+      font.pointSize: 26
+      anchors.centerIn: parent
+      color: "white"
+    }
+
+    MouseArea {
+      anchors.fill: parent
+      hoverEnabled: true
+
+      onEntered: {
+      }
+      onExited: {
+      }
+      onClicked: {
+        autoPilotPanel.stopAuto()
       }
     }
   }
 
   function setButtonEnable(enabled) {
-    if (enabled) {
-      buttonAuto.visible =true
-      buttonManul.manulRun = true
-    }
     buttonAuto.enabled = enabled
+    buttonManul.enabled = enabled
   }
 
-  function changeToAutoRun() {
-    buttonAuto.visible =false
-    buttonManul.manulRun = false
+  function changeToAutoRun(flag) {
+    buttonAuto.visible = !flag
+    buttonManul.visible = !flag
+    buttonStopAuto.visible = flag
   }
 }
