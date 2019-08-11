@@ -64,14 +64,16 @@ void QDataDisplayDialog::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("DECISION: %1").arg(planningData.decision));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("RADAR_DECISION: %1").arg(planningData.radar_decision));
+  item->setText(0, QString("RADAR28_DECISION: %1").arg(planningData.radar28f_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("RADAR73_DECISION: %1").arg(planningData.radar73f_decision));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("ULTRASONIC_DECISION: %1").arg(planningData.ultrasonic_decision));
 
   // target points
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "TARGET_POINT");
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 6; ++i) {
     item = new QTreeWidgetItem(itemRoot);
     item->setText(0, QString("Index: %1").arg(i));
 
@@ -248,38 +250,72 @@ void QDataDisplayDialog::setPlanningData(
     item->setText(0, QString("LEFT_RIGHT_DISTANCE_S: %1").arg(planningData.left_right_target_distance_s));
   }*/
 
-  // radar targets
+  // radar 28 targets
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
-  SIZE = static_cast<int>(planningData.radar_results.object_count);
-  itemRoot->setText(0, QString("RADAR_TRARGETS [%1]").arg(SIZE));
+  SIZE = static_cast<int>(planningData.radar28f_results.object_count);
+  itemRoot->setText(0, QString("RADAR28_TRARGETS [%1]").arg(SIZE));
   for (int i = 0; i < SIZE; ++i) {
     item = new QTreeWidgetItem(itemRoot);
     item->setText(0, QString("Index: %1").arg(i));
 
     QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("ID: %1").arg(planningData.radar_results.radar_objects[i].id));
+    itemChild->setText(0, QString("ID: %1").arg(planningData.radar28f_results.radar_objects[i].id));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("ANGLE: %1").arg(planningData.radar_results.radar_objects[i].angle));
+    itemChild->setText(0, QString("ANGLE: %1").arg(planningData.radar28f_results.radar_objects[i].angle));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("DEVID: %1").arg(planningData.radar_results.radar_objects[i].devid));
+    itemChild->setText(0, QString("DEVID: %1").arg(planningData.radar28f_results.radar_objects[i].devid));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("L: %1").arg(planningData.radar_results.radar_objects[i].l));
+    itemChild->setText(0, QString("L: %1").arg(planningData.radar28f_results.radar_objects[i].l));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("W: %1").arg(planningData.radar_results.radar_objects[i].w));
+    itemChild->setText(0, QString("W: %1").arg(planningData.radar28f_results.radar_objects[i].w));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("RANGE: %1").arg(planningData.radar_results.radar_objects[i].range));
+    itemChild->setText(0, QString("RANGE: %1").arg(planningData.radar28f_results.radar_objects[i].range));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("RANGE_LAT: %1").arg(planningData.radar_results.radar_objects[i].range_lat));
+    itemChild->setText(0, QString("RANGE_LAT: %1").arg(planningData.radar28f_results.radar_objects[i].range_lat));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("RANGE_LON: %1").arg(planningData.radar_results.radar_objects[i].range_lon));
+    itemChild->setText(0, QString("RANGE_LON: %1").arg(planningData.radar28f_results.radar_objects[i].range_lon));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("V_LAT: %1").arg(planningData.radar_results.radar_objects[i].v_lat));
+    itemChild->setText(0, QString("V_LAT: %1").arg(planningData.radar28f_results.radar_objects[i].v_lat));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("V_LON: %1").arg(planningData.radar_results.radar_objects[i].v_lon));
+    itemChild->setText(0, QString("V_LON: %1").arg(planningData.radar28f_results.radar_objects[i].v_lon));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("STATUS: %1").arg(planningData.radar_results.radar_objects[i].status));
+    itemChild->setText(0, QString("STATUS: %1").arg(planningData.radar28f_results.radar_objects[i].status));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("VEL: %1").arg(planningData.radar_results.radar_objects[i].vel));
+    itemChild->setText(0, QString("VEL: %1").arg(planningData.radar28f_results.radar_objects[i].vel));
+  }
+
+  // radar 73 targets
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  SIZE = static_cast<int>(planningData.radar73f_results.object_count);
+  itemRoot->setText(0, QString("RADAR73_TRARGETS [%1]").arg(SIZE));
+  for (int i = 0; i < SIZE; ++i) {
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, QString("Index: %1").arg(i));
+
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("ID: %1").arg(planningData.radar73f_results.radar_objects[i].id));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("ANGLE: %1").arg(planningData.radar73f_results.radar_objects[i].angle));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("DEVID: %1").arg(planningData.radar73f_results.radar_objects[i].devid));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("L: %1").arg(planningData.radar73f_results.radar_objects[i].l));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("W: %1").arg(planningData.radar73f_results.radar_objects[i].w));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("RANGE: %1").arg(planningData.radar73f_results.radar_objects[i].range));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("RANGE_LAT: %1").arg(planningData.radar73f_results.radar_objects[i].range_lat));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("RANGE_LON: %1").arg(planningData.radar73f_results.radar_objects[i].range_lon));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("V_LAT: %1").arg(planningData.radar73f_results.radar_objects[i].v_lat));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("V_LON: %1").arg(planningData.radar73f_results.radar_objects[i].v_lon));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("STATUS: %1").arg(planningData.radar73f_results.radar_objects[i].status));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("VEL: %1").arg(planningData.radar73f_results.radar_objects[i].vel));
   }
 
   // ultrasonic

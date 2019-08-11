@@ -1,4 +1,5 @@
 #include <sstream>
+#include <fstream>
 #include <thread>
 #include <boost/filesystem.hpp>
 #include "ros/ros.h"
@@ -38,7 +39,7 @@ void send_planning_string(const ros::Publisher &data_pub)
       root["TYPE"] = "PUSH_UPDATE";
 
       std::string gps_name = path + std::to_string(i) + "_gps.txt";
-      std::ifstream in_gps(gps_name);
+      std::ifstream in_gps(gps_name.c_str());
       std::string gps_string((std::istreambuf_iterator<char>(in_gps)),
                           std::istreambuf_iterator<char>());
       in_gps.close();
@@ -49,7 +50,7 @@ void send_planning_string(const ros::Publisher &data_pub)
       data["GPS"] = gps;
 
       std::string sense_name = path + std::to_string(i) + "_sense.txt";
-      std::ifstream in_sense(sense_name);
+      std::ifstream in_sense(sense_name.c_str());
       std::string sense_string((std::istreambuf_iterator<char>(in_sense)),
                           std::istreambuf_iterator<char>());
       in_sense.close();

@@ -34,6 +34,7 @@ add_message_files (
   ReferencePoint.msg
   TargetPoint.msg 
   Radar28fTargetColl.msg
+  Radar73fTargetColl.msg
   RadarTarget.msg
   TrackTargetColl.msg
   TrackTarget.msg

@@ -35,7 +35,7 @@ void QBaseWidget::replay(const std::string &subdir)
   m_nIntervalMillSecs = 300;
   m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
-  m_listPlanningFiles = this->fileList(path);
+  this->fileList(path, m_listPlanningFiles);
 
   m_itFile = m_listPlanningFiles.begin();
   if (m_nTimerId != 0) {
@@ -73,18 +73,18 @@ std::list<std::string> QBaseWidget::pathList(const std::string &subdir)
 
  * @return: 数据文件名字符串链表
 ********************************************************/
-std::list<std::string> QBaseWidget::fileList(const std::string &path)
+void QBaseWidget::fileList(const std::string &path, std::vector<std::string> &files)
 {
+  files.clear();
   namespace fs = boost::filesystem;
   fs::path fs_path = fs::path(path);
-  std::list<std::string> files;
   fs::directory_iterator end_iter;
   for (fs::directory_iterator it(path); it != end_iter; ++it) {
     std::stringstream ss;
     ss << *it;
     files.push_back(ss.str());
   }
-  return files;
+  std::sort(files.begin(), files.end());
 }
 
 /*******************************************************

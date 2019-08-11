@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QTimerEvent>
 #include <QTextBrowser>
+#include <QStatusBar>
 #include "boost/filesystem.hpp"
 #include "QPlanningWidget.h"
 #include "QPlanningShowWidget.h"
@@ -102,6 +103,10 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
     this->readFromJsonFile(*m_itFile, data);
     m_pWdgShow->setPlanningData(data);
     m_pWdgParam->setPlanningData(data);
+    std::string name = *m_itFile;
+    std::size_t index = name.find_last_of('/');
+    name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
     QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
     m_pWdgParam->setFrameOffset(1);
     ++m_itFile;
@@ -195,6 +200,10 @@ void QPlanningWidget::onSetFrameIndexReplay(int index)
     this->readFromJsonFile(*m_itFile, data);
     m_pWdgShow->setPlanningData(data);
     m_pWdgParam->setPlanningData(data);
+    std::string name = *m_itFile;
+    std::size_t index = name.find_last_of('/');
+    name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
     QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   }
 }
@@ -215,7 +224,7 @@ void QPlanningWidget::onDisplayData()
   rect.moveCenter(pt);
   dlg.setGeometry(rect);
 
-  std::list<std::string>::iterator it = m_itFile;
+  std::vector<std::string>::iterator it = m_itFile;
   while (it == m_listPlanningFiles.end()) --it;
 
   debug_tool::PlanningData4Debug planningData;
@@ -236,7 +245,7 @@ void QPlanningWidget::replayJson(const QString &path)
   m_nIntervalMillSecs = 300;
   m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
-  m_listPlanningFiles = this->fileList(path.toStdString());
+  this->fileList(path.toStdString(), m_listPlanningFiles);
 
   m_itFile = m_listPlanningFiles.begin();
   if (m_nTimerId != 0) {
@@ -304,14 +313,14 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
           );
   }
 
-  // radar target
-  const debug_tool::Radar28fTargetColl &radarResult = planningData.radar_results;
-  Json::Value radarTrargets, radarTrarget;
-  int sizeTarget = qMin<int>(100, radarResult.object_count);
-  radarTrargets["OBJECT_COUNT"] = radarResult.object_count;
-  for (int i = 0; i < sizeTarget; ++i) {
+  // radar 28 target
+  const debug_tool::Radar28fTargetColl &radar28Result = planningData.radar28f_results;
+  Json::Value radar28Trargets, radar28Trarget;
+  int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
+  radar28Trargets["OBJECT_COUNT"] = radar28Result.object_count;
+  for (int i = 0; i < sizeTarget28; ++i) {
     Json::Value item;
-    const debug_tool::RadarTarget &target = radarResult.radar_objects[i];
+    const debug_tool::RadarTarget &target = radar28Result.radar_objects[i];
     item["ID"] = target.id;
     item["RANGE"] = target.range;
     item["RANGE_LAT"] = target.range_lat;
@@ -325,14 +334,39 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
     item["L"] = target.l;
     item["DEVID"] = target.devid;
 
-    radarTrarget.append(item);
+    radar28Trarget.append(item);
   }
-  radarTrargets["RADAR_OBJECTS"] = radarTrarget;
+  radar28Trargets["RADAR28_OBJECTS"] = radar28Trarget;
+
+  // radar 73 target
+  const debug_tool::Radar73fTargetColl &radar73Result = planningData.radar73f_results;
+  Json::Value radar73Trargets, radar73Trarget;
+  int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
+  radar73Trargets["OBJECT_COUNT"] = radar73Result.object_count;
+  for (int i = 0; i < sizeTarget73; ++i) {
+    Json::Value item;
+    const debug_tool::RadarTarget &target = radar73Result.radar_objects[i];
+    item["ID"] = target.id;
+    item["RANGE"] = target.range;
+    item["RANGE_LAT"] = target.range_lat;
+    item["RANGE_LON"] = target.range_lon;
+    item["ANGLE"] = target.angle;
+    item["VEL"] = target.vel;
+    item["V_LAT"] = target.v_lat;
+    item["V_LON"] = target.v_lon;
+    item["STATUS"] = target.status;
+    item["W"] = target.w;
+    item["L"] = target.l;
+    item["DEVID"] = target.devid;
+
+    radar73Trarget.append(item);
+  }
+  radar73Trargets["RADAR73_OBJECTS"] = radar73Trarget;
 
   // UltraSonic
   const debug_tool::UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
   Json::Value ultrasonicTrargets, ultrasonicTrarget;
-  sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
+  int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
   ultrasonicTrargets["OBJECT_COUNT"] = static_cast<int>(ultrasonicResult.object_count);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
@@ -379,9 +413,11 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   Json::Value decisionState;
   decisionState["DECISION"] = static_cast<int>(planningData.decision);
   decisionState["ULTRASONIC_DECISION"] = static_cast<int>(planningData.ultrasonic_decision);
-  decisionState["RADAR_DECISION"] = static_cast<int>(planningData.radar_decision);
+  decisionState["RADAR28_DECISION"] = static_cast<int>(planningData.radar28f_decision);
+  decisionState["RADAR73_DECISION"] = static_cast<int>(planningData.radar73f_decision);
+
   Json::Value decision_targets;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 6; ++i) {
     Json::Value item;
     item["sensor_type"] = static_cast<int>(planningData.decision_targets[i].sensor_type);
     item["x"] = planningData.decision_targets[i].x;
@@ -452,7 +488,8 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
 
   Json::Value data;
   data["CAR_STATUS"] = carStatus;
-  data["RADAR_TRARGETS"] = radarTrargets;
+  data["RADAR28_TRARGETS"] = radar28Trargets;
+  data["RADAR73_TRARGETS"] = radar73Trargets;
   data["ULTRASONIC_TRARGETS"] = ultrasonicTrargets;
   data["TRACK_TRARGETS"] = trackTrargets;
   data["DECISION_STATE"] = decisionState;
@@ -495,7 +532,8 @@ void QPlanningWidget::parseDataFromJson(
 {
   //memset(&planningData, 0, sizeof(planningData));
   Json::Value carStatus = data["CAR_STATUS"];
-  Json::Value radarTrargets = data["RADAR_TRARGETS"];
+  Json::Value radar28Trargets = data["RADAR28_TRARGETS"];
+  Json::Value radar73Trargets = data["RADAR73_TRARGETS"];
   Json::Value ultrasonicTrargets = data["ULTRASONIC_TRARGETS"];
   Json::Value trackTrargets = data["TRACK_TRARGETS"];
   Json::Value decisionState = data["DECISION_STATE"];
@@ -529,14 +567,36 @@ void QPlanningWidget::parseDataFromJson(
           );
   }
 
-  // radar target
-  debug_tool::Radar28fTargetColl &radarResult = planningData.radar_results;
-  radarResult.object_count = radarTrargets["OBJECT_COUNT"].asInt();
-  Json::Value radarTrarget = radarTrargets["RADAR_OBJECTS"];
-  int sizeTarget = qMin<int>(100, radarResult.object_count);
-  for (int i = 0; i < sizeTarget; ++i) {
-    Json::Value item = radarTrarget[i];
-    debug_tool::RadarTarget &target = radarResult.radar_objects[i];
+  // radar 28 target
+  debug_tool::Radar28fTargetColl &radar28Result = planningData.radar28f_results;
+  radar28Result.object_count = radar28Trargets["OBJECT_COUNT"].asInt();
+  Json::Value radar28Trarget = radar28Trargets["RADAR28_OBJECTS"];
+  int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
+  for (int i = 0; i < sizeTarget28; ++i) {
+    Json::Value item = radar28Trarget[i];
+    debug_tool::RadarTarget &target = radar28Result.radar_objects[i];
+    target.id = item["ID"].asInt();
+    target.range = item["RANGE"].asDouble();
+    target.range_lat = item["RANGE_LAT"].asDouble();
+    target.range_lon = item["RANGE_LON"].asDouble();
+    target.angle = item["ANGLE"].asDouble();
+    target.vel = item["VEL"].asDouble();
+    target.v_lat = item["V_LAT"].asDouble();
+    target.v_lon = item["V_LON"].asDouble();
+    target.status = item["STATUS"].asInt();
+    target.w = item["W"].asDouble();
+    target.l = item["L"].asDouble();
+    target.devid = item["DEVID"].asInt();
+  }
+
+  // radar 73 target
+  debug_tool::Radar73fTargetColl &radar73Result = planningData.radar73f_results;
+  radar73Result.object_count = radar73Trargets["OBJECT_COUNT"].asInt();
+  Json::Value radar73Trarget = radar73Trargets["RADAR73_OBJECTS"];
+  int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
+  for (int i = 0; i < sizeTarget73; ++i) {
+    Json::Value item = radar73Trarget[i];
+    debug_tool::RadarTarget &target = radar73Result.radar_objects[i];
     target.id = item["ID"].asInt();
     target.range = item["RANGE"].asDouble();
     target.range_lat = item["RANGE_LAT"].asDouble();
@@ -556,7 +616,7 @@ void QPlanningWidget::parseDataFromJson(
   ultrasonicResult.object_count = static_cast<int8_t>(
         ultrasonicTrargets["OBJECT_COUNT"].asInt());
   Json::Value ultrasonicTrarget = ultrasonicTrargets["US_OBJECTS"];
-  sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
+  int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = ultrasonicTrarget[i];
     debug_tool::UltraSonicTarget &target = ultrasonicResult.us_objects[i];
@@ -592,12 +652,12 @@ void QPlanningWidget::parseDataFromJson(
     target.P4_Y = item["P4_Y"].asFloat();
     target.STATUS = item["STATUS"].asFloat();
   }
-
   // decision
   planningData.decision = static_cast<int8_t>(decisionState["DECISION"].asInt());
   planningData.ultrasonic_decision = static_cast<int8_t>(
         decisionState["ULTRASONIC_DECISION"].asInt());
-  planningData.radar_decision = static_cast<int8_t>(decisionState["RADAR_DECISION"].asInt());
+  planningData.radar28f_decision = static_cast<int8_t>(decisionState["RADAR28_DECISION"].asInt());
+  planningData.radar73f_decision = static_cast<int8_t>(decisionState["RADAR73_DECISION"].asInt());
   const int SIZE_DECISION = static_cast<int>(decisionState["DECISION_TARGETS"].size());
   for (int i = 0; i < SIZE_DECISION; ++i) {
     Json::Value item = decisionState["DECISION_TARGETS"][i];

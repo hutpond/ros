@@ -7,7 +7,7 @@
 ********************************************************/
 #include "QEditorMainWindow.h"
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QScreen>
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +15,8 @@ int main(int argc, char *argv[])
 
   QEditorMainWindow w;
 #ifdef TEST
-  QRect rect = QApplication::desktop()->screenGeometry();
+  QList<QScreen *> screens = QGuiApplication::screens();
+  QRect rect = screens.at(0)->availableGeometry();
   QPoint pt = rect.center();
   rect.setSize(QSize(1024, 768));
   rect.moveCenter(pt);

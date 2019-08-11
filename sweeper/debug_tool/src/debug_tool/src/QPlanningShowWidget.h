@@ -19,7 +19,8 @@ class QPlanningShowWidget : public QBaseShowWidget
   enum {
     SENSOR_UNKNOW = 0,
     SENSOR_ULTRASONIC,
-    SENSOR_RADAR,
+    SENSOR_RADAR_28F,
+    SENSER_RADAR_73F,
     SENSOR_TRACK_TARGET,
     SENSOR_LIDAR,
     SENSOR_CAMERA
@@ -48,7 +49,8 @@ protected:
   void drawPlanningPath(QPainter &);
   void drawObstacleObject(QPainter &);
   void drawUltrasonicTarget(QPainter &);
-  void drawRadarTarget(QPainter &);
+  void drawRadar28Target(QPainter &);
+  void drawRadar73Target(QPainter &);
   void drawTrackTarget(QPainter &);
   void drawDecisionTargets(QPainter &);
   void drawDecisionTargetsSL(const debug_tool::TargetPoint_<std::allocator<void>> &, QPainter &);

@@ -116,11 +116,13 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::PlanningData4Debug 
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
   int nIndexUs = static_cast<int>(data.ultrasonic_decision);
-  int nIndexRadar = static_cast<int>(data.radar_decision);
+  int nIndexRadar = static_cast<int>(data.radar28f_decision);
+  int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
   m_pLblDecisionValue->setFont(G_TEXT_FONT);
-  strText = QString("%1 [us: %2 radar: %3]").arg(this->getDecisionText(nIndex)).
+  strText = QString("%1 [us: %2 r28: %3 r73: %4]").arg(this->getDecisionText(nIndex)).
       arg(this->getDecisionText(nIndexUs)).
-      arg(this->getDecisionText(nIndexRadar));
+      arg(this->getDecisionText(nIndexRadar)).
+      arg(this->getDecisionText(nIndexRadar73));
   m_pLblDecisionValue->setText(strText);
   if (nIndex >= 0 && nIndex < 4) {
     m_pLblDecisionValue->setStyleSheet("background-color: rgb(0, 0, 0, 0);");

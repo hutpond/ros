@@ -1,4 +1,5 @@
 #include <sstream>
+#include <fstream>
 #include <thread>
 #include <boost/filesystem.hpp>
 #include "ros/ros.h"
@@ -37,7 +38,8 @@ void send_planning_string(const ros::Publisher &data_pub)
       ss << it;
       std::string name = ss.str();
 
-      std::ifstream in(name.substr(1, name.length() - 2));
+      name = name.substr(1, name.length() - 2);
+      std::ifstream in(name.c_str());
       std::string planning_string((std::istreambuf_iterator<char>(in)),
                           std::istreambuf_iterator<char>());
       in.close();

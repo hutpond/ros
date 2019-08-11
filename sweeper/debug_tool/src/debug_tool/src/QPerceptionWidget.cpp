@@ -479,7 +479,7 @@ void QPerceptionWidget::onSetFrameIndexReplay(int index)
       ++m_itFile;
     }
   }
-  std::list<std::string>::iterator it = m_itFile;
+  std::vector<std::string>::iterator it = m_itFile;
   if (it == m_listPlanningFiles.end()) {
     --it;
   }
@@ -508,7 +508,7 @@ void QPerceptionWidget::onDisplayData()
     m_pDlgDataDisplay->setWindowTitle(QStringLiteral("Perception Data"));
   }
 
-  std::list<std::string>::iterator it = m_itFile;
+  std::vector<std::string>::iterator it = m_itFile;
   if (it == m_listPlanningFiles.end()) --it;
   //std::string text = this->createDispayText(*it);
   //QString strQtText = QString::fromUtf8(text.data());

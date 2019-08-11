@@ -10,7 +10,8 @@ float64 vehicle_width
 float64 vehicle_length
 float64 head_distance
 
-Radar28fTargetColl radar_results
+Radar28fTargetColl radar28f_results
+Radar73fTargetColl radar73f_results
 UltraSonicTargetColl ultrasonic_results
 TrackTargetColl fusion_results
 
@@ -43,7 +44,8 @@ ReferencePoint[100] reference_points
 
 int8 decision
 int8 ultrasonic_decision
-int8 radar_decision
-TargetPoint[5] decision_targets
+int8 radar28f_decision
+int8 radar73f_decision
+TargetPoint[6] decision_targets
 
 string debug_info

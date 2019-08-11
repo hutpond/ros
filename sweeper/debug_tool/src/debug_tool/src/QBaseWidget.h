@@ -34,7 +34,7 @@ public:
 protected:
   void replay(const std::string &);
   std::list<std::string> pathList(const std::string &);
-  std::list<std::string> fileList(const std::string &);
+  void fileList(const std::string &, std::vector<std::string> &);
 
 protected slots:
   void setReplayInterval(int);
@@ -46,8 +46,8 @@ protected:
   boost::filesystem::path m_fspath;
   boost::atomic_int m_nIntervalMillSecs; // replay interval mill seconds
   boost::atomic_bool m_bFlagPauseReplay; // replay pause state;
-  std::list<std::string> m_listPlanningFiles;
-  std::list<std::string>::iterator m_itFile;  // 文件名链表迭代器
+  std::vector<std::string> m_listPlanningFiles;
+  std::vector<std::string>::iterator m_itFile;  // 文件名链表迭代器
   int m_nTimerId;         // replay定时器id
 
   QDataDisplayDialog *m_pDlgDataDisplay;

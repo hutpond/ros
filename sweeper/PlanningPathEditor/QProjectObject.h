@@ -46,7 +46,7 @@ struct Point
     return *this;
   }
   bool equal(const Point &point) {
-    constexpr float DIFF = 0.01;
+    constexpr double DIFF = 0.01;
     return ( (qAbs<double>(this->x - point.x) < DIFF) &&
              (qAbs<double>(this->y - point.y) < DIFF) &&
              (qAbs<double>(this->z - point.z) < DIFF) );

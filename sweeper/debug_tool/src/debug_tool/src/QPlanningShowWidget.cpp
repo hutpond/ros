@@ -770,11 +770,11 @@ void QPlanningShowWidget::drawUltrasonicTarget(QPainter &painter)
 
  * @return
 ********************************************************/
-void QPlanningShowWidget::drawRadarTarget(QPainter &painter)
+void QPlanningShowWidget::drawRadar28Target(QPainter &painter)
 {
   painter.save();
 
-  const debug_tool::Radar28fTargetColl &radar = m_planningData.radar_results;
+  const debug_tool::Radar28fTargetColl &radar = m_planningData.radar28f_results;
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
@@ -821,7 +821,67 @@ void QPlanningShowWidget::drawRadarTarget(QPainter &painter)
     painter.drawRect(rect);
   }
 
-    painter.restore();
+  painter.restore();
+}
+
+/*******************************************************
+ * @brief 绘制雷达障碍物，路边沿以内
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawRadar73Target(QPainter &painter)
+{
+  painter.save();
+
+  const debug_tool::Radar73fTargetColl &radar = m_planningData.radar73f_results;
+
+  const double VEH_W = m_planningData.vehicle_width;
+  const double VEH_L = m_planningData.vehicle_length;
+
+  const double STOP_DIS = 0.5;
+  const double PASS_DIS = 1.1;
+  const int SIZE = static_cast<int>(radar.object_count);
+  for (int i = 0; i < SIZE; ++i) {
+    const int ID = static_cast<int>(radar.radar_objects[i].devid);
+    const double DIS_X = radar.radar_objects[i].range_lat;
+    const double DIS_Y = radar.radar_objects[i].range_lon;
+    if (ID < 10 || ID > 13) continue;
+
+    QPointF ptf;
+    switch (ID) {
+      case 10:
+        ptf = QPointF(VEH_HEAD - 0.7 - DIS_X, VEH_W / 2 + DIS_Y);
+        break;
+      case 11:
+        ptf = QPointF(VEH_HEAD - 0.7 - DIS_X, -VEH_W / 2 - DIS_Y);
+        break;
+      case 12:
+        ptf = QPointF(-VEH_L + VEH_HEAD + 0.7 - DIS_X, VEH_W / 2 - DIS_Y);
+        break;
+      case 13:
+        ptf = QPointF(-VEH_L + VEH_HEAD + 0.7 - DIS_X, VEH_W / 2 + DIS_Y);
+        break;
+    }
+
+    if ( ptf.x() < (-VEH_L + VEH_HEAD) || ptf.x() > VEH_HEAD + PASS_DIS ||
+         ptf.y() < (-VEH_W / 2 - PASS_DIS)  || ptf.y() > (VEH_W / 2 + PASS_DIS) ) {
+      continue;
+    }
+
+    if ( ptf.x() >= (-VEH_L + VEH_HEAD) && ptf.x() <= VEH_HEAD + STOP_DIS &&
+         ptf.y() >= (-VEH_W / 2 - STOP_DIS) && ptf.y() <= (VEH_W / 2 + STOP_DIS) ) {
+      painter.setPen(Qt::magenta);
+    }
+    else {
+      painter.setPen(Qt::blue);
+    }
+    QRect rect(0, 0, 12, 12);
+    rect.moveCenter(m_transform.map(ptf).toPoint());
+    painter.drawRect(rect);
+  }
+
+  painter.restore();
 }
 
 /*******************************************************
@@ -897,7 +957,7 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
 void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
 {
   painter.save();
-  for (int i = 0; i < 5; ++ i) {
+  for (int i = 0; i < 6; ++ i) {
     debug_tool::TargetPoint_<std::allocator<void>> &targets =
         m_planningData.decision_targets[i];
 
@@ -919,7 +979,8 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
           painter.drawLine(line2);
         }
         break;
-      case SENSOR_RADAR:
+      case SENSOR_RADAR_28F:
+      case SENSER_RADAR_73F:
         {
           QPointF ptf = QPointF(targets.x, targets.y);
           ptf = m_transform.map(ptf);
