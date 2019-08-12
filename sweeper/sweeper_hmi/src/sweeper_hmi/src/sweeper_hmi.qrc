@@ -56,5 +56,6 @@
         <file>svg/zoomOut.svg</file>
         <file>svg/zoomIn.svg</file>
         <file>svg/direction.svg</file>
+        <file>fault_code.xls</file>
     </qresource>
 </RCC>

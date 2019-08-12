@@ -4,8 +4,10 @@
 #include <QObject>
 #include <QVector>
 #include <QQmlListProperty>
+#include "dbAdsApi4HMI.h"
 
 class QTimer;
+class CHostApi4HMI;
 
 class QMsgInfo : public QObject
 {
@@ -74,9 +76,12 @@ public slots:
 
 private:
   int m_nStep;
+  dbAds::ISelfCheck::e_type m_nType;
+  dbAds::ISelfCheck::e_result m_nResult;
   static QVector<QMsgInfo *> m_infos;
 
   QTimer *m_pTimer;
+  CHostApi4HMI *m_pApi4Hmi;
 
   static void appendInfo(QQmlListProperty<QMsgInfo> *list, QMsgInfo *info);
   static void clearInfos(QQmlListProperty<QMsgInfo> *list);

@@ -2,6 +2,7 @@
 #include <QRandomGenerator>
 #include <QDebug>
 #include "QDataManager.h"
+#include "CHostApi4HMI.h"
 
 QMsgInfo::QMsgInfo(QObject *parent)
   : QObject(parent) {
@@ -48,6 +49,7 @@ QVector<QMsgInfo *> QDataManager::m_infos;
 QDataManager::QDataManager(QObject *parent)
   : QObject(parent)
 {
+  m_pApi4Hmi = new CHostApi4HMI;
   m_pTimer = new QTimer(this);
   connect(m_pTimer, SIGNAL(timeout()), this, SLOT(onChecked()));
 }
@@ -55,18 +57,23 @@ QDataManager::QDataManager(QObject *parent)
 void QDataManager::startCheck()
 {
   m_nStep = 0;
+  m_nType = dbAds::ISelfCheck::e_type::Vehicle;
+  m_nResult = dbAds::ISelfCheck::e_result::Pass;
+  dbAds::ISelfCheck *pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
+  pCheck->Start();
+
   this->clearInfos();
   m_pTimer->start(100);
 }
 
 void QDataManager::startAuto()
 {
-
+  m_pApi4Hmi->m_lpApi->StartAutoDrive();
 }
 
 void QDataManager::stopAuto()
 {
-
+  m_pApi4Hmi->m_lpApi->StopAutoDrive();
 }
 
 int QDataManager::step() const
@@ -111,34 +118,44 @@ void QDataManager::clearInfos()
 
 void QDataManager::onChecked()
 {
-  if (m_nStep == 25) {
-    int w = QRandomGenerator::global()->bounded(10);
-    emit checkEnd(CheckVehicle, (w != 0));
-  }
-  else if (m_nStep == 60) {
-    int w = QRandomGenerator::global()->bounded(10);
-    emit checkEnd(CheckSystem, (w != 0));
-  }
-  else if (m_nStep == 70) {
-    int w = QRandomGenerator::global()->bounded(10);
-    emit checkEnd(CheckSensor, (w != 0));
-  }
-  else if (m_nStep == 100) {
-    int w = QRandomGenerator::global()->bounded(10);
-    emit checkEnd(CheckAlgorithm, (w != 0));
-    m_pTimer->stop();
-    QTimer::singleShot(1000, this, SIGNAL(stopCheck()));
+  dbAds::ISelfCheck *pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
+  int percent = pCheck->GetProgress();
+  m_nStep = 25 * m_nType + percent / 4;
+  emit stepChanged(m_nStep);
 
-    for (int i = 0; i < 12; ++i) {
-      QMsgInfo *info = new QMsgInfo;
-      info->setName(QString("Name %1").arg(i + 1));
-      info->setCode(QString::number(1000 + i));
-      info->setDescription("Description Test show something.");
-      this->appendInfo(info);
+  dbAds::ISelfCheck::e_result nResult = pCheck->GetResult();
+  if (m_nResult == dbAds::ISelfCheck::e_result::Pass &&
+      nResult == dbAds::ISelfCheck::e_result::Failure) {
+    m_nResult = nResult;
+  }
+  if (nResult == dbAds::ISelfCheck::e_result::Pass ||
+      nResult == dbAds::ISelfCheck::e_result::Failure) {
+
+    emit checkEnd((CheckType)(m_nType), nResult == dbAds::ISelfCheck::e_result::Pass);
+    pCheck->Stop();
+
+    if (m_nType == dbAds::ISelfCheck::e_type::Algorithm) {
+      m_pTimer->stop();
+      QTimer::singleShot(1000, this, SIGNAL(stopCheck()));
+
+      if (m_nResult != 0) {
+        std::vector<dbAds::IApi4HMI::CFault> faults;
+        m_pApi4Hmi->m_lpApi->GetFaultList(faults);
+        for (const auto &fault : faults) {
+          QMsgInfo *info = new QMsgInfo;
+          info->setName(QString::fromStdString(fault.szName));
+          info->setCode(QString::fromStdString(fault.szCode));
+          info->setDescription(QString::fromStdString(fault.szCondition));
+          this->appendInfo(info);
+        }
+      }
+    }
+    else {
+      m_nType = (dbAds::ISelfCheck::e_type) (int(m_nType) + 1);
+      pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
+      pCheck->Start();
     }
   }
-  emit stepChanged(m_nStep);
-  ++ m_nStep;
 }
 
 void QDataManager::appendInfo(QQmlListProperty<QMsgInfo> *list, QMsgInfo *info)

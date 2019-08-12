@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(sweeper_hmi LANGUAGES CXX)
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  add_definitions("-DDEBUG")
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -14,18 +18,22 @@ set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Qml Quick REQUIRED)
 
 # ros
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs ads_msgs)
 catkin_package()
 include_directories( ${catkin_INCLUDE_DIRS} )
+include_directories(/usr/local/libxls/include)
+link_directories(/usr/local/libxls/lib)
 
 set(HEADERS
   src/QDataManager.h
   src/dbAdsApi4HMI.h
+  src/CHostApi4HMI.h
   )
 set(SOURCES
   src/main.cpp
   src/QDataManager.cpp
   src/dbAdsApi4HMI.cpp
+  src/CHostApi4HMI.cpp
   )
 set(RESOURCES
   src/sweeper_hmi.qrc
@@ -37,6 +45,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick)
+target_link_libraries(${PROJECT_NAME} xlsreader)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}

@@ -242,7 +242,7 @@ void QPlanningWidget::onDisplayData()
 
 void QPlanningWidget::replayJson(const QString &path)
 {
-  m_nIntervalMillSecs = 300;
+  m_nIntervalMillSecs = 30;
   m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
   this->fileList(path.toStdString(), m_listPlanningFiles);
