@@ -16,7 +16,7 @@ Window {
   color: "#ffffff"
   title: qsTr("Conway’s Game of Life")
   //visibility: Window.FullScreen
-  flags: Qt.FramelessWindowHint
+  //flags: Qt.FramelessWindowHint
 
   // quit
   Item {

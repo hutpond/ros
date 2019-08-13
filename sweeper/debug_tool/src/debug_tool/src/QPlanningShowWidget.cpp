@@ -139,6 +139,7 @@ void QPlanningShowWidget::drawImage()
   this->drawPlanningPoint(painter);
   this->drawPlanningPath(painter);
   this->drawDecisionTargets(painter);
+  this->drawTrackTarget(painter);
 }
 
 /*******************************************************
@@ -359,7 +360,7 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 {
   const double leftWidth = m_planningData.left_half_road_width;
   const double rightWidth = m_planningData.right_half_road_width;
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
 
   QPointF ptfLeft, ptfRight;
   QPolygonF pgfLeft, pgfRight, pgfReference;
@@ -447,9 +448,11 @@ void QPlanningShowWidget::drawAreaLine(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawDecisionPoint(QPainter &painter)
 {
-#define pts m_planningData.reference_points
+  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+      _reference_points_type;
+  const _reference_points_type &pts = m_planningData.reference_points;
 
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
   int index = -1;
   double dS = 0;//m_planningData.decision_point_s;
   double dL = 0;//m_planningData.decision_point_l;
@@ -594,7 +597,7 @@ void QPlanningShowWidget::drawPlanningPath(QPainter &painter)
     }
     // calc x,y
     int index = -1, index2 = -1;
-    const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+    const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
     for (int j = 0; j < SIZE - 1; ++j) {
       const debug_tool::ReferencePoint &pointPre = m_planningData.reference_points[j];
       const debug_tool::ReferencePoint &point = m_planningData.reference_points[j + 1];
@@ -900,7 +903,7 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
 
   painter.save();
   QPen pen;
-  pen.setColor(Qt::red);
+  pen.setColor(Qt::darkMagenta);
   pen.setStyle(Qt::SolidLine);
   painter.setFont(QFont("Times", 10));
   painter.setPen(pen);
@@ -1113,7 +1116,7 @@ int QPlanningShowWidget::findReferenceIndex(const double s)
   typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
   int index = -1;
 
   // find range of s
@@ -1148,7 +1151,7 @@ void QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
   typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points),100);
   int index = -1;
   for (int i = 0; i < SIZE - 1; ++i) {
     QLineF linef(REF_PTS[i].x, REF_PTS[i].y, REF_PTS[i + 1].x, REF_PTS[i + 1].y);
@@ -1221,7 +1224,7 @@ void QPlanningShowWidget::slToXy(const double s, const double l, QPointF &ptfXy)
   typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
 
   const int index = this->findReferenceIndex(s);
   bool direct = true;  // line direction, ture, forward
@@ -1282,7 +1285,7 @@ QPolygonF QPlanningShowWidget::createSlPgf(const QPointF &center, double width, 
   typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
-  const int SIZE = static_cast<int>(m_planningData.num_reference_points);
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
 
   QPolygonF pgf;
   double s = 0, l = 0;

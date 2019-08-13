@@ -1,5 +1,4 @@
 #include <QTimer>
-#include <QRandomGenerator>
 #include <QDebug>
 #include "QDataManager.h"
 #include "CHostApi4HMI.h"

@@ -172,7 +172,7 @@ void QDataDisplayDialog::setPlanningData(
 
   // reference
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
-  int SIZE = static_cast<int>(planningData.num_reference_points);
+  int SIZE = qBound<int>(0, static_cast<int>(planningData.num_reference_points), 100);
   itemRoot->setText(0, QString("REFERENCE_LINE [%1]").arg(SIZE));
   for (int i = 0; i < SIZE; ++i) {
     item = new QTreeWidgetItem(itemRoot);
