@@ -369,11 +369,11 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
     QPointF ptfLeft;
     for (int i = 0; i < SIZE; ++i) {
       double s = m_planningData.reference_points[i].s;
-      if (s > 11) {
+      if (s > 10 + m_planningData.head_distance) {
         break;
       }
       double l = 0;
-      for (int j = 0; j < 4; ++j) {
+      for (int j = 0; j < 5; ++j) {
         l += m_planningData.left_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfLeft);
@@ -401,7 +401,7 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
         break;
       }
       double l = 0.0;
-      for (int j = 0; j < 4; ++j) {
+      for (int j = 0; j < 5; ++j) {
         l += m_planningData.right_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfRight);
@@ -430,10 +430,13 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 
   QPen pen;
   pen.setWidth(4);
-  pen.setColor(Qt::yellow);
+  pen.setColor(m_planningData.left_road_boundary_available ? Qt::green : Qt::yellow);
   pen.setStyle(Qt::SolidLine);
   painter.setPen(pen);
   painter.drawPolyline(m_transform.map(pgfLeft));
+
+  pen.setColor(m_planningData.right_road_boundary_available ? Qt::green : Qt::yellow);
+  painter.setPen(pen);
   painter.drawPolyline(m_transform.map(pgfRight));
 
   pen.setWidth(1);
