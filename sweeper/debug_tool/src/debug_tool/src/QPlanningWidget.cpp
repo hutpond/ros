@@ -100,14 +100,18 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
     }
     debug_tool::PlanningData4Debug data;
     //memset(&data, 0, sizeof(data));
-    this->readFromJsonFile(*m_itFile, data);
-    m_pWdgShow->setPlanningData(data);
-    m_pWdgParam->setPlanningData(data);
     std::string name = *m_itFile;
     std::size_t index = name.find_last_of('/');
     name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    if (this->readFromJsonFile(*m_itFile, data)) {
+      m_pWdgShow->setPlanningData(data);
+      m_pWdgParam->setPlanningData(data);
+      QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+    }
+    else {
+      name += "-------- FAILED !!!!!!!!!!!!!!!!1";
+    }
     QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
-    QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
     m_pWdgParam->setFrameOffset(1);
     ++m_itFile;
   }
@@ -197,14 +201,18 @@ void QPlanningWidget::onSetFrameIndexReplay(int index)
   if (m_itFile != m_listPlanningFiles.end()) {
     debug_tool::PlanningData4Debug data;
     //memset(&data, 0, sizeof(data));
-    this->readFromJsonFile(*m_itFile, data);
-    m_pWdgShow->setPlanningData(data);
-    m_pWdgParam->setPlanningData(data);
     std::string name = *m_itFile;
     std::size_t index = name.find_last_of('/');
     name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    if (this->readFromJsonFile(*m_itFile, data)) {
+      m_pWdgShow->setPlanningData(data);
+      m_pWdgParam->setPlanningData(data);
+      QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+    }
+    else {
+      name += "-------- FAILED !!!!!!!!!!!!!!!!1";
+    }
     QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
-    QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   }
 }
 
@@ -228,16 +236,15 @@ void QPlanningWidget::onDisplayData()
   while (it == m_listPlanningFiles.end()) --it;
 
   debug_tool::PlanningData4Debug planningData;
-  this->readFromJsonFile(*it, planningData);
-
-  std::string sub_name = *it;
-  namespace  fs = boost::filesystem;
-  fs::path path = fs::path(sub_name);
-  sub_name = path.filename().string();
-  sub_name = sub_name.substr(0, sub_name.length() - 1);
-
-  dlg.setPlanningData(QString::fromStdString(sub_name), planningData);
-  dlg.exec();
+  if (this->readFromJsonFile(*it, planningData)) {
+    std::string sub_name = *it;
+    namespace  fs = boost::filesystem;
+    fs::path path = fs::path(sub_name);
+    sub_name = path.filename().string();
+    sub_name = sub_name.substr(0, sub_name.length() - 1);
+    dlg.setPlanningData(QString::fromStdString(sub_name), planningData);
+    dlg.exec();
+  }
 }
 
 void QPlanningWidget::replayJson(const QString &path)
@@ -256,7 +263,7 @@ void QPlanningWidget::replayJson(const QString &path)
   m_nTimerId = startTimer(m_nIntervalMillSecs);
 }
 
-void QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::PlanningData4Debug &planningData)
+bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::PlanningData4Debug &planningData)
 {
   const std::string fileName = name.substr(1, name.length() - 2);
   std::ifstream in(fileName.c_str());
@@ -266,10 +273,12 @@ void QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::Plan
   Json::Value root;
   Json::Reader reader;
   if (!reader.parse(str, root)) {
-    return;
+    return false;
   }
   this->parseDataFromJson(root, planningData);
   this->sortTrackTargets(planningData);
+
+  return true;
 }
 
 void QPlanningWidget::onParsePlanningData(const debug_tool::PlanningData4Debug &planningData)
@@ -468,6 +477,17 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   roadInfo["MIN_SAFE_DISTANCE"] = planningData.safe_dis1;
   roadInfo["SAFE_DISTANCE"] = planningData.safe_dis2;
   roadInfo["MAX_PLANNING_DISTANCE"] = planningData.max_planning_distance;
+  roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"] = planningData.left_road_boundary_available;
+  roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"] = planningData.right_road_boundary_available;
+  Json::Value leftRoadBoundary, rightRoadBoundary;
+  for (int i = 0; i < 5; ++i) {
+    Json::Value itemLeft = planningData.left_road_boundary[i];
+    leftRoadBoundary.append(itemLeft);
+    Json::Value itemRight = planningData.right_road_boundary[i];
+    rightRoadBoundary.append(itemRight);
+  }
+  roadInfo["LEFT_ROAD_BOUNDARY"] = leftRoadBoundary;
+  roadInfo["RIGHT_ROAD_BOUNDARY"] = rightRoadBoundary;
 
   // referene
   Json::Value referenceLine;
@@ -706,6 +726,16 @@ void QPlanningWidget::parseDataFromJson(
   planningData.safe_dis1 = roadInfo["MIN_SAFE_DISTANCE"].asDouble();
   planningData.safe_dis2 = roadInfo["SAFE_DISTANCE"].asDouble();
   planningData.max_planning_distance = roadInfo["MAX_PLANNING_DISTANCE"].asDouble();
+  planningData.left_road_boundary_available = roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"].asBool();
+  planningData.right_road_boundary_available = roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"].asBool();
+  int SIZE_BOUND = qBound<int>(0, static_cast<int>(roadInfo["LEFT_ROAD_BOUNDARY"].size()), 5);
+  for (int i = 0; i < SIZE_BOUND; ++i) {
+    planningData.left_road_boundary[i] = roadInfo["LEFT_ROAD_BOUNDARY"][i].asDouble();
+  }
+  SIZE_BOUND = qBound<int>(0, static_cast<int>(roadInfo["RIGHT_ROAD_BOUNDARY"].size()), 5);
+  for (int i = 0; i < SIZE_BOUND; ++i) {
+    planningData.right_road_boundary[i] = roadInfo["RIGHT_ROAD_BOUNDARY"][i].asDouble();
+  }
 
   // referene
   Json::Value referencePoints = referenceLine["REFERENCE_POINTS"];

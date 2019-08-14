@@ -362,19 +362,68 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
   const double rightWidth = m_planningData.right_half_road_width;
   const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
 
-  QPointF ptfLeft, ptfRight;
   QPolygonF pgfLeft, pgfRight, pgfReference;
-  for (int i = 0; i < SIZE; ++i) {
-    this->slToXy(m_planningData.reference_points[i].s, leftWidth, ptfLeft);
-    this->slToXy(m_planningData.reference_points[i].s, - rightWidth, ptfRight);
 
-    pgfLeft << ptfLeft;
-    pgfRight << ptfRight;
+  // left
+  if (m_planningData.left_road_boundary_available) {
+    QPointF ptfLeft;
+    for (int i = 0; i < SIZE; ++i) {
+      double s = m_planningData.reference_points[i].s;
+      if (s > 11) {
+        break;
+      }
+      double l = 0;
+      for (int j = 0; j < 4; ++j) {
+        l += m_planningData.left_road_boundary[j] * pow(s, j);
+      }
+      this->slToXy(s, l, ptfLeft);
+
+      pgfLeft << ptfLeft;
+      m_ptfsLeftRoadSide[i] = ptfLeft;
+    }
+  }
+  else {
+    QPointF ptfLeft;
+    for (int i = 0; i < SIZE; ++i) {
+      this->slToXy(m_planningData.reference_points[i].s, leftWidth, ptfLeft);
+
+      pgfLeft << ptfLeft;
+      m_ptfsLeftRoadSide[i] = ptfLeft;
+    }
+  }
+
+  // right
+  if (m_planningData.right_road_boundary_available) {
+    QPointF ptfRight;
+    for (int i = 0; i < SIZE; ++i) {
+      double s = m_planningData.reference_points[i].s;
+      if (s > 11) {
+        break;
+      }
+      double l = 0.0;
+      for (int j = 0; j < 4; ++j) {
+        l += m_planningData.right_road_boundary[j] * pow(s, j);
+      }
+      this->slToXy(s, l, ptfRight);
+
+      pgfRight << ptfRight;
+      m_ptfsRightRoadSide[i] = ptfRight;
+    }
+  }
+  else {
+    QPointF ptfRight;
+    for (int i = 0; i < SIZE; ++i) {
+      this->slToXy(m_planningData.reference_points[i].s, - rightWidth, ptfRight);
+
+      pgfRight << ptfRight;
+      m_ptfsRightRoadSide[i] = ptfRight;
+    }
+  }
+
+  // reference
+  for (int i = 0; i < SIZE; ++i) {
     pgfReference << QPointF(m_planningData.reference_points[i].x,
                             m_planningData.reference_points[i].y);
-
-    m_ptfsLeftRoadSide[i] = ptfLeft;
-    m_ptfsRightRoadSide[i] = ptfRight;
   }
 
   painter.save();

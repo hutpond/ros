@@ -12,9 +12,10 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QCheckBox>
 #include "QSettingDialog.h"
 
-static constexpr qint32 BAUD[] = {4800, 9600, 19200, 38400, 57600, 115200};
+static constexpr qint32 BAUD[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400};
 
 QSettingDialog::QSettingDialog(QWidget *parent)
   : QDialog(parent)
@@ -33,6 +34,7 @@ QSettingDialog::QSettingDialog(QWidget *parent)
   hLayout->addWidget(m_pBtnCancel, 1);
   hLayout->addStretch(2);
 
+
   // TODO stretch not work
   QVBoxLayout *vLayout = new QVBoxLayout;
   vLayout->addWidget(m_pTabWidget);
@@ -42,21 +44,21 @@ QSettingDialog::QSettingDialog(QWidget *parent)
   this->setLayout(vLayout);
 }
 
-void QSettingDialog::setSerialParam(const QString &device, qint32 baud)
+void QSettingDialog::setSerialParam(const QString &device, qint32 baud, bool select)
 {
   QSerialSettingWidget *pWdgSerial = dynamic_cast<QSerialSettingWidget *>(
         m_pTabWidget->currentWidget());
   if (pWdgSerial) {
-    pWdgSerial->setSerialParam(device, baud);
+    pWdgSerial->setSerialParam(device, baud, select);
   }
 }
 
-void QSettingDialog::getSerialParam(QString &device, qint32 &baud)
+void QSettingDialog::getSerialParam(QString &device, qint32 &baud, bool &select)
 {
   QSerialSettingWidget *pWdgSerial = dynamic_cast<QSerialSettingWidget *>(
         m_pTabWidget->currentWidget());
   if (pWdgSerial) {
-    pWdgSerial->getSerialParam(device, baud);
+    pWdgSerial->getSerialParam(device, baud, select);
   }
 }
 
@@ -69,6 +71,7 @@ QSerialSettingWidget::QSerialSettingWidget(QWidget *parent)
   for (const auto &item : BAUD) {
     m_pCmbBaud->addItem(QString::number(item));
   }
+  m_pCheckBoxSelect = new QCheckBox(QStringLiteral("Seleckt"), this);
 
   QVBoxLayout *vLayout = new QVBoxLayout;
   QHBoxLayout *hLayout = new QHBoxLayout;
@@ -86,12 +89,18 @@ QSerialSettingWidget::QSerialSettingWidget(QWidget *parent)
   hLayout->addWidget(m_pCmbBaud, 4);
   hLayout->addStretch(3);
   vLayout->addLayout(hLayout, 1);
-  vLayout->addStretch(4);
+  vLayout->addStretch(1);
+
+  hLayout = new QHBoxLayout;
+  hLayout->addWidget(m_pCheckBoxSelect, 4);
+  hLayout->addStretch(4);
+  vLayout->addLayout(hLayout, 1);
+  vLayout->addStretch(3);
 
   this->setLayout(vLayout);
 }
 
-void QSerialSettingWidget::setSerialParam(const QString &device, qint32 baud)
+void QSerialSettingWidget::setSerialParam(const QString &device, qint32 baud, bool select)
 {
   m_pEditDevice->setText(device);
   int index = 0;
@@ -103,11 +112,13 @@ void QSerialSettingWidget::setSerialParam(const QString &device, qint32 baud)
     index = 1;
   }
   m_pCmbBaud->setCurrentIndex(index);
+  m_pCheckBoxSelect->setChecked(select);
 }
 
-void QSerialSettingWidget::getSerialParam(QString &device, qint32 &baud)
+void QSerialSettingWidget::getSerialParam(QString &device, qint32 &baud, bool &select)
 {
   device = m_pEditDevice->text();
   QString text = m_pCmbBaud->currentText();
   baud = text.toInt();
+  select = m_pCheckBoxSelect->isChecked();
 }

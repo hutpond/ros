@@ -41,7 +41,7 @@ protected:
 
 protected:
   void replayJson(const QString &);
-  void readFromJsonFile(const std::string &, debug_tool::PlanningData4Debug &);
+  bool readFromJsonFile(const std::string &, debug_tool::PlanningData4Debug &);
 
   void sortTrackTargets(debug_tool::PlanningData4Debug &);
   void saveDataToJsonFile(const debug_tool::PlanningData4Debug &);

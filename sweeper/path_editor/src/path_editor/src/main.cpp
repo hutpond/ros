@@ -8,9 +8,11 @@
 #include "QEditorMainWindow.h"
 #include <QApplication>
 #include <QScreen>
+#include <ros/ros.h>
 
 int main(int argc, char *argv[])
 {
+  ros::init(argc, argv, "path_editor_subscribe_node_");
   QApplication a(argc, argv);
 
   QEditorMainWindow w;

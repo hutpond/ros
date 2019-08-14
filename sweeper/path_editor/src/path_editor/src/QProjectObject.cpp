@@ -6,6 +6,7 @@
  * Description: 工程管理类
 ********************************************************/
 #include <memory>
+#include <fstream>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
@@ -21,6 +22,39 @@
 #include "QProjectObject.h"
 #include "QReadDataObject.h"
 #include "QOpenDriveObject.h"
+
+
+std::ostream & operator<<(std::ostream &out, const MapCellData &data) {
+  out.write(reinterpret_cast<const char*>(&data.fX), sizeof(data.fX));
+  out.write(reinterpret_cast<const char*>(&data.fY), sizeof(data.fY));
+  out.write(reinterpret_cast<const char*>(&data.fIntensityAvg), sizeof(data.fIntensityAvg));
+  out.write(reinterpret_cast<const char*>(&data.fIntensitySigma), sizeof(data.fIntensitySigma));
+  out.write(reinterpret_cast<const char*>(&data.fHeightAvg), sizeof(data.fHeightAvg));
+  out.write(reinterpret_cast<const char*>(&data.fHeightSigma), sizeof(data.fHeightSigma));
+  out.write(reinterpret_cast<const char*>(&data.fMaxIntensity), sizeof(data.fMaxIntensity));
+  out.write(reinterpret_cast<const char*>(&data.fMaxHeight), sizeof(data.fMaxHeight));
+  out.write(reinterpret_cast<const char*>(&data.dLon), sizeof(data.dLon));
+  out.write(reinterpret_cast<const char*>(&data.dLat), sizeof(data.dLat));
+  out.write(reinterpret_cast<const char*>(&data.chLaneId), sizeof(data.chLaneId));
+
+  return out;
+}
+
+std::istream & operator>>(std::istream &in, MapCellData &data) {
+  in.read(reinterpret_cast<char*>(&data.fX), sizeof(data.fX));
+  in.read(reinterpret_cast<char*>(&data.fY), sizeof(data.fY));
+  in.read(reinterpret_cast<char*>(&data.fIntensityAvg), sizeof(data.fIntensityAvg));
+  in.read(reinterpret_cast<char*>(&data.fIntensitySigma), sizeof(data.fIntensitySigma));
+  in.read(reinterpret_cast<char*>(&data.fHeightAvg), sizeof(data.fHeightAvg));
+  in.read(reinterpret_cast<char*>(&data.fHeightSigma), sizeof(data.fHeightSigma));
+  in.read(reinterpret_cast<char*>(&data.fMaxIntensity), sizeof(data.fMaxIntensity));
+  in.read(reinterpret_cast<char*>(&data.fMaxHeight), sizeof(data.fMaxHeight));
+  in.read(reinterpret_cast<char*>(&data.dLon), sizeof(data.dLon));
+  in.read(reinterpret_cast<char*>(&data.dLat), sizeof(data.dLat));
+  in.read(reinterpret_cast<char*>(&data.chLaneId), sizeof(data.chLaneId));
+
+  return in;
+}
 
 QProjectObject::QProjectObject(QObject *parent)
   : QObject(parent)
@@ -150,6 +184,42 @@ void QProjectObject::saveProject()
   m_pObjOpenDrive->writeOpenDriveFile(m_strPathName, m_strProName, m_listReferensePoints);
 }
 
+void QProjectObject::buildProject()
+{
+  if (m_listReferensePoints.size() == 0) {
+    return;
+  }
+  std::string fileName = m_strPathName.toLocal8Bit().data();
+  fileName.append(m_strProName.toLocal8Bit().data());
+  fileName.append(".bin");
+  std::ofstream out(fileName, std::ios::binary);
+
+  MapCellData data;
+  memset(&data, 0, sizeof(data));
+  QSharedPointer<Point> point = m_listReferensePoints[0];
+  data.dLat = point->lat;
+  data.dLon = point->lon;
+  data.fX = point->x;
+  data.fY = point->y;
+  out << data;
+
+  const int SIZE = static_cast<int>(m_listReferensePoints.size());
+  const double MAX_DIS = 0.5;
+  for (int i = 1; i < SIZE; ++ i) {
+    if (m_listReferensePoints[i]->distance(*point) < MAX_DIS) {
+      continue;
+    }
+
+    point = m_listReferensePoints[i];
+    data.dLat = point->lat;
+    data.dLon = point->lon;
+    data.fX = point->x;
+    data.fY = point->y;
+    out << data;
+  }
+  out.close();
+}
+
 /**
  * @brief 添加数据
  * @param data: IMU数据
@@ -185,24 +255,44 @@ void QProjectObject::setImuData(const DataPacket *data)
   pInfo->m_cGpsState = data->getStatus();
   pInfo->m_cUpdateFlag = 1;
 
-  this->saveImuData(*pInfo);
+  const double PI = 3.14159265;
   if (m_vector3dOrigin(0) > 360) {
-    m_vector3dOrigin = Eigen::Vector3d(pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude);
+    m_vector3dOrigin = Eigen::Vector3d(pInfo->m_dLatitude * PI / 180.0,
+                                       pInfo->m_dLongitude * PI / 180.0,
+                                       pInfo->m_dAltitude);
   }
-  Eigen::Vector3d vector3d(pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude);
+  Eigen::Vector3d vector3d(pInfo->m_dLatitude * PI / 180,
+                           pInfo->m_dLongitude * PI / 180,
+                           pInfo->m_dAltitude);
   vector3d = this->Blh2Xyz(vector3d);
   vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
 
-  QSharedPointer<Point> point(new Point(vector3d(0), vector3d(1), vector3d(2)));
-  if ( m_listReferensePoints.size() == 0) {
-    m_listReferensePoints.push_back(point);
+  QSharedPointer<Point> point(new Point(
+                                vector3d(0), vector3d(1), vector3d(2),
+                                pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude));
+  m_listReferensePoints.push_back(point);
+}
+
+void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &data)
+{
+  const double PI = 3.14159265;
+  if (m_strProName.isEmpty()) {
+    return;
   }
-  else{
-    const auto &last = m_listReferensePoints.at(m_listReferensePoints.size() - 1);
-    if (!last->equal(*point)) {
-      m_listReferensePoints.push_back(point);
-    }
+  if (m_vector3dOrigin(0) > 360) {
+    m_vector3dOrigin = Eigen::Vector3d(data->lat * PI / 180.0,
+                                       data->lon * PI / 180.0,
+                                       data->height);
   }
+  Eigen::Vector3d vector3d(data->lat * PI / 180,
+                           data->lon * PI / 180,
+                           data->height);
+  vector3d = this->Blh2Xyz(vector3d);
+  vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
+
+  QSharedPointer<Point> point(new Point(vector3d(0), vector3d(1), vector3d(2),
+                                        data->lat, data->lon, data->height));
+  m_listReferensePoints.push_back(point);
 }
 
 /**
@@ -249,7 +339,8 @@ Eigen::Vector3d QProjectObject::Blh2Xyz(const Eigen::Vector3d &blh)
  */
 Eigen::Vector3d QProjectObject::Ecef2enu(const Eigen::Vector3d &pos_e, const Eigen::Vector3d &blh)
 {
-  return ( (Mat_n2e(blh).transpose()) * pos_e );
+  Eigen::Vector3d delta = pos_e - this->Blh2Xyz(blh);
+  return ( (Mat_n2e(blh).transpose()) * delta );
 }
 
 void QProjectObject::createPointsList()
@@ -260,7 +351,7 @@ void QProjectObject::createPointsList()
     double angle = i * (2 * 3.14159265 * 3 / SIZE);
     double x = s * qSin(angle);
     double y = s * qCos(angle);
-    QSharedPointer<Point> pt(new Point(x, y, 0));
+    QSharedPointer<Point> pt(new Point(x, y, 0, 0, 0, 0));
     m_listReferensePoints.append(pt);
   }
 }

@@ -112,6 +112,9 @@ void QOpenDriveObject::writeOpenDriveFile(const QString &path, const QString &na
     stream.writeAttribute("y", QString("%1").arg(point->y, -1, 'e', 16, QLatin1Char('0')));
     stream.writeAttribute("hdg", QString("%1").arg(point->angle(), -1, 'e', 16, QLatin1Char('0')));
     stream.writeAttribute("length", QString("%1").arg(length, -1, 'e', 16, QLatin1Char('0')));
+    stream.writeAttribute("lat", QString("%1").arg(point->lat, -1, 'e', 16, QLatin1Char('0')));
+    stream.writeAttribute("lon", QString("%1").arg(point->lon, -1, 'e', 16, QLatin1Char('0')));
+    stream.writeAttribute("height", QString("%1").arg(point->height, -1, 'e', 16, QLatin1Char('0')));
     stream.writeStartElement("line");
     stream.writeEndElement(); // line
     stream.writeEndElement(); // geometry

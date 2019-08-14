@@ -19,6 +19,7 @@
 #include <QFileDialog>
 #include "QEditorMainWindow.h"
 #include "QReadDataObject.h"
+#include "QReadDataRosObject.h"
 #include "QSettingDialog.h"
 #include "QProjectObject.h"
 #include "QDrawPathWidget.h"
@@ -46,10 +47,17 @@ QEditorMainWindow::QEditorMainWindow(QWidget *parent)
   auto fun = std::bind(&QProjectObject::setImuData, m_pObjProject, std::placeholders::_1);
   m_pObjReadData->setSetDataFun(fun);
   this->setWindowTitle(WND_TITLE);
+
+  m_pObjReadDataRos = new QReadDataRosObject(this);
+  connect(m_pObjReadDataRos, SIGNAL(imuData(const path_editor::ads_ins_data::ConstPtr &)),
+          m_pObjProject, SLOT(onSetImuData(const path_editor::ads_ins_data::ConstPtr &)));
+
+  m_pObjReadDataRos->startSubscribe();
 }
 
 QEditorMainWindow::~QEditorMainWindow()
 {
+  m_pObjReadDataRos->stopSubscribe();
 }
 
 void QEditorMainWindow::readIniFile()
@@ -57,7 +65,8 @@ void QEditorMainWindow::readIniFile()
   QSettings settings("config.ini", QSettings::IniFormat);
   QString device = settings.value("serial/device", "/dev/ttyS0").toString();
   int baud = settings.value("serial/baud", 9600).toInt();
-  m_pObjReadData->openSerialPort(device, baud);
+  bool select = settings.value("serial/select", false).toBool();
+  m_pObjReadData->openSerialPort(device, baud, select);
 }
 
 /*******************************************************
@@ -242,7 +251,7 @@ void QEditorMainWindow::onActionSave()
  */
 void QEditorMainWindow::onActionBuild()
 {
-
+  m_pObjProject->buildProject();
 }
 
 /**
@@ -282,17 +291,19 @@ void QEditorMainWindow::onActionSetting()
   dlg.setWindowTitle(QStringLiteral("Setting"));
   QString device;
   qint32 baud;
-  m_pObjReadData->getSerailParam(device, baud);
-  dlg.setSerialParam(device, baud);
+  bool select;
+  m_pObjReadData->getSerailParam(device, baud, select);
+  dlg.setSerialParam(device, baud, select);
   if (dlg.exec() == QDialog::Accepted) {
-    dlg.getSerialParam(device, baud);
+    dlg.getSerialParam(device, baud, select);
 
     QSettings settings("config.ini", QSettings::IniFormat);
     settings.setValue("serial/device", device);
     settings.setValue("serial/baud", baud);
+    settings.setValue("serial/select", select);
     settings.sync();
 
-    m_pObjReadData->openSerialPort(device, baud);
+    m_pObjReadData->openSerialPort(device, baud, select);
   }
 }
 

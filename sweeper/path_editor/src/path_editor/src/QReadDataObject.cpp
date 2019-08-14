@@ -12,6 +12,7 @@ QReadDataObject::QReadDataObject(QObject *parent)
   : QObject(parent)
   , m_strDevice("")
   , m_nBaud(0)
+  , m_bSerialSelect(false)
 {
   m_pSerialPort = new QSerialPort(this);
   connect(m_pSerialPort, &QSerialPort::readyRead, this, &QReadDataObject::onReadData);
@@ -32,13 +33,17 @@ QReadDataObject::QReadDataObject(QObject *parent)
  *
  * @return true, 设置并打开成功
  */
-bool QReadDataObject::openSerialPort(const QString &device, qint32 baud)
+bool QReadDataObject::openSerialPort(const QString &device, qint32 baud, bool select)
 {
-  if (m_strDevice == device && m_nBaud == baud) {
+  if (m_strDevice == device && m_nBaud == baud && m_bSerialSelect == select) {
     return true;
   }
+  m_bSerialSelect = select;
   m_strDevice = device;
   m_nBaud = baud;
+  if (!m_bSerialSelect) {
+    return false;
+  }
   if (m_pSerialPort->isOpen()) {
     m_pSerialPort->close();
   }
@@ -54,10 +59,11 @@ bool QReadDataObject::openSerialPort(const QString &device, qint32 baud)
  *
  * @return
  */
-void QReadDataObject::getSerailParam(QString &device, qint32 &baud)
+void QReadDataObject::getSerailParam(QString &device, qint32 &baud, bool &select)
 {
   device = m_strDevice;
   baud = m_nBaud;
+  select = m_bSerialSelect;
 }
 
 /**

@@ -51,12 +51,14 @@ set(HEADERS
   src/QEditorMainWindow.h
   src/QPanelWidget.h
   src/QReadDataObject.h
+  src/QReadDataRosObject.h
   )
 set(SOURCES
   src/main.cpp
   src/QEditorMainWindow.cpp
   src/QPanelWidget.cpp
   src/QReadDataObject.cpp
+  src/QReadDataRosObject.cpp
   src/QDrawPathWidget.cpp
   src/QOpenDriveObject.cpp
   src/QProjectObject.cpp

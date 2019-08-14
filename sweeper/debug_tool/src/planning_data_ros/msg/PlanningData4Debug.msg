@@ -36,6 +36,10 @@ float64 trajectory_end_y
 float64 safe_dis1
 float64 safe_dis2
 float64 max_planning_distance
+bool left_road_boundary_available
+bool right_road_boundary_available
+float64[5] left_road_boundary
+float64[5] right_road_boundary
 float64 left_half_road_width
 float64 right_half_road_width
 

@@ -8,10 +8,12 @@
 #ifndef QPROJECTOBJECT_H
 #define QPROJECTOBJECT_H
 
+#include <iostream>
 #include <QObject>
 #include <QDialog>
 #include <QtMath>
 #include <eigen3/Eigen/Core>
+#include "path_editor/ads_ins_data.h"
 
 class QLineEdit;
 class QPushButton;
@@ -30,26 +32,28 @@ struct Point
   double y;
   double z;
 
+  double lat;
+  double lon;
+  double height;
+
   Point()
     : x(0), y(0), z(0)
+    , lat(0), lon(0), height(0)
   {}
-  Point(double _x, double _y, double _z)
+  Point(double _x, double _y, double _z, double lat_, double lon_, double height_)
   {
     x = _x;
     y = _y;
     z = _z;
+    lat = lat_;
+    lon = lon_;
+    height = height_;
   }
   Point & operator=(const Point &rhs) {
     this->x = rhs.x;
     this->y = rhs.y;
     this->z = rhs.z;
     return *this;
-  }
-  bool equal(const Point &point) {
-    constexpr double DIFF = 0.01;
-    return ( (qAbs<double>(this->x - point.x) < DIFF) &&
-             (qAbs<double>(this->y - point.y) < DIFF) &&
-             (qAbs<double>(this->z - point.z) < DIFF) );
   }
   double distance(const Point &point) {
     return qSqrt(
@@ -92,6 +96,20 @@ struct InfoPacket
   char	m_cUpdateFlag; // flag of update，1: update, 0: not update
 };
 
+typedef struct MapCellData_{
+  float fX;         //地理坐标位置X
+  float fY;         //地理坐标位置Y
+  float fIntensityAvg;    //激光反射强度均值
+  float fIntensitySigma;  //激光反射方差
+  float fHeightAvg;       //高度均值
+  float fHeightSigma;     //高度方差
+  float fMaxIntensity;    //反射强度最大值
+  float fMaxHeight;       //高度最大值
+  double dLon;          //经度
+  double dLat;          //纬度
+  char chLaneId;        //所在的车道ID
+}MapCellData;
+
 class QProjectObject : public QObject
 {
   Q_OBJECT
@@ -102,10 +120,14 @@ public:
   void stopProject();
   void closeProject();
   void saveProject();
+  void buildProject();
   void setImuData(const DataPacket *);
 
   const QList<QSharedPointer<Point>> & getPathPoints() const;
   QList<QSharedPointer<Point>> & getPathPoints();
+
+protected slots:
+  void onSetImuData(const path_editor::ads_ins_data::ConstPtr &);
 
 protected:
   void createProjectFile(const QString &);

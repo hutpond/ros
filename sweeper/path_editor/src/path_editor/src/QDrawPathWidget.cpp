@@ -63,7 +63,7 @@ void QDrawPathWidget::drawImage()
   QPainter painter(&m_image);
   painter.fillRect(m_image.rect(), QColor(230, 230, 230));
 
-#ifdef TEST
+#ifdef DEBUG
   this->drawMapBorder(painter);
 #endif
   this->drawPath(painter);
@@ -97,21 +97,21 @@ void QDrawPathWidget::drawMapBorder(QPainter &painter)
 
 void QDrawPathWidget::drawPath(QPainter &painter)
 {
+  QPolygonF pgf;
   const QList<QSharedPointer<Point>> &points = m_rObjProject.getPathPoints();
   const int SIZE = points.size();
-  if (SIZE == 0) {
-    return;
-  }
   for (int i = 0; i < SIZE - 1; ++i) {
     const QSharedPointer<Point> pt = points.at(i);
     const QSharedPointer<Point> pt2 = points.at(i + 1);
     if (pt->x > MAX_POS || pt2->x > MAX_POS) {
       continue;
     }
+    pgf << QPointF(pt->x, pt->y);
+  }
 
-    QLineF linef(pt->x, pt->y, pt2->x, pt2->y);
-    linef = m_transform.map(linef);
-    painter.drawLine(linef);
+  if (pgf.size() > 0) {
+    pgf = m_transform.map(pgf);
+    painter.drawPolyline(pgf);
   }
 }
 
@@ -169,8 +169,8 @@ void QDrawPathWidget::calcMapRect()
       }
       width *= qPow(COEF, m_nDisplayRatio);
       height *= qPow(COEF, m_nDisplayRatio);
-      x_min = -(x_max - x_min) / 2 - (width - (x_max - x_min)) / 2 - m_ptfTranslate.x();
-      y_min = -(y_max - y_min) / 2 - (height -(y_max - y_min)) / 2 - m_ptfTranslate.y();
+      x_min -= (width - (x_max - x_min)) / 2.0 + m_ptfTranslate.x();
+      y_min -= (height - (y_max - y_min)) / 2.0 + m_ptfTranslate.y();
 
       m_rectfMap = QRectF(x_min, y_min, width, height);
     }

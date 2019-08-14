@@ -138,8 +138,8 @@ class QReadDataObject : public QObject
 public:
   explicit QReadDataObject(QObject *parent = nullptr);
 
-  bool openSerialPort(const QString &, qint32);
-  void getSerailParam(QString &, qint32 &);
+  bool openSerialPort(const QString &, qint32, bool);
+  void getSerailParam(QString &, qint32 &, bool &);
   void setSetDataFun(std::function<void(const DataPacket *)>);
 
 signals:
@@ -154,6 +154,7 @@ private:
   QSerialPort *m_pSerialPort;
   QString m_strDevice;
   qint32 m_nBaud;
+  bool m_bSerialSelect;
   QByteArray m_baData;
   DataPacket m_dataPacket;
 

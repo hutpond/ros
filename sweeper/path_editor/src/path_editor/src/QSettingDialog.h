@@ -13,6 +13,7 @@
 class QTabWidget;
 class QLineEdit;
 class QComboBox;
+class QCheckBox;
 
 class QSettingDialog : public QDialog
 {
@@ -20,8 +21,8 @@ class QSettingDialog : public QDialog
 
 public:
   QSettingDialog(QWidget *);
-  void setSerialParam(const QString &, qint32);
-  void getSerialParam(QString &, qint32 &);
+  void setSerialParam(const QString &, qint32, bool);
+  void getSerialParam(QString &, qint32 &, bool &);
 
 private:
   QTabWidget *m_pTabWidget;
@@ -35,12 +36,13 @@ class QSerialSettingWidget : public QWidget
 
 public:
   QSerialSettingWidget(QWidget *);
-  void setSerialParam(const QString &, qint32);
-  void getSerialParam(QString &, qint32 &);
+  void setSerialParam(const QString &, qint32, bool);
+  void getSerialParam(QString &, qint32 &, bool &);
 
 private:
   QLineEdit *m_pEditDevice;
   QComboBox *m_pCmbBaud;
+  QCheckBox *m_pCheckBoxSelect;
 };
 
 #endif // QSETTINGDIALOG_H

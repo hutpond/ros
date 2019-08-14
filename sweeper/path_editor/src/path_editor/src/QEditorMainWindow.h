@@ -11,6 +11,7 @@
 #include <QMainWindow>
 
 class QReadDataObject;
+class QReadDataRosObject;
 class QProjectObject;
 class QDrawPathWidget;
 class QPanelWidget;
@@ -44,6 +45,7 @@ private:
   QAction *m_pActionClose;
 
   QReadDataObject *m_pObjReadData;
+  QReadDataRosObject *m_pObjReadDataRos;
   QProjectObject *m_pObjProject;
   QDrawPathWidget *m_pWdgDrawPath;
   QDockWidget *m_pDockWdgPanel;

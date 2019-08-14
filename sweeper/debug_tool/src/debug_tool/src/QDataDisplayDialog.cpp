@@ -130,6 +130,28 @@ void QDataDisplayDialog::setPlanningData(
   item->setText(0, QString("SAFE_DISTANCE: %1").arg(planningData.safe_dis2));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("MAX_PLANNING_DISTANCE: %1").arg(planningData.max_planning_distance));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("LEFT_ROAD_BOUNDARY_AVAILABLE: %1").
+                arg(planningData.left_road_boundary_available ? "true" : "false"));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("RIGHT_ROAD_BOUNDARY_AVAILABLE: %1").
+                arg(planningData.right_road_boundary_available ? "true" : "false"));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, "LEFT_ROAD_BOUNDARY");
+  for (int i = 0; i < 5; ++i) {
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("BOUNDARY%1: %2").
+                       arg(i).
+                       arg(planningData.left_road_boundary[i]));
+  }
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, "RIGHT_ROAD_BOUNDARY");
+  for (int i = 0; i < 5; ++i) {
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("BOUNDARY%1: %2").
+                       arg(i).
+                       arg(planningData.right_road_boundary[i]));
+  }
 
   // planning path
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
