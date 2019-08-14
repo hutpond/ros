@@ -360,84 +360,138 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 {
   const double leftWidth = m_planningData.left_half_road_width;
   const double rightWidth = m_planningData.right_half_road_width;
-  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
+  const size_t SIZE = qBound<size_t>(0, static_cast<size_t>(m_planningData.num_reference_points), 100);
 
+  size_t sizeLeft = 0, sizeLeft2 = 0;
+  size_t sizeRight = 0, sizeRight2 = 0;
   QPolygonF pgfLeft, pgfRight, pgfReference;
+  QPolygonF pgfLeft2, pgfRight2;
+  QPolygonF pgfLeftBound, pgfRightBound;
 
   // left
   if (m_planningData.left_road_boundary_available) {
     QPointF ptfLeft;
-    for (int i = 0; i < SIZE; ++i) {
+    for (size_t i = 0; i < SIZE; ++i) {
       double s = m_planningData.reference_points[i].s;
-      if (s > 10 + m_planningData.head_distance) {
+      double l = 0.0;
+      if (i == 0 && s > m_planningData.left_road_boundary_start_s) {
+        s = m_planningData.left_road_boundary_start_s;
+        l = 0.0;
+        for (size_t j = 0; j < 5; ++j) {
+          l += m_planningData.left_road_boundary[j] * pow(s, j);
+        }
+        this->slToXy(s, l, ptfLeft);
+        pgfLeftBound << ptfLeft;
+      }
+      if (s > m_planningData.left_road_boundary_end_s) {
+        sizeLeft = i;
+        s = m_planningData.left_road_boundary_end_s;
+        l = 0.0;
+        for (size_t j = 0; j < 5; ++j) {
+          l += m_planningData.left_road_boundary[j] * pow(s, j);
+        }
+        this->slToXy(s, l, ptfLeft);
+        pgfLeftBound << ptfLeft;
         break;
       }
-      double l = 0;
-      for (int j = 0; j < 5; ++j) {
+      for (size_t j = 0; j < 5; ++j) {
         l += m_planningData.left_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfLeft);
 
-      pgfLeft << ptfLeft;
+      pgfLeftBound << ptfLeft;
       m_ptfsLeftRoadSide[i] = ptfLeft;
     }
   }
-  else {
+  for (size_t i = sizeLeft; i < SIZE; ++i) {
     QPointF ptfLeft;
-    for (int i = 0; i < SIZE; ++i) {
-      this->slToXy(m_planningData.reference_points[i].s, leftWidth, ptfLeft);
 
+    if (i == sizeLeft && i > 0) {
+      this->slToXy(m_planningData.left_road_boundary_end_s, leftWidth, ptfLeft);
       pgfLeft << ptfLeft;
-      m_ptfsLeftRoadSide[i] = ptfLeft;
     }
+    this->slToXy(m_planningData.reference_points[i].s, leftWidth, ptfLeft);
+    pgfLeft << ptfLeft;
+    m_ptfsLeftRoadSide[i] = ptfLeft;
   }
 
   // right
   if (m_planningData.right_road_boundary_available) {
     QPointF ptfRight;
-    for (int i = 0; i < SIZE; ++i) {
-      double s = m_planningData.reference_points[i].s;
-      if (s > 11) {
+    for (size_t i = 0; i < SIZE; ++i) {
+      double s = 0.0;
+      double l = 0.0;
+      if (i == 0 && s > m_planningData.right_road_boundary_start_s) {
+        s = m_planningData.right_road_boundary_start_s;
+        l = 0.0;
+        for (size_t j = 0; j < 5; ++j) {
+          l += m_planningData.right_road_boundary[j] * pow(s, j);
+        }
+        this->slToXy(s, l, ptfRight);
+        pgfRightBound << ptfRight;
+      }
+      if (s > m_planningData.right_road_boundary_end_s) {
+        sizeRight = i;
+        s = m_planningData.right_road_boundary_end_s;
+        l = 0.0;
+        for (size_t j = 0; j < 5; ++j) {
+          l += m_planningData.right_road_boundary[j] * pow(s, j);
+        }
+        this->slToXy(s, l, ptfRight);
+        pgfRightBound << ptfRight;
         break;
       }
-      double l = 0.0;
-      for (int j = 0; j < 5; ++j) {
+
+      s = m_planningData.reference_points[i].s;
+      l = 0.0;
+      for (size_t j = 0; j < 5; ++j) {
         l += m_planningData.right_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfRight);
-
-      pgfRight << ptfRight;
+      pgfRightBound << ptfRight;
       m_ptfsRightRoadSide[i] = ptfRight;
     }
   }
-  else {
+  for (size_t i = sizeRight; i < SIZE; ++i) {
     QPointF ptfRight;
-    for (int i = 0; i < SIZE; ++i) {
-      this->slToXy(m_planningData.reference_points[i].s, - rightWidth, ptfRight);
-
+    if (i == sizeLeft && i > 0) {
+      this->slToXy(m_planningData.right_road_boundary_end_s, - rightWidth, ptfRight);
       pgfRight << ptfRight;
-      m_ptfsRightRoadSide[i] = ptfRight;
     }
+
+    this->slToXy(m_planningData.reference_points[i].s, - rightWidth, ptfRight);
+    pgfRight << ptfRight;
+    m_ptfsRightRoadSide[i] = ptfRight;
   }
 
   // reference
-  for (int i = 0; i < SIZE; ++i) {
+  for (size_t i = 0; i < SIZE; ++i) {
     pgfReference << QPointF(m_planningData.reference_points[i].x,
                             m_planningData.reference_points[i].y);
   }
 
   painter.save();
-
   QPen pen;
+
   pen.setWidth(4);
-  pen.setColor(m_planningData.left_road_boundary_available ? Qt::green : Qt::yellow);
+  pen.setColor(Qt::green);
   pen.setStyle(Qt::SolidLine);
   painter.setPen(pen);
-  painter.drawPolyline(m_transform.map(pgfLeft));
+  if (pgfLeftBound.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfLeftBound));
+  }
+  if (pgfRightBound.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfRightBound));
+  }
 
-  pen.setColor(m_planningData.right_road_boundary_available ? Qt::green : Qt::yellow);
+  pen.setColor(Qt::yellow);
   painter.setPen(pen);
-  painter.drawPolyline(m_transform.map(pgfRight));
+  if (pgfLeft.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfLeft));
+  }
+  if (pgfRight.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfRight));
+  }
 
   pen.setWidth(1);
   pen.setColor(Qt::black);

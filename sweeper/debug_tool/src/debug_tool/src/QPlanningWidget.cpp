@@ -480,7 +480,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"] = planningData.left_road_boundary_available;
   roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"] = planningData.right_road_boundary_available;
   Json::Value leftRoadBoundary, rightRoadBoundary;
-  for (int i = 0; i < 5; ++i) {
+  for (size_t i = 0; i < 5; ++i) {
     Json::Value itemLeft = planningData.left_road_boundary[i];
     leftRoadBoundary.append(itemLeft);
     Json::Value itemRight = planningData.right_road_boundary[i];
@@ -488,6 +488,10 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   }
   roadInfo["LEFT_ROAD_BOUNDARY"] = leftRoadBoundary;
   roadInfo["RIGHT_ROAD_BOUNDARY"] = rightRoadBoundary;
+  roadInfo["LEFT_ROAD_BOUNDARY_START_S"] = planningData.left_road_boundary_start_s;
+  roadInfo["LEFT_ROAD_BOUNDARY_END_S"] = planningData.left_road_boundary_end_s;
+  roadInfo["RIGHT_ROAD_BOUNDARY_START_S"] = planningData.right_road_boundary_start_s;
+  roadInfo["RIGHT_ROAD_BOUNDARY_END_S"] = planningData.right_road_boundary_end_s;
 
   // referene
   Json::Value referenceLine;
@@ -736,6 +740,10 @@ void QPlanningWidget::parseDataFromJson(
   for (int i = 0; i < SIZE_BOUND; ++i) {
     planningData.right_road_boundary[i] = roadInfo["RIGHT_ROAD_BOUNDARY"][i].asDouble();
   }
+  planningData.left_road_boundary_start_s = roadInfo["LEFT_ROAD_BOUNDARY_START_S"].asDouble();
+  planningData.left_road_boundary_end_s = roadInfo["LEFT_ROAD_BOUNDARY_END_S"].asDouble();
+  planningData.right_road_boundary_start_s = roadInfo["RIGHT_ROAD_BOUNDARY_START_S"].asDouble();
+  planningData.right_road_boundary_end_s = roadInfo["RIGHT_ROAD_BOUNDARY_END_S"].asDouble();
 
   // referene
   Json::Value referencePoints = referenceLine["REFERENCE_POINTS"];

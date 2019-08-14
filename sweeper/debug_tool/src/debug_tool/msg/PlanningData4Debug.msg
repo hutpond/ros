@@ -40,6 +40,10 @@ bool left_road_boundary_available
 bool right_road_boundary_available
 float64[5] left_road_boundary
 float64[5] right_road_boundary
+float64 left_road_boundary_start_s
+float64 left_road_boundary_end_s
+float64 right_road_boundary_start_s
+float64 right_road_boundary_end_s
 float64 left_half_road_width
 float64 right_half_road_width
 

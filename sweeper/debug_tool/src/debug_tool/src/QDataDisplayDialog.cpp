@@ -152,6 +152,14 @@ void QDataDisplayDialog::setPlanningData(
                        arg(i).
                        arg(planningData.right_road_boundary[i]));
   }
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("LEFT_ROAD_BOUNDARY_S: %1, %2").
+                arg(planningData.left_road_boundary_start_s).
+                arg(planningData.left_road_boundary_end_s));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("RIGHT_ROAD_BOUNDARY_S: %1, %2").
+                arg(planningData.right_road_boundary_start_s).
+                arg(planningData.right_road_boundary_end_s));
 
   // planning path
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
