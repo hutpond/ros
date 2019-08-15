@@ -98,17 +98,20 @@ void QDrawPathWidget::drawMapBorder(QPainter &painter)
 void QDrawPathWidget::drawPath(QPainter &painter)
 {
   QPolygonF pgf;
-  const QList<QSharedPointer<Point>> &points = m_rObjProject.getPathPoints();
+  const QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
   const int SIZE = points.size();
   for (int i = 0; i < SIZE - 1; ++i) {
-    const QSharedPointer<Point> pt = points.at(i);
-    const QSharedPointer<Point> pt2 = points.at(i + 1);
-    if (pt->x > MAX_POS || pt2->x > MAX_POS) {
+    const QSharedPointer<MapBinData> pt = points.at(i);
+    if (pt->clear) {
+      if (pgf.size() > 0) {
+        pgf = m_transform.map(pgf);
+        painter.drawPolyline(pgf);
+        pgf.clear();
+      }
       continue;
     }
     pgf << QPointF(pt->x, pt->y);
   }
-
   if (pgf.size() > 0) {
     pgf = m_transform.map(pgf);
     painter.drawPolyline(pgf);
@@ -130,7 +133,7 @@ void QDrawPathWidget::calcMapRect()
 {
   constexpr float COEF = 1.2;
   if (qFuzzyCompare(m_rectfSelectMap.width(), 0)) {
-    const QList<QSharedPointer<Point>> &points = m_rObjProject.getPathPoints();
+    const QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
     if (points.size() == 0) {
       const float WIDTH = 8;
       const float LENGTH = WIDTH / m_rectPicture.width() * m_rectPicture.height();
@@ -142,7 +145,7 @@ void QDrawPathWidget::calcMapRect()
       float y_min = MAX_POS;
       float y_max = -MAX_POS;
       for (const auto &it : points) {
-        if (it->x > MAX_POS) {
+        if (it->clear) {
           continue;
         }
         if (x_min > it->x) {
@@ -298,14 +301,14 @@ void QDrawPathWidget::mouseMoveEvent(QMouseEvent *e)
       linef = inverted.map(linef);
       const double RADIUS = linef.length();
       ptf = inverted.map(ptf);
-      QList<QSharedPointer<Point>> &points = m_rObjProject.getPathPoints();
+      QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
       foreach (auto &pt, points) {
-        if (pt->x > MAX_POS) {
+        if (pt->clear) {
           continue;
         }
         double length = QLineF(ptf.x(), ptf.y(), pt->x, pt->y).length();
         if (length <= RADIUS) {
-          pt->x = FLT_MAX;
+          pt->clear = true;
         }
       }
     }

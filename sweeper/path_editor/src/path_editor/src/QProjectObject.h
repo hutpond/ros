@@ -26,48 +26,6 @@ struct ProjectInfo
 };
 
 constexpr double MAX_POS = 10000;
-struct Point
-{
-  double x;
-  double y;
-  double z;
-
-  double lat;
-  double lon;
-  double height;
-
-  Point()
-    : x(0), y(0), z(0)
-    , lat(0), lon(0), height(0)
-  {}
-  Point(double _x, double _y, double _z, double lat_, double lon_, double height_)
-  {
-    x = _x;
-    y = _y;
-    z = _z;
-    lat = lat_;
-    lon = lon_;
-    height = height_;
-  }
-  Point & operator=(const Point &rhs) {
-    this->x = rhs.x;
-    this->y = rhs.y;
-    this->z = rhs.z;
-    return *this;
-  }
-  double distance(const Point &point) {
-    return qSqrt(
-          (this->x - point.x) * (this->x - point.x) +
-          (this->y - point.y) * (this->y - point.y) +
-          (this->z - point.z) * (this->z - point.z)
-          );
-  }
-  double angle() {
-    QLineF line(0, 0, 0, 10);
-    QLineF line2(0, 0, this->x, this->y);
-    return line.angleTo(line2);
-  }
-};
 
 struct InfoPacket
 {
@@ -96,19 +54,72 @@ struct InfoPacket
   char	m_cUpdateFlag; // flag of update，1: update, 0: not update
 };
 
-typedef struct MapCellData_{
-  float fX;         //地理坐标位置X
-  float fY;         //地理坐标位置Y
-  float fIntensityAvg;    //激光反射强度均值
-  float fIntensitySigma;  //激光反射方差
-  float fHeightAvg;       //高度均值
-  float fHeightSigma;     //高度方差
-  float fMaxIntensity;    //反射强度最大值
-  float fMaxHeight;       //高度最大值
-  double dLon;          //经度
-  double dLat;          //纬度
-  char chLaneId;        //所在的车道ID
-}MapCellData;
+struct MapBinData
+{
+  int id;
+  double x;
+  double y;
+  double z;
+
+  double pitch;
+  double roll;
+  double yaw;
+
+  double lat;
+  double lon;
+  double alt;
+
+  bool clear;
+
+  MapBinData()
+    : x(0), y(0), z(0)
+    , pitch(0), roll(0), yaw(0)
+    , lat(0), lon(0), alt(0)
+    , clear(false)
+  {}
+
+  MapBinData(double _x, double _y, double _z,
+             double lat_, double lon_, double alt_,
+             double pitch_, double roll_, double yaw_)
+  {
+    x = _x;
+    y = _y;
+    z = _z;
+    lat = lat_;
+    lon = lon_;
+    alt = alt_;
+    pitch = pitch_;
+    roll = roll_;
+    yaw = yaw_;
+    clear = false;
+  }
+
+  MapBinData & operator=(const MapBinData &rhs) {
+    this->x = rhs.x;
+    this->y = rhs.y;
+    this->z = rhs.z;
+    this->lat = rhs.lat;
+    this->lon = rhs.lon;
+    this->alt = rhs.alt;
+    this->pitch = rhs.pitch;
+    this->roll = rhs.roll;
+    this->yaw = rhs.yaw;
+    return *this;
+  }
+  double distance(const MapBinData &data) {
+    return qSqrt(
+          (this->x - data.x) * (this->x - data.x) +
+          (this->y - data.y) * (this->y - data.y) +
+          (this->z - data.z) * (this->z - data.z)
+          );
+  }
+  double angle() {
+    QLineF line(0, 0, 0, 10);
+    QLineF line2(0, 0, this->x, this->y);
+    return line.angleTo(line2);
+  }
+
+};
 
 class QProjectObject : public QObject
 {
@@ -123,8 +134,8 @@ public:
   void buildProject();
   void setImuData(const DataPacket *);
 
-  const QList<QSharedPointer<Point>> & getPathPoints() const;
-  QList<QSharedPointer<Point>> & getPathPoints();
+  const QList<QSharedPointer<MapBinData>> & getPathPoints() const;
+  QList<QSharedPointer<MapBinData>> & getPathPoints();
 
 protected slots:
   void onSetImuData(const path_editor::ads_ins_data::ConstPtr &);
@@ -145,7 +156,7 @@ public slots:
 
 private:
   QOpenDriveObject *m_pObjOpenDrive;
-  QList<QSharedPointer<Point>> m_listReferensePoints;
+  QList<QSharedPointer<MapBinData>> m_listReferensePoints;
   Eigen::Vector3d m_vector3dOrigin;
 
   QString m_strPathName;

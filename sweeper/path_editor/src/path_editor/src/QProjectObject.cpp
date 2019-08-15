@@ -24,34 +24,32 @@
 #include "QOpenDriveObject.h"
 
 
-std::ostream & operator<<(std::ostream &out, const MapCellData &data) {
-  out.write(reinterpret_cast<const char*>(&data.fX), sizeof(data.fX));
-  out.write(reinterpret_cast<const char*>(&data.fY), sizeof(data.fY));
-  out.write(reinterpret_cast<const char*>(&data.fIntensityAvg), sizeof(data.fIntensityAvg));
-  out.write(reinterpret_cast<const char*>(&data.fIntensitySigma), sizeof(data.fIntensitySigma));
-  out.write(reinterpret_cast<const char*>(&data.fHeightAvg), sizeof(data.fHeightAvg));
-  out.write(reinterpret_cast<const char*>(&data.fHeightSigma), sizeof(data.fHeightSigma));
-  out.write(reinterpret_cast<const char*>(&data.fMaxIntensity), sizeof(data.fMaxIntensity));
-  out.write(reinterpret_cast<const char*>(&data.fMaxHeight), sizeof(data.fMaxHeight));
-  out.write(reinterpret_cast<const char*>(&data.dLon), sizeof(data.dLon));
-  out.write(reinterpret_cast<const char*>(&data.dLat), sizeof(data.dLat));
-  out.write(reinterpret_cast<const char*>(&data.chLaneId), sizeof(data.chLaneId));
+std::ostream & operator<<(std::ostream &out, const MapBinData &data) {
+  out.write(reinterpret_cast<const char*>(&data.id), sizeof(data.id));
+  out.write(reinterpret_cast<const char*>(&data.x), sizeof(data.x));
+  out.write(reinterpret_cast<const char*>(&data.y), sizeof(data.y));
+  out.write(reinterpret_cast<const char*>(&data.z), sizeof(data.z));
+  out.write(reinterpret_cast<const char*>(&data.pitch), sizeof(data.pitch));
+  out.write(reinterpret_cast<const char*>(&data.roll), sizeof(data.roll));
+  out.write(reinterpret_cast<const char*>(&data.yaw), sizeof(data.yaw));
+  out.write(reinterpret_cast<const char*>(&data.lat), sizeof(data.lat));
+  out.write(reinterpret_cast<const char*>(&data.lon), sizeof(data.lon));
+  out.write(reinterpret_cast<const char*>(&data.alt), sizeof(data.alt));
 
   return out;
 }
 
-std::istream & operator>>(std::istream &in, MapCellData &data) {
-  in.read(reinterpret_cast<char*>(&data.fX), sizeof(data.fX));
-  in.read(reinterpret_cast<char*>(&data.fY), sizeof(data.fY));
-  in.read(reinterpret_cast<char*>(&data.fIntensityAvg), sizeof(data.fIntensityAvg));
-  in.read(reinterpret_cast<char*>(&data.fIntensitySigma), sizeof(data.fIntensitySigma));
-  in.read(reinterpret_cast<char*>(&data.fHeightAvg), sizeof(data.fHeightAvg));
-  in.read(reinterpret_cast<char*>(&data.fHeightSigma), sizeof(data.fHeightSigma));
-  in.read(reinterpret_cast<char*>(&data.fMaxIntensity), sizeof(data.fMaxIntensity));
-  in.read(reinterpret_cast<char*>(&data.fMaxHeight), sizeof(data.fMaxHeight));
-  in.read(reinterpret_cast<char*>(&data.dLon), sizeof(data.dLon));
-  in.read(reinterpret_cast<char*>(&data.dLat), sizeof(data.dLat));
-  in.read(reinterpret_cast<char*>(&data.chLaneId), sizeof(data.chLaneId));
+std::istream & operator>>(std::istream &in, MapBinData &data) {
+  in.read(reinterpret_cast<char*>(&data.id), sizeof(data.id));
+  in.read(reinterpret_cast<char*>(&data.x), sizeof(data.x));
+  in.read(reinterpret_cast<char*>(&data.y), sizeof(data.y));
+  in.read(reinterpret_cast<char*>(&data.z), sizeof(data.z));
+  in.read(reinterpret_cast<char*>(&data.pitch), sizeof(data.pitch));
+  in.read(reinterpret_cast<char*>(&data.roll), sizeof(data.roll));
+  in.read(reinterpret_cast<char*>(&data.yaw), sizeof(data.yaw));
+  in.read(reinterpret_cast<char*>(&data.lat), sizeof(data.lat));
+  in.read(reinterpret_cast<char*>(&data.lon), sizeof(data.lon));
+  in.read(reinterpret_cast<char*>(&data.alt), sizeof(data.alt));
 
   return in;
 }
@@ -194,28 +192,22 @@ void QProjectObject::buildProject()
   fileName.append(".bin");
   std::ofstream out(fileName, std::ios::binary);
 
-  MapCellData data;
-  memset(&data, 0, sizeof(data));
-  QSharedPointer<Point> point = m_listReferensePoints[0];
-  data.dLat = point->lat;
-  data.dLon = point->lon;
-  data.fX = point->x;
-  data.fY = point->y;
-  out << data;
+  QSharedPointer<MapBinData> data = m_listReferensePoints[0];
+  data->id = -1;
+  out << *data;
 
   const int SIZE = static_cast<int>(m_listReferensePoints.size());
   const double MAX_DIS = 0.5;
   for (int i = 1; i < SIZE; ++ i) {
-    if (m_listReferensePoints[i]->distance(*point) < MAX_DIS) {
+    if (m_listReferensePoints[i]->clear ||
+        m_listReferensePoints[i]->distance(*data) < MAX_DIS) {
       continue;
     }
 
-    point = m_listReferensePoints[i];
-    data.dLat = point->lat;
-    data.dLon = point->lon;
-    data.fX = point->x;
-    data.fY = point->y;
-    out << data;
+    int id = data->id + 1;
+    data = m_listReferensePoints[i];
+    data->id = id;
+    out << *data;
   }
   out.close();
 }
@@ -267,9 +259,10 @@ void QProjectObject::setImuData(const DataPacket *data)
   vector3d = this->Blh2Xyz(vector3d);
   vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
 
-  QSharedPointer<Point> point(new Point(
-                                vector3d(0), vector3d(1), vector3d(2),
-                                pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude));
+  QSharedPointer<MapBinData> point
+      (new MapBinData(vector3d(0), vector3d(1), vector3d(2),
+                      pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude,
+                      pInfo->m_dPitch, pInfo->m_dRoll, pInfo->m_dYaw));
   m_listReferensePoints.push_back(point);
 }
 
@@ -290,8 +283,10 @@ void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &dat
   vector3d = this->Blh2Xyz(vector3d);
   vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
 
-  QSharedPointer<Point> point(new Point(vector3d(0), vector3d(1), vector3d(2),
-                                        data->lat, data->lon, data->height));
+  QSharedPointer<MapBinData> point(
+        new MapBinData(vector3d(0), vector3d(1), vector3d(2),
+                  data->lat, data->lon, data->height,
+                  data->pitch, data->roll, data->yaw));
   m_listReferensePoints.push_back(point);
 }
 
@@ -351,7 +346,7 @@ void QProjectObject::createPointsList()
     double angle = i * (2 * 3.14159265 * 3 / SIZE);
     double x = s * qSin(angle);
     double y = s * qCos(angle);
-    QSharedPointer<Point> pt(new Point(x, y, 0, 0, 0, 0));
+    QSharedPointer<MapBinData> pt(new MapBinData(x, y, 0, 0, 0, 0, 0, 0, 0));
     m_listReferensePoints.append(pt);
   }
 }
@@ -362,12 +357,12 @@ void QProjectObject::createPointsList()
  *
  * @return 路径点列表
  */
-const QList<QSharedPointer<Point>> & QProjectObject::getPathPoints() const
+const QList<QSharedPointer<MapBinData>> & QProjectObject::getPathPoints() const
 {
   return m_listReferensePoints;
 }
 
-QList<QSharedPointer<Point>> & QProjectObject::getPathPoints()
+QList<QSharedPointer<MapBinData>> & QProjectObject::getPathPoints()
 {
   return m_listReferensePoints;
 }

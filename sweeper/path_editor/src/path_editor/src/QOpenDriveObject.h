@@ -11,7 +11,7 @@
 #include <QObject>
 
 struct InfoPacket;
-struct Point;
+struct MapBinData;
 
 class QOpenDriveObject : public QObject
 {
@@ -19,8 +19,8 @@ class QOpenDriveObject : public QObject
 public:
   explicit QOpenDriveObject(QObject *parent = nullptr);
 
-  void readOpenDriveFile(const QString &, const QString &, QList<QSharedPointer<Point>> &);
-  void writeOpenDriveFile(const QString &, const QString &, const QList<QSharedPointer<Point>> &);
+  void readOpenDriveFile(const QString &, const QString &, QList<QSharedPointer<MapBinData>> &);
+  void writeOpenDriveFile(const QString &, const QString &, const QList<QSharedPointer<MapBinData>> &);
 
 signals:
 

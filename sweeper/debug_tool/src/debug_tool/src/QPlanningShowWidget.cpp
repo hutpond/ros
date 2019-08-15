@@ -366,20 +366,37 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
   const double leftWidth = m_planningData.left_half_road_width;
   const double rightWidth = m_planningData.right_half_road_width;
 
-  const double leftStart = m_planningData.left_road_boundary_start_s;
-  const double leftEnd = m_planningData.left_road_boundary_end_s;
-  const double rightStart = m_planningData.right_road_boundary_start_s;
-  const double rightEnd = m_planningData.right_road_boundary_end_s;
+  double leftStart = m_planningData.left_road_boundary_start_s;
+  double leftEnd = m_planningData.left_road_boundary_end_s;
+  double rightStart = m_planningData.right_road_boundary_start_s;
+  double rightEnd = m_planningData.right_road_boundary_end_s;
+
+  const double ref_start_s = pts[0].s;
+  const double ref_end_s = 10.0 + m_planningData.head_distance;
+  if (leftEnd <= ref_start_s || leftStart >= ref_end_s) {
+    leftStart = ref_start_s;
+    leftEnd = ref_end_s;
+  }
+  if (leftStart < ref_start_s) {
+    leftStart = ref_start_s;
+  }
+  if (leftEnd > ref_end_s){
+    leftEnd = ref_end_s;
+  }
+  if (rightEnd <= ref_start_s || rightStart >= ref_end_s) {
+    rightStart = ref_start_s;
+    rightEnd = ref_end_s;
+  }
+  if (rightStart < ref_start_s) {
+    rightStart = ref_start_s;
+  }
+  if (rightEnd > ref_end_s){
+    rightEnd = ref_end_s;
+  }
 
   // left
   size_t indexLeft = 0, indexLeft2 = 0;
   if (m_planningData.left_road_boundary_available) {
-    if (leftStart < pts[0].s) {
-      indexLeft = 0;
-    }
-    if (leftEnd < pts[0].s) {
-      indexLeft = 0;
-    }
     for (size_t i = 1; i < SIZE; ++i) {
       if (leftStart >= pts[i - 1].s && leftStart < pts[i].s) {
         indexLeft = i;
@@ -388,19 +405,10 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
         indexLeft2 = i;
       }
     }
-    if (leftEnd >= pts[SIZE - 1].s) {
-      indexLeft2 = SIZE - 1;
-    }
   }
   // right
   size_t indexRight = 0, indexRight2 = 0;
   if (m_planningData.right_road_boundary_available) {
-    if (rightStart < pts[0].s) {
-      indexRight = 0;
-    }
-    if (rightEnd < pts[0].s) {
-      indexRight2 = 0;
-    }
     for (size_t i = 1; i < SIZE; ++i) {
       if (rightStart >= pts[i - 1].s && rightStart < pts[i].s) {
         indexRight = i;
@@ -408,9 +416,6 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
       if (rightEnd >= pts[i - 1].s && rightEnd < pts[i].s) {
         indexRight2 = i;
       }
-    }
-    if (rightEnd >= pts[SIZE - 1].s) {
-      indexRight2 = SIZE - 1;
     }
   }
 
@@ -496,7 +501,7 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
         l += m_planningData.right_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfRight);
-      pgfLeftBound << ptfRight;
+      pgfRightBound << ptfRight;
     }
   }
   for (size_t i = indexRight2; i < SIZE; ++ i) {
