@@ -139,7 +139,7 @@ void QPlanningShowWidget::drawImage()
   this->drawPlanningPoint(painter);
   this->drawPlanningPath(painter);
   this->drawDecisionTargets(painter);
-  this->drawTrackTarget(painter);
+  this->drawTrackTargetWithPoints(painter);
 }
 
 /*******************************************************
@@ -358,113 +358,156 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 {
+  const size_t SIZE = qBound<size_t>(0, static_cast<size_t>(m_planningData.num_reference_points), 100);
+  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+      _reference_points_type;
+  const _reference_points_type &pts = m_planningData.reference_points;
+
   const double leftWidth = m_planningData.left_half_road_width;
   const double rightWidth = m_planningData.right_half_road_width;
-  const size_t SIZE = qBound<size_t>(0, static_cast<size_t>(m_planningData.num_reference_points), 100);
 
-  size_t sizeLeft = 0, sizeLeft2 = 0;
-  size_t sizeRight = 0, sizeRight2 = 0;
-  QPolygonF pgfLeft, pgfRight, pgfReference;
-  QPolygonF pgfLeft2, pgfRight2;
-  QPolygonF pgfLeftBound, pgfRightBound;
+  const double leftStart = m_planningData.left_road_boundary_start_s;
+  const double leftEnd = m_planningData.left_road_boundary_end_s;
+  const double rightStart = m_planningData.right_road_boundary_start_s;
+  const double rightEnd = m_planningData.right_road_boundary_end_s;
 
   // left
+  size_t indexLeft = 0, indexLeft2 = 0;
   if (m_planningData.left_road_boundary_available) {
+    if (leftStart < pts[0].s) {
+      indexLeft = 0;
+    }
+    if (leftEnd < pts[0].s) {
+      indexLeft = 0;
+    }
+    for (size_t i = 1; i < SIZE; ++i) {
+      if (leftStart >= pts[i - 1].s && leftStart < pts[i].s) {
+        indexLeft = i;
+      }
+      if (leftEnd >= pts[i - 1].s && leftEnd < pts[i].s) {
+        indexLeft2 = i;
+      }
+    }
+    if (leftEnd >= pts[SIZE - 1].s) {
+      indexLeft2 = SIZE - 1;
+    }
+  }
+  // right
+  size_t indexRight = 0, indexRight2 = 0;
+  if (m_planningData.right_road_boundary_available) {
+    if (rightStart < pts[0].s) {
+      indexRight = 0;
+    }
+    if (rightEnd < pts[0].s) {
+      indexRight2 = 0;
+    }
+    for (size_t i = 1; i < SIZE; ++i) {
+      if (rightStart >= pts[i - 1].s && rightStart < pts[i].s) {
+        indexRight = i;
+      }
+      if (rightEnd >= pts[i - 1].s && rightEnd < pts[i].s) {
+        indexRight2 = i;
+      }
+    }
+    if (rightEnd >= pts[SIZE - 1].s) {
+      indexRight2 = SIZE - 1;
+    }
+  }
+
+  // left
+  QPolygonF pgfLeft, pgfLeft2;
+  QPolygonF pgfLeftBound;
+  for (size_t i = 0; i < indexLeft; ++ i) {
     QPointF ptfLeft;
-    for (size_t i = 0; i < SIZE; ++i) {
-      double s = m_planningData.reference_points[i].s;
-      double l = 0.0;
-      if (i == 0 && s > m_planningData.left_road_boundary_start_s) {
-        s = m_planningData.left_road_boundary_start_s;
-        l = 0.0;
-        for (size_t j = 0; j < 5; ++j) {
-          l += m_planningData.left_road_boundary[j] * pow(s, j);
-        }
-        this->slToXy(s, l, ptfLeft);
-        pgfLeftBound << ptfLeft;
-      }
-      if (s > m_planningData.left_road_boundary_end_s) {
-        sizeLeft = i;
-        s = m_planningData.left_road_boundary_end_s;
-        l = 0.0;
-        for (size_t j = 0; j < 5; ++j) {
-          l += m_planningData.left_road_boundary[j] * pow(s, j);
-        }
-        this->slToXy(s, l, ptfLeft);
-        pgfLeftBound << ptfLeft;
-        break;
-      }
+    this->slToXy(pts[i].s, leftWidth, ptfLeft);
+    pgfLeft << ptfLeft;
+    m_ptfsLeftRoadSide[i] = ptfLeft;
+  }
+  for (size_t i = indexLeft; i < indexLeft2; ++ i) {
+    QPointF ptfLeft;
+    double s, l;
+    if (i == indexLeft && leftStart >=  pts[0].s) {
+      s = leftStart;
+      l = 0.0;
       for (size_t j = 0; j < 5; ++j) {
         l += m_planningData.left_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfLeft);
-
       pgfLeftBound << ptfLeft;
-      m_ptfsLeftRoadSide[i] = ptfLeft;
+    }
+    s = pts[i].s;
+    l = 0.0;
+    for (size_t j = 0; j < 5; ++j) {
+      l += m_planningData.left_road_boundary[j] * pow(s, j);
+    }
+    this->slToXy(s, l, ptfLeft);
+    pgfLeftBound << ptfLeft;
+    m_ptfsLeftRoadSide[i] = ptfLeft;
+    if (i == indexLeft2 - 1 && leftEnd < pts[SIZE - 1].s) {
+      s = leftEnd;
+      l = 0.0;
+      for (size_t j = 0; j < 5; ++j) {
+        l += m_planningData.left_road_boundary[j] * pow(s, j);
+      }
+      this->slToXy(s, l, ptfLeft);
+      pgfLeftBound << ptfLeft;
     }
   }
-  for (size_t i = sizeLeft; i < SIZE; ++i) {
+  for (size_t i = indexLeft2; i < SIZE; ++ i) {
     QPointF ptfLeft;
-
-    if (i == sizeLeft && i > 0) {
-      this->slToXy(m_planningData.left_road_boundary_end_s, leftWidth, ptfLeft);
-      pgfLeft << ptfLeft;
-    }
-    this->slToXy(m_planningData.reference_points[i].s, leftWidth, ptfLeft);
-    pgfLeft << ptfLeft;
+    this->slToXy(pts[i].s, leftWidth, ptfLeft);
+    pgfLeft2 << ptfLeft;
     m_ptfsLeftRoadSide[i] = ptfLeft;
   }
 
   // right
-  if (m_planningData.right_road_boundary_available) {
+  QPolygonF pgfRight, pgfRight2;
+  QPolygonF pgfRightBound;
+  for (size_t i = 0; i < indexRight; ++ i) {
     QPointF ptfRight;
-    for (size_t i = 0; i < SIZE; ++i) {
-      double s = 0.0;
-      double l = 0.0;
-      if (i == 0 && s > m_planningData.right_road_boundary_start_s) {
-        s = m_planningData.right_road_boundary_start_s;
-        l = 0.0;
-        for (size_t j = 0; j < 5; ++j) {
-          l += m_planningData.right_road_boundary[j] * pow(s, j);
-        }
-        this->slToXy(s, l, ptfRight);
-        pgfRightBound << ptfRight;
-      }
-      if (s > m_planningData.right_road_boundary_end_s) {
-        sizeRight = i;
-        s = m_planningData.right_road_boundary_end_s;
-        l = 0.0;
-        for (size_t j = 0; j < 5; ++j) {
-          l += m_planningData.right_road_boundary[j] * pow(s, j);
-        }
-        this->slToXy(s, l, ptfRight);
-        pgfRightBound << ptfRight;
-        break;
-      }
-
-      s = m_planningData.reference_points[i].s;
+    this->slToXy(pts[i].s, - rightWidth, ptfRight);
+    pgfRight << ptfRight;
+    m_ptfsRightRoadSide[i] = ptfRight;
+  }
+  for (size_t i = indexRight; i < indexRight2; ++ i) {
+    QPointF ptfRight;
+    double s, l;
+    if (i == indexRight && rightStart >= pts[0].s) {
+      s = rightStart;
       l = 0.0;
       for (size_t j = 0; j < 5; ++j) {
         l += m_planningData.right_road_boundary[j] * pow(s, j);
       }
       this->slToXy(s, l, ptfRight);
       pgfRightBound << ptfRight;
-      m_ptfsRightRoadSide[i] = ptfRight;
+    }
+    s = pts[i].s;
+    l = 0.0;
+    for (size_t j = 0; j < 5; ++j) {
+      l += m_planningData.right_road_boundary[j] * pow(s, j);
+    }
+    this->slToXy(s, l, ptfRight);
+    pgfRightBound << ptfRight;
+    m_ptfsRightRoadSide[i] = ptfRight;
+    if (i == indexLeft2 - 1 && rightEnd < pts[SIZE - 1].s) {
+      s = rightEnd;
+      l = 0.0;
+      for (size_t j = 0; j < 5; ++j) {
+        l += m_planningData.right_road_boundary[j] * pow(s, j);
+      }
+      this->slToXy(s, l, ptfRight);
+      pgfLeftBound << ptfRight;
     }
   }
-  for (size_t i = sizeRight; i < SIZE; ++i) {
+  for (size_t i = indexRight2; i < SIZE; ++ i) {
     QPointF ptfRight;
-    if (i == sizeLeft && i > 0) {
-      this->slToXy(m_planningData.right_road_boundary_end_s, - rightWidth, ptfRight);
-      pgfRight << ptfRight;
-    }
-
-    this->slToXy(m_planningData.reference_points[i].s, - rightWidth, ptfRight);
-    pgfRight << ptfRight;
+    this->slToXy(pts[i].s, - rightWidth, ptfRight);
+    pgfRight2 << ptfRight;
     m_ptfsRightRoadSide[i] = ptfRight;
   }
 
   // reference
+  QPolygonF pgfReference;
   for (size_t i = 0; i < SIZE; ++i) {
     pgfReference << QPointF(m_planningData.reference_points[i].x,
                             m_planningData.reference_points[i].y);
@@ -491,6 +534,12 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
   }
   if (pgfRight.size() > 0) {
     painter.drawPolyline(m_transform.map(pgfRight));
+  }
+  if (pgfLeft2.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfLeft2));
+  }
+  if (pgfRight2.size() > 0) {
+    painter.drawPolyline(m_transform.map(pgfRight2));
   }
 
   pen.setWidth(1);
@@ -1020,6 +1069,76 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
     if (pgf.empty()) {
       continue;
     }
+
+    bool contains = false;
+    foreach (const QPointF &ptf, pgf) {
+      int indexLeft = -1;
+      int indexRight = -1;
+
+      // find x range
+      for (int j = 0; j < SIZE_REF - 1; ++j) {
+        if (indexLeft != -1 && indexRight != -1) {
+          break;
+        }
+        if (m_ptfsLeftRoadSide[j].x() > 10 || m_ptfsRightRoadSide[j].x() > 10) {
+          break;
+        }
+        if (indexLeft == -1 && ptf.x() > m_ptfsLeftRoadSide[j].x() &&
+             ptf.x() <= m_ptfsLeftRoadSide[j + 1].x()) {
+          indexLeft = j;
+        }
+        if (indexRight == -1 && ptf.x() > m_ptfsRightRoadSide[j].x() &&
+            ptf.x() <= m_ptfsRightRoadSide[j + 1].x()) {
+          indexRight = j;
+        }
+      }
+      if (indexLeft == -1 && indexRight == -1) {
+        continue;
+      }
+      // check y range
+      contains = ( (indexLeft != -1 && ptf.y() <= m_ptfsLeftRoadSide[indexLeft].y()) &&
+          (indexRight != -1 && ptf.y() >= m_ptfsRightRoadSide[indexRight].y()) );
+      if (contains) {
+        break;
+      }
+    }
+    if (contains) {
+      pgf = m_transform.map(pgf);
+      painter.drawPolygon(pgf);
+      painter.drawText(pgf.boundingRect(), Qt::AlignCenter, QString::number(i));
+    }
+  }
+
+  painter.restore();
+}
+
+/*******************************************************
+ * @brief 绘制激光障碍物，路边沿以内，以角点画图
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
+{
+  typedef boost::array< ::debug_tool::TrackTarget_<std::allocator<void>> , 250>  \
+      _track_objects_type;
+  const _track_objects_type &TRACKS = m_planningData.fusion_results.track_objects;
+  const int SIZE = static_cast<int>(m_planningData.fusion_results.object_count);
+  const int SIZE_REF = static_cast<int>(m_planningData.num_reference_points);
+
+  painter.save();
+  QPen pen;
+  pen.setColor(Qt::darkMagenta);
+  pen.setStyle(Qt::SolidLine);
+  painter.setFont(QFont("Times", 10));
+  painter.setPen(pen);
+
+  for (int i = 0; i < SIZE; ++i) {
+    QPolygonF pgf;
+    pgf << QPointF(TRACKS[i].P1_X, TRACKS[i].P1_Y) <<
+           QPointF(TRACKS[i].P2_X, TRACKS[i].P2_Y) <<
+           QPointF(TRACKS[i].P3_X, TRACKS[i].P3_Y) <<
+           QPointF(TRACKS[i].P4_X, TRACKS[i].P4_Y);
 
     bool contains = false;
     foreach (const QPointF &ptf, pgf) {

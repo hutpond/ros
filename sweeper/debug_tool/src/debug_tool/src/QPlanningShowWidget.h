@@ -52,6 +52,7 @@ protected:
   void drawRadar28Target(QPainter &);
   void drawRadar73Target(QPainter &);
   void drawTrackTarget(QPainter &);
+  void drawTrackTargetWithPoints(QPainter &);
   void drawDecisionTargets(QPainter &);
   void drawDecisionTargetsSL(const debug_tool::TargetPoint_<std::allocator<void>> &, QPainter &);
 
