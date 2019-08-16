@@ -21,12 +21,14 @@ uint8 moduleID_Software       = 5
 uint8 moduleID_MCU            = 6
 uint8 moduleID_EPS            = 7
 uint8 moduleID_BMS            = 8
+uint8 moduleID_COUNT          = 8
 
 uint8 moduleStatus_OK           = 0
 uint8 moduleStatus_Critical     = 1
 uint8 moduleStatus_Warning      = 2
 uint8 moduleStatus_Info_Online  = 3
 
+Header    header
 uint8     moduleID
 uint8     moduleStatus
 uint8     moduleSubtype

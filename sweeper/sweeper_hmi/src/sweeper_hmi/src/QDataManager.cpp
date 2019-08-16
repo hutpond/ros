@@ -56,7 +56,7 @@ QDataManager::QDataManager(QObject *parent)
 void QDataManager::startCheck()
 {
   m_nStep = 0;
-  m_nType = dbAds::ISelfCheck::e_type::Vehicle;
+  m_nType = dbAds::ISelfCheck::e_type::Chassis;
   m_nResult = dbAds::ISelfCheck::e_result::Pass;
   dbAds::ISelfCheck *pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
   pCheck->Start();

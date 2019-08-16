@@ -8,22 +8,39 @@ CHostApi4HMI::CHostApi4HMI()
   m_lpApi = dbAds::getApi4HMI();
   m_lpApi->StartWithHost(this, "", 1);
 
+  std::vector<std::string> cared_property = { dbAds::IApi4HMI::Item_shou_sha
+                                              , dbAds::IApi4HMI::Item_shikuo_light
+                                              , dbAds::IApi4HMI::Item_jinguang_light
+                                              , dbAds::IApi4HMI::Item_yuanguang_light
+                                              , dbAds::IApi4HMI::Item_yingji_light
+                                              , dbAds::IApi4HMI::Item_checliang_fault
+                                              , dbAds::IApi4HMI::Item_saopan
+                                              , dbAds::IApi4HMI::Item_penshui
+                                              , dbAds::IApi4HMI::Item_car_state
+                                              , dbAds::IApi4HMI::Item_module_state
+                                              , dbAds::IApi4HMI::Item_shui_liang
+                                              , dbAds::IApi4HMI::Item_dang_wei
+                                             };
   m_lpApi->InstallEventCallback([this](dbAds::IApi4HMI::CEventReport& report)
   {
-    std::cout << "report.szCode:" << report.szCode << std::endl;
+      if(dbAds::IApi4HMI::Item_module_state == report.m_ItemName)
+      {
+          std::cout << "report[" << report.m_ItemName << "]="
+                    << boost::any_cast<std::string>(report.m_value)
+                    << std::endl;
 
-    std::vector<dbAds::IApi4HMI::CFault> faults;
-    m_lpApi->GetFaultList(faults);
-    for (auto it = faults.begin(); it != faults.end(); it++)
-    {
-      std::cout << *it;
-    }
+          std::vector<dbAds::IApi4HMI::CFault> faults;
+          m_lpApi->GetFaultList(faults);
+          for (auto it = faults.begin(); it != faults.end(); it++)
+          {
+              std::cout << *it;
+          }
+      }
+      return 1;
+  }, cared_property);
 
-    return 1;
-  });
-
-  std::string topic = "/ads_hmi_command";
-  m_Subs[topic] = m_lpnode->subscribe(topic, 10, &CHostApi4HMI::OnMsg_ads_hmi_command, this);
+  std::string topic = "/ads_ad_command";
+  m_Subs[topic] = m_lpnode->subscribe(topic, 10, &CHostApi4HMI::OnMsg_ads_ad_command, this);
 
   topic = "/ads_module_report";
   m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_module_report>(topic, 2);
@@ -42,9 +59,6 @@ CHostApi4HMI::CHostApi4HMI()
 
   topic = "/ads_control_throttle_report";
   m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_throttle_report>(topic, 10);
-
-  topic = "/ads_device_report";
-  m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_device_report>(topic, 10);
 }
 
 void CHostApi4HMI::getNodeHandle(std::vector<ros::NodeHandle*> &nhs)
@@ -52,9 +66,9 @@ void CHostApi4HMI::getNodeHandle(std::vector<ros::NodeHandle*> &nhs)
   nhs.push_back(m_lpnode);
 }
 
-void CHostApi4HMI::OnMsg_ads_hmi_command(const ads_msgs::ads_hmi_command &msg)
+void CHostApi4HMI::OnMsg_ads_ad_command(const ads_msgs::ads_ad_command &msg)
 {
-  std::cout << __FUNCTION__ << "(" << msg.wRunState << ")" << std::endl;
+  std::cout << __FUNCTION__ << "(" << msg.action << ")" << std::endl;
 }
 
 

@@ -1,0 +1,11 @@
+int32   status
+int32   vehicle_class
+float32 range
+float32 heading_angle
+float32 range_rate
+float32 angle
+float32 height
+float32 width
+float32 length
+int8    br_light_indicator
+int8    turn_indicator
