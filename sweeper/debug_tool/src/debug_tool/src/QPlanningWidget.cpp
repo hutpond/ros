@@ -235,15 +235,29 @@ void QPlanningWidget::replayJson(const QString &path)
 bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::PlanningData4Debug &planningData)
 {
   const std::string fileName = name.substr(1, name.length() - 2);
-  std::ifstream in(fileName.c_str());
-  std::string str((std::istreambuf_iterator<char>(in)),
-                      std::istreambuf_iterator<char>());
-  in.close();
-  Json::Value root;
-  Json::Reader reader;
-  if (!reader.parse(str, root)) {
+
+  FILE *pf = fopen(fileName.c_str(), "r");
+  if (pf == NULL) {
     return false;
   }
+  fseek(pf , 0 , SEEK_END);
+  long size = ftell(pf);
+  rewind(pf);
+  char *buffer = (char*)malloc(size + 1);
+  memset(buffer, 0, size + 1);
+  if (buffer == NULL) {
+    return false;
+  }
+  fread(buffer,1, size, pf);
+  fclose(pf);
+
+  Json::Value root;
+  Json::Reader reader;
+  if (!reader.parse(buffer, root)) {
+    delete buffer;
+    return false;
+  }
+  delete buffer;
   this->parseDataFromJson(root, planningData);
   this->sortTrackTargets(planningData);
 
