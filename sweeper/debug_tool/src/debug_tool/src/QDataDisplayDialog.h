@@ -8,16 +8,16 @@
 #ifndef Q_DATA_DISPLAY_WIDGET_H
 #define Q_DATA_DISPLAY_WIDGET_H
 
-#include <QDialog>
+#include <QWidget>
 #include "debug_tool/PlanningData4Debug.h"
 
 class QTreeWidget;
-class QDataDisplayDialog : public QDialog
+class QDataDisplayDialog : public QWidget
 {
   Q_OBJECT
 public:
   explicit QDataDisplayDialog(QWidget *parent = NULL);
-  void setPlanningData(const QString &, const debug_tool::PlanningData4Debug &);
+  void setPlanningData(const debug_tool::PlanningData4Debug &);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

@@ -21,6 +21,7 @@
 #include "QErrorFigureWidget.h"
 #include "QPerceptionWidget.h"
 #include "QPlanningWidget.h"
+#include "QDataDisplayDialog.h"
 //#include "ReadDataManager.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
@@ -33,6 +34,7 @@ static const char *HELP_TOOL_BAR = "HELP";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = NULL;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = NULL;
+QDataDisplayDialog * QDebugToolMainWnd::s_pDataDisplay = NULL;
 
 QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   : QMainWindow(parent)
@@ -72,14 +74,19 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   //	std::placeholders::_1);
   //ReadDataManager::instance()->setPlanningParseFunction(funPlanning);
 
-  s_pTextBrowser = new QTextBrowser(this);
-  QDockWidget *pDockWdg = new QDockWidget(tr("Output"), this);
+  QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
-  pDockWdg->setWidget(s_pTextBrowser);
   QWidget *pDockTitle = new QWidget;
   pDockTitle->setStyleSheet("background-color: rgb(114, 159, 207);");
   pDockWdg->setTitleBarWidget(pDockTitle);
   this->addDockWidget(Qt::BottomDockWidgetArea, pDockWdg);
+
+  s_pTextBrowser = new QTextBrowser(this);
+  QTabWidget *pTabWidget = new QTabWidget(this);
+  pTabWidget->addTab(s_pTextBrowser, tr("Output"));
+  s_pDataDisplay = new QDataDisplayDialog(this);
+  pTabWidget->addTab(s_pDataDisplay, tr("Data"));
+  pDockWdg->setWidget(pTabWidget);
 
   s_pStatusBar = this->statusBar();
   s_pStatusBar->showMessage("Ready");

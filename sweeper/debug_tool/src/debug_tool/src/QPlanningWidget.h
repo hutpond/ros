@@ -49,7 +49,6 @@ protected:
 
 protected slots:
   void onSetFrameIndexReplay(int);
-  void onDisplayData();
 
   void onParsePlanningData(const debug_tool::PlanningData4Debug &);
 

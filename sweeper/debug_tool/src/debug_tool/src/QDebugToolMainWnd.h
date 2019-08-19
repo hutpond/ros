@@ -19,6 +19,7 @@ class QErrorFigureWidget;
 class QPerceptionWidget;
 class QPlanningWidget;
 class QTextBrowser;
+class QDataDisplayDialog;
 
 class QDebugToolMainWnd : public QMainWindow
 {
@@ -85,6 +86,7 @@ private:
 public:
   static QStatusBar *s_pStatusBar;
   static QTextBrowser *s_pTextBrowser;
+  static QDataDisplayDialog *s_pDataDisplay;
 };
 
 #endif  // Q_DEBUG_TOOL_MAIN_WND_H

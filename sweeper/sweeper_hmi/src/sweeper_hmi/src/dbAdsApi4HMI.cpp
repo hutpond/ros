@@ -41,9 +41,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
+                for(m_progress = 0; m_progress < 100; m_progress += 1)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     if(m_bStop) break;
                 }
 
@@ -93,9 +93,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
+                for(m_progress = 0; m_progress < 100; m_progress += 1)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     if(m_bStop) break;
                 }
 
@@ -145,9 +145,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
+                for(m_progress = 0; m_progress < 100; m_progress += 1)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     if(m_bStop) break;
                 }
 
@@ -197,9 +197,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
+                for(m_progress = 0; m_progress < 100; m_progress += 1)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     if(m_bStop) break;
                 }
 

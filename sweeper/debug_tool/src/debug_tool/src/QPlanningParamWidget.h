@@ -41,7 +41,6 @@ signals:
   void replayState(bool);
 signals:
   void replayFrameOffset(int);
-  void displayData();
 
 private slots:
   void onBtnClicked();
@@ -71,7 +70,6 @@ private:
   QPushButton *m_pBtnResume;
   QPushButton *m_pBtnBack;
   QPushButton *m_pBtnNext;
-  QPushButton *m_pBtnData;
   QSlider *m_pSliderPlay;
 
   int m_nSliderValue;

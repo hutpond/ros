@@ -49,16 +49,11 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pBtnNext = new QPushButton(tr("前进"), m_pGBoxReplay);
   connect(m_pBtnNext, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
   layout->addWidget(m_pBtnNext, 0, 4, 1, 1);
-  m_pBtnData = new QPushButton(tr("数据"), m_pGBoxReplay);
-  connect(m_pBtnData, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnData, 0, 5, 1, 1);
   m_pSliderPlay = new QSlider(Qt::Horizontal, m_pGBoxReplay);
   connect(m_pSliderPlay, &QSlider::valueChanged,
           this, &QPlanningParamWidget::onSliderValueChanged);
   layout->addWidget(m_pSliderPlay, 1, 1, 1, 5);
   m_pGBoxReplay->setLayout(layout);
-
-  connect(m_pBtnData, &QPushButton::clicked, this, &QPlanningParamWidget::displayData);
 }
 
 QPlanningParamWidget::~QPlanningParamWidget()
@@ -83,7 +78,6 @@ void QPlanningParamWidget::setShowType(int index)
     m_pBtnResume->setEnabled(false);
     m_pBtnBack->setEnabled(false);
     m_pBtnNext->setEnabled(false);
-    m_pBtnData->setEnabled(false);
     m_pSliderPlay->setEnabled(false);
   }
 }
@@ -242,7 +236,6 @@ void QPlanningParamWidget::onBtnClicked()
     m_pBtnResume->setEnabled(true);
     m_pBtnBack->setEnabled(true);
     m_pBtnNext->setEnabled(true);
-    m_pBtnData->setEnabled(true);
     m_pSliderPlay->setEnabled(true);
     emit replayState(true);
   }
@@ -251,7 +244,6 @@ void QPlanningParamWidget::onBtnClicked()
     m_pBtnResume->setEnabled(false);
     m_pBtnBack->setEnabled(false);
     m_pBtnNext->setEnabled(false);
-    m_pBtnData->setEnabled(false);
     m_pSliderPlay->setEnabled(false);
     emit replayState(false);
   }
@@ -262,8 +254,6 @@ void QPlanningParamWidget::onBtnClicked()
   else if (sender == m_pBtnNext) {
     this->setFrameOffset(1);
     emit replayFrameOffset(1);
-  }
-  else if (sender == m_pBtnData) {
   }
 }
 

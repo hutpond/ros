@@ -10,7 +10,7 @@
 #include "QDataDisplayDialog.h"
 
 QDataDisplayDialog::QDataDisplayDialog(QWidget *parent)
-  : QDialog(parent)
+  : QWidget(parent)
 {
   m_pTreeWidget = new QTreeWidget(this);
   m_pTreeWidget->header()->hide();
@@ -28,10 +28,9 @@ void QDataDisplayDialog::resizeEvent(QResizeEvent *)
  * @return
 ********************************************************/
 void QDataDisplayDialog::setPlanningData(
-    const QString &name,
     const debug_tool::PlanningData4Debug &planningData)
 {
-  this->setWindowTitle(name);
+  m_pTreeWidget->clear();
   // car status
   QTreeWidgetItem *itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "CAR_STATUS");

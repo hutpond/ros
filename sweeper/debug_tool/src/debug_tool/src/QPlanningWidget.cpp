@@ -31,8 +31,6 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
           this, &QPlanningWidget::onReplayState);
   connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
           this, &QPlanningWidget::onSetFrameIndexReplay);
-  connect(m_pWdgParam, &QPlanningParamWidget::displayData,
-          this, &QPlanningWidget::onDisplayData);
 
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
@@ -107,6 +105,7 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
       m_pWdgShow->setPlanningData(data);
       m_pWdgParam->setPlanningData(data);
       QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+      QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
     }
     else {
       name += "-------- FAILED !!!!!!!!!!!!!!!!1";
@@ -208,42 +207,12 @@ void QPlanningWidget::onSetFrameIndexReplay(int index)
       m_pWdgShow->setPlanningData(data);
       m_pWdgParam->setPlanningData(data);
       QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+      QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
     }
     else {
       name += "-------- FAILED !!!!!!!!!!!!!!!!1";
     }
     QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
-  }
-}
-
-/*******************************************************
- * @brief data button clicked响应槽函数
- * @param
-
- * @return
-********************************************************/
-void QPlanningWidget::onDisplayData()
-{
-  if (m_listPlanningFiles.size() == 0) return;
-  QDataDisplayDialog dlg(this);
-  QRect rect = this->rect();
-  QPoint pt = rect.center();
-  rect.setSize(QSize(rect.width() * 0.8, rect.height() * 0.8));
-  rect.moveCenter(pt);
-  dlg.setGeometry(rect);
-
-  std::vector<std::string>::iterator it = m_itFile;
-  while (it == m_listPlanningFiles.end()) --it;
-
-  debug_tool::PlanningData4Debug planningData;
-  if (this->readFromJsonFile(*it, planningData)) {
-    std::string sub_name = *it;
-    namespace  fs = boost::filesystem;
-    fs::path path = fs::path(sub_name);
-    sub_name = path.filename().string();
-    sub_name = sub_name.substr(0, sub_name.length() - 1);
-    dlg.setPlanningData(QString::fromStdString(sub_name), planningData);
-    dlg.exec();
   }
 }
 
@@ -290,6 +259,8 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::PlanningData4Debug &
     m_pWdgShow->setPlanningData(data);
     m_pWdgParam->setPlanningData(data);
     QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+    QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
+
   }
 }
 
