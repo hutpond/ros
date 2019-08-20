@@ -140,6 +140,7 @@ void QPlanningShowWidget::drawImage()
   this->drawPlanningPath(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
+  this->drawSplines(painter);
 }
 
 /*******************************************************
@@ -709,16 +710,16 @@ void QPlanningShowWidget::drawPlanningPath(QPainter &painter)
   const int SIZE = 40;
   // 当前帧
   double coef[5] = {0};
-  coef[0] = m_planningData.trajectory_b0;
+  /*coef[0] = m_planningData.trajectory_b0;
   coef[1] = m_planningData.trajectory_b1;
   coef[2] = m_planningData.trajectory_b2;
   coef[3] = m_planningData.trajectory_b3;
-  coef[4] = m_planningData.trajectory_b4;
+  coef[4] = m_planningData.trajectory_b4;*/
   QPen pen;
   pen.setWidth(2);
   pen.setColor(Qt::blue);
   painter.setPen(pen);
-  const double dLenX = static_cast<double>(m_planningData.trajectory_end_x -
+  /*const double dLenX = static_cast<double>(m_planningData.trajectory_end_x -
                                            m_planningData.trajectory_start_x) / SIZE;
   const double dStartX = static_cast<double>(m_planningData.trajectory_start_x);
   for (int i = 1; i <= SIZE; ++i) {
@@ -733,7 +734,7 @@ void QPlanningShowWidget::drawPlanningPath(QPainter &painter)
     QLineF linef(fX, fY, fX2, fY2);
     linef = m_transform.map(linef);
     painter.drawLine(linef);
-  }
+  }*/
 
   // 三次曲线
   coef[0] = m_planningData.trajectory_a0;
@@ -833,6 +834,37 @@ void QPlanningShowWidget::drawPlanningPath(QPainter &painter)
   }
 
   painter.restore();
+}
+
+/*******************************************************
+ * @brief 绘制planning path of bezier
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawSplines(QPainter &painter)
+{
+  QPen pen;
+  pen.setWidth(2);
+  pen.setColor(Qt::blue);
+  painter.setPen(pen);
+
+  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_splines), 100);
+  QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
+  for (int i = 0; i < SIZE; ++i) {
+    ptfStart = QPointF(m_planningData.splines[i].xb.x, m_planningData.splines[i].yb.x);
+    ptfEnd = QPointF(m_planningData.splines[i].xb.w, m_planningData.splines[i].yb.w);
+    ptfControl1 = QPointF(m_planningData.splines[i].xb.y, m_planningData.splines[i].yb.y);
+    ptfControl2 = QPointF(m_planningData.splines[i].xb.z, m_planningData.splines[i].yb.z);
+    ptfStart = m_transform.map(ptfStart);
+    ptfEnd = m_transform.map(ptfEnd);
+    ptfControl1 = m_transform.map(ptfControl1);
+    ptfControl2 = m_transform.map(ptfControl2);
+
+    QPainterPath path(ptfStart);
+    path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
+    painter.drawPath(path);
+  }
 }
 
 /*******************************************************

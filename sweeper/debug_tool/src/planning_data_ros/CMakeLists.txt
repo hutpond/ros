@@ -23,6 +23,8 @@ add_message_files (
   TrackTarget.msg
   UltraSonicTargetColl.msg
   UltraSonicTarget.msg
+  Spline.msg
+  Vec4f.msg
   )
 
 generate_messages(

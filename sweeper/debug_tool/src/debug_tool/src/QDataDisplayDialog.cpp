@@ -173,16 +173,6 @@ void QDataDisplayDialog::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("A3: %1").arg(planningData.trajectory_a3));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("B0: %1").arg(planningData.trajectory_b0));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("B1: %1").arg(planningData.trajectory_b1));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("B2: %1").arg(planningData.trajectory_b2));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("B3: %1").arg(planningData.trajectory_b3));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("B4: %1").arg(planningData.trajectory_b4));
-  item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("EL: %1").arg(planningData.trajectory_end_l));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("ES: %1").arg(planningData.trajectory_end_s));
@@ -198,6 +188,24 @@ void QDataDisplayDialog::setPlanningData(
   item->setText(0, QString("SX: %1").arg(planningData.trajectory_start_x));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("SY: %1").arg(planningData.trajectory_start_y));
+
+  int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("SPLINES [%1]").arg(SIZE_SPLINES));
+  for (int i = 0; i < SIZE_SPLINES; ++i) {
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
+        arg(i).
+        arg(planningData.splines[i].xb.x).
+        arg(planningData.splines[i].xb.y).
+        arg(planningData.splines[i].xb.z).
+        arg(planningData.splines[i].xb.w).
+        arg(planningData.splines[i].yb.x).
+        arg(planningData.splines[i].yb.y).
+        arg(planningData.splines[i].yb.z).
+        arg(planningData.splines[i].yb.w);
+    itemChild->setText(0, text);
+  }
 
   // reference
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);

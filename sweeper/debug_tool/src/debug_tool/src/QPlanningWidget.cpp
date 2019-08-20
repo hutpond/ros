@@ -274,7 +274,6 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::PlanningData4Debug &
     m_pWdgParam->setPlanningData(data);
     QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
     QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-
   }
 }
 
@@ -441,11 +440,6 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   trajectory["A1"] = planningData.trajectory_a1;
   trajectory["A2"] = planningData.trajectory_a2;
   trajectory["A3"] = planningData.trajectory_a3;
-  trajectory["B0"] = planningData.trajectory_b0;
-  trajectory["B1"] = planningData.trajectory_b1;
-  trajectory["B2"] = planningData.trajectory_b2;
-  trajectory["B3"] = planningData.trajectory_b3;
-  trajectory["B4"] = planningData.trajectory_b4;
   trajectory["SX"] = planningData.trajectory_start_x;
   trajectory["SY"] = planningData.trajectory_start_y;
   trajectory["SL"] = planningData.trajectory_start_l;
@@ -454,6 +448,22 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   trajectory["EY"] = planningData.trajectory_end_y;
   trajectory["EL"] = planningData.trajectory_end_l;
   trajectory["ES"] = planningData.trajectory_end_s;
+  trajectory["NUM_SPLINES"] = static_cast<int>(planningData.num_splines);
+  const int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
+  Json::Value splines;
+  for (int i = 0; i < SIZE_SPLINES; ++ i) {
+    Json::Value item;
+    item["XB_X"] = planningData.splines[i].xb.x;
+    item["XB_Y"] = planningData.splines[i].xb.y;
+    item["XB_Z"] = planningData.splines[i].xb.z;
+    item["XB_W"] = planningData.splines[i].xb.w;
+    item["YB_X"] = planningData.splines[i].yb.x;
+    item["YB_Y"] = planningData.splines[i].yb.y;
+    item["YB_Z"] = planningData.splines[i].yb.z;
+    item["YB_W"] = planningData.splines[i].yb.w;
+    splines.append(item);
+  }
+  trajectory["SPLINES"] = splines;
 
   // road info
   Json::Value roadInfo;
@@ -695,11 +705,6 @@ void QPlanningWidget::parseDataFromJson(
   planningData.trajectory_a1 = trajectory["A1"].asDouble();
   planningData.trajectory_a2 = trajectory["A2"].asDouble();
   planningData.trajectory_a3 = trajectory["A3"].asDouble();
-  planningData.trajectory_b0 = trajectory["B0"].asDouble();
-  planningData.trajectory_b1 = trajectory["B1"].asDouble();
-  planningData.trajectory_b2 = trajectory["B2"].asDouble();
-  planningData.trajectory_b3 = trajectory["B3"].asDouble();
-  planningData.trajectory_b4 = trajectory["B4"].asDouble();
   planningData.trajectory_start_x = trajectory["SX"].asDouble();
   planningData.trajectory_start_y = trajectory["SY"].asDouble();
   planningData.trajectory_start_l = trajectory["SL"].asDouble();
@@ -708,6 +713,19 @@ void QPlanningWidget::parseDataFromJson(
   planningData.trajectory_end_y = trajectory["EY"].asDouble();
   planningData.trajectory_end_l = trajectory["EL"].asDouble();
   planningData.trajectory_end_s = trajectory["ES"].asDouble();
+  planningData.num_splines = static_cast<int8_t>(trajectory["NUM_SPLINES"].asInt());
+  const int SIZE_SPLINES = static_cast<int>(trajectory["SPLINES"].size());
+  for (int i = 0; i < SIZE_SPLINES; ++i) {
+    Json::Value item = trajectory["SPLINES"][i];
+    planningData.splines[i].xb.x = item["XB_X"].asDouble();
+    planningData.splines[i].xb.y = item["XB_Y"].asDouble();
+    planningData.splines[i].xb.z = item["XB_Z"].asDouble();
+    planningData.splines[i].xb.w = item["XB_W"].asDouble();
+    planningData.splines[i].yb.x = item["YB_X"].asDouble();
+    planningData.splines[i].yb.y = item["YB_Y"].asDouble();
+    planningData.splines[i].yb.z = item["YB_Z"].asDouble();
+    planningData.splines[i].yb.w = item["YB_W"].asDouble();
+  }
 
   // road info
   planningData.left_half_road_width = roadInfo["LEFT_HALF_ROAD_WIDTH"].asDouble();
