@@ -4,9 +4,9 @@
 #include <boost/smart_ptr/make_shared.hpp>
 #include <QObject>
 #include "ros/ros.h"
-#include "debug_tool/PlanningData4Debug.h"
-#include "debug_tool/TargetPoint.h"
-#include "debug_tool/ReferencePoint.h"
+#include "debug_tool/ads_PlanningData4Debug.h"
+#include "debug_tool/ads_TargetPoint.h"
+#include "debug_tool/ads_ReferencePoint.h"
 
 class QReadDataManagerRos : public QObject
 {
@@ -16,7 +16,7 @@ public:
   void start_subscribe();
   void stop_subscirbe();
 
-  void send_planning_data(const debug_tool::PlanningData4Debug &);
+  void send_planning_data(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
   void timerEvent(QTimerEvent *);
@@ -25,7 +25,7 @@ private:
   explicit QReadDataManagerRos(QObject *parent = NULL);
 
 signals:
-  void planningData(const debug_tool::PlanningData4Debug &);
+  void planningData(const debug_tool::ads_PlanningData4Debug &);
 
 public slots:
 

@@ -39,7 +39,7 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 
  * @return
 ********************************************************/
-void QPlanningShowWidget::setPlanningData(const debug_tool::PlanningData4Debug &data)
+void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
   m_planningData = data;
   //memcpy(&m_planningData, &data, sizeof(data));
@@ -137,7 +137,6 @@ void QPlanningShowWidget::drawImage()
   this->drawAxis(painter);
   this->drawAreaLine(painter);
   this->drawPlanningPoint(painter);
-  this->drawPlanningPath(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawSplines(painter);
@@ -360,7 +359,7 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
 void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 {
   const size_t SIZE = qBound<size_t>(0, static_cast<size_t>(m_planningData.num_reference_points), 100);
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &pts = m_planningData.reference_points;
 
@@ -609,7 +608,7 @@ void QPlanningShowWidget::drawAreaLine(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawDecisionPoint(QPainter &painter)
 {
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &pts = m_planningData.reference_points;
 
@@ -675,164 +674,22 @@ void QPlanningShowWidget::drawDecisionPoint(QPainter &painter)
 void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
 {
   QPointF ptfPlanning = QPointF(
-        m_planningData.trajectory_end_x,
-        m_planningData.trajectory_end_y
+        m_planningData.planning_output.pose.position.x,
+        m_planningData.planning_output.pose.position.y
         );
   QPointF ptf = m_transform.map(ptfPlanning);
-  QRect rect = QRect(0, 0, 7, 7);
+  QRect rect = QRect(0, 0, 10, 10);
   rect.moveCenter(ptf.toPoint());
   QLineF line(rect.topLeft(), rect.bottomRight());
   QLineF line2(rect.bottomLeft(), rect.topRight());
 
   painter.save();
   QPen pen;
-  pen.setColor(Qt::blue);
-  pen.setWidth(2);
+  pen.setColor(Qt::magenta);
+  pen.setWidth(4);
   painter.setPen(pen);
   painter.drawLine(line);
   painter.drawLine(line2);
-  painter.restore();
-}
-
-/*******************************************************
- * @brief 绘制规划路径，包括当前帧和前一帧
- * @param painter: 画笔
-
- * @return
-********************************************************/
-void QPlanningShowWidget::drawPlanningPath(QPainter &painter)
-{
-  if (m_planningData.decision == 4) {
-    return;
-  }
-
-  painter.save();
-  const int SIZE = 40;
-  // 当前帧
-  double coef[5] = {0};
-  /*coef[0] = m_planningData.trajectory_b0;
-  coef[1] = m_planningData.trajectory_b1;
-  coef[2] = m_planningData.trajectory_b2;
-  coef[3] = m_planningData.trajectory_b3;
-  coef[4] = m_planningData.trajectory_b4;*/
-  QPen pen;
-  pen.setWidth(2);
-  pen.setColor(Qt::blue);
-  painter.setPen(pen);
-  /*const double dLenX = static_cast<double>(m_planningData.trajectory_end_x -
-                                           m_planningData.trajectory_start_x) / SIZE;
-  const double dStartX = static_cast<double>(m_planningData.trajectory_start_x);
-  for (int i = 1; i <= SIZE; ++i) {
-    const double fX = dStartX + (i - 1) * dLenX;
-    const double fX2 = dStartX + i * dLenX;
-    double fY = 0;
-    double fY2 = 0;
-    for (int j = 0; j < 5; ++j) {
-      fY += coef[j] * pow(fX, j);
-      fY2 += coef[j] * pow(fX2, j);
-    }
-    QLineF linef(fX, fY, fX2, fY2);
-    linef = m_transform.map(linef);
-    painter.drawLine(linef);
-  }*/
-
-  // 三次曲线
-  coef[0] = m_planningData.trajectory_a0;
-  coef[1] = m_planningData.trajectory_a1;
-  coef[2] = m_planningData.trajectory_a2;
-  coef[3] = m_planningData.trajectory_a3;
-  pen.setColor(Qt::magenta);
-  painter.setPen(pen);
-  const double dLenS = static_cast<double>(m_planningData.trajectory_end_s -
-                                           m_planningData.trajectory_start_s) / SIZE;
-  const double dStartS = static_cast<double>(m_planningData.trajectory_start_s);
-  for (int i = 1; i <= SIZE; ++i) {
-    // calc s, l
-    const double fS = dStartS + (i - 1) * dLenS;
-    const double fS2 = dStartS + i * dLenS;
-    double fL = 0;
-    double fL2 = 0;
-    for (int j = 0; j < 4; ++j) {
-      fL += coef[j] * pow(fS, j);
-      fL2 += coef[j] * pow(fS2, j);
-    }
-    // calc x,y
-    int index = -1, index2 = -1;
-    const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
-    for (int j = 0; j < SIZE - 1; ++j) {
-      const debug_tool::ReferencePoint &pointPre = m_planningData.reference_points[j];
-      const debug_tool::ReferencePoint &point = m_planningData.reference_points[j + 1];
-      if (index == -1 && fS >= pointPre.s && fS < point.s) {
-        index = j;
-      }
-      if (index2 == -1 && fS2 >= pointPre.s && fS2 < point.s) {
-        index2 = j;
-      }
-      if (index > 0 && index2 > 0) {
-        break;
-      }
-    }
-    if (index == -1 || index2 == -1) {
-      continue;
-    }
-    const debug_tool::ReferencePoint &ptStart = m_planningData.reference_points[index];
-    const debug_tool::ReferencePoint &ptStart2 = m_planningData.reference_points[index + 1];
-    QLineF linefStart;
-    float fSDis = (ptStart2.s - ptStart.s);
-    if ( qAbs<float>(fS - ptStart.s) < qAbs<float>(ptStart2.s - fS) ) {
-      linefStart = QLineF(ptStart.x, ptStart.y, ptStart2.x, ptStart2.y);
-      QPointF ptfStart = linefStart.pointAt( (fS - ptStart.s) / fSDis );
-      linefStart.setP1(ptfStart);
-      linefStart = linefStart.normalVector();
-    }
-    else {
-      linefStart = QLineF(ptStart2.x, ptStart2.y, ptStart.x, ptStart.y);
-      QPointF ptfStart = linefStart.pointAt( (ptStart2.s - fS) / fSDis );
-      linefStart.setP1(ptfStart);
-//      linefStart = QLineF(linefStart.p2(), linefStart.p1());
-      linefStart = linefStart.normalVector().normalVector().normalVector();
-    }
-    linefStart.setLength(-fL);
-
-    const debug_tool::ReferencePoint &ptEnd = m_planningData.reference_points[index2];
-    const debug_tool::ReferencePoint &ptEnd2 = m_planningData.reference_points[index2 + 1];
-    QLineF linefEnd;
-    fSDis = (ptEnd2.s - ptEnd.s);
-    if ( qAbs<float>(fS2 - ptEnd.s) < qAbs<float>(ptEnd2.s - fS2) ) {
-      linefEnd = QLineF(ptEnd.x, ptEnd.y, ptEnd2.x, ptEnd2.y);
-      QPointF ptfEnd = linefEnd.pointAt( (fS2 - ptEnd.s) / fSDis );
-      linefEnd.setP1(ptfEnd);
-      linefEnd = linefEnd.normalVector();
-    }
-    else {
-      linefEnd = QLineF(ptEnd2.x, ptEnd2.y, ptEnd.x, ptEnd.y);
-      QPointF ptfEnd = linefEnd.pointAt( (ptEnd2.s - fS2) / fSDis );
-      linefEnd.setP1(ptfEnd);
-//      linefEnd = QLineF(linefEnd.p2(), linefEnd.p1());
-      linefEnd = linefEnd.normalVector().normalVector().normalVector();
-    }
-    linefEnd.setLength(-fL2);
-
-    QLineF linef(linefStart.p2(), linefEnd.p2());
-    linef = m_transform.map(linef);
-    painter.drawLine(linef);
-  }
-
-  {
-    QPointF ptfEnd;
-    this->slToXy(m_planningData.trajectory_end_s, m_planningData.trajectory_end_l,
-                 ptfEnd);
-    ptfEnd = m_transform.map(ptfEnd);
-    QRect rect = QRect(0, 0, 7, 7);
-    rect.moveCenter(ptfEnd.toPoint());
-    QLineF line(rect.topLeft(), rect.bottomRight());
-    QLineF line2(rect.bottomLeft(), rect.topRight());
-
-    pen.setWidth(2);
-    painter.drawLine(line);
-    painter.drawLine(line2);
-  }
-
   painter.restore();
 }
 
@@ -901,7 +758,7 @@ void QPlanningShowWidget::drawUltrasonicTarget(QPainter &painter)
 {
   painter.save();
 
-  const debug_tool::UltraSonicTargetColl &ultrasonic = m_planningData.ultrasonic_results;
+  const debug_tool::ads_UltraSonicTargetColl &ultrasonic = m_planningData.ultrasonic_results;
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
@@ -969,7 +826,7 @@ void QPlanningShowWidget::drawRadar28Target(QPainter &painter)
 {
   painter.save();
 
-  const debug_tool::Radar28fTargetColl &radar = m_planningData.radar28f_results;
+  const debug_tool::ads_Radar28fTargetColl &radar = m_planningData.radar28f_results;
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
@@ -1029,7 +886,7 @@ void QPlanningShowWidget::drawRadar73Target(QPainter &painter)
 {
   painter.save();
 
-  const debug_tool::Radar73fTargetColl &radar = m_planningData.radar73f_results;
+  const debug_tool::ads_Radar73fTargetColl &radar = m_planningData.radar73f_results;
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
@@ -1087,7 +944,7 @@ void QPlanningShowWidget::drawRadar73Target(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
 {
-  typedef boost::array< ::debug_tool::TrackTarget_<std::allocator<void>> , 250>  \
+  typedef boost::array< ::debug_tool::ads_TrackTarget_<std::allocator<void>> , 250>  \
       _track_objects_type;
   const _track_objects_type &TRACKS = m_planningData.fusion_results.track_objects;
   const int SIZE = static_cast<int>(m_planningData.fusion_results.object_count);
@@ -1157,7 +1014,7 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
 {
-  typedef boost::array< ::debug_tool::TrackTarget_<std::allocator<void>> , 250>  \
+  typedef boost::array< ::debug_tool::ads_TrackTarget_<std::allocator<void>> , 250>  \
       _track_objects_type;
   const _track_objects_type &TRACKS = m_planningData.fusion_results.track_objects;
   const int SIZE = static_cast<int>(m_planningData.fusion_results.object_count);
@@ -1223,7 +1080,7 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
 {
   painter.save();
   for (int i = 0; i < 6; ++ i) {
-    debug_tool::TargetPoint_<std::allocator<void>> &targets =
+    debug_tool::ads_TargetPoint_<std::allocator<void>> &targets =
         m_planningData.decision_targets[i];
 
     switch (targets.sensor_type) {
@@ -1288,7 +1145,7 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
 }
 
 void QPlanningShowWidget::drawDecisionTargetsSL(
-    const debug_tool::TargetPoint_<std::allocator<void>> &targets,
+    const debug_tool::ads_TargetPoint_<std::allocator<void>> &targets,
     QPainter &painter)
 {
   painter.save();
@@ -1322,7 +1179,7 @@ void QPlanningShowWidget::drawDecisionTargetsSL(
   pen.setStyle(Qt::DotLine);
   painter.setPen(pen);
 
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
   QPolygonF pgf, pgf2;
@@ -1375,7 +1232,7 @@ void QPlanningShowWidget::drawDecisionTargetsSL(
 */
 int QPlanningShowWidget::findReferenceIndex(const double s)
 {
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
   const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
@@ -1410,7 +1267,7 @@ int QPlanningShowWidget::findReferenceIndex(const double s)
 */
 void QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
 {
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
   const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points),100);
@@ -1483,7 +1340,7 @@ void QPlanningShowWidget::xyToSl(const QPointF &ptfXy, double &s, double &l)
 */
 void QPlanningShowWidget::slToXy(const double s, const double l, QPointF &ptfXy)
 {
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
   const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);
@@ -1544,7 +1401,7 @@ void QPlanningShowWidget::slToXy(const double s, const double l, QPointF &ptfXy)
 QPolygonF QPlanningShowWidget::createSlPgf(const QPointF &center, double width, double length,
                                            bool slflag)
 {
-  typedef boost::array< ::debug_tool::ReferencePoint_<std::allocator<void>> , 100> \
+  typedef boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> \
       _reference_points_type;
   const _reference_points_type &REF_PTS = m_planningData.reference_points;
   const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_reference_points), 100);

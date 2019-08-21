@@ -10,7 +10,7 @@
 
 #include <boost/function.hpp>
 #include "QBaseShowWidget.h"
-#include "debug_tool/PlanningData4Debug.h"
+#include "debug_tool/ads_PlanningData4Debug.h"
 
 class QPlanningShowWidget : public QBaseShowWidget
 {
@@ -30,7 +30,7 @@ public:
   QPlanningShowWidget(QWidget *parent);
   ~QPlanningShowWidget();
 
-  void setPlanningData(const debug_tool::PlanningData4Debug &);
+  void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void setFunPosition(boost::function<void(float, float, float, float)>);
   void setViewResolution(int);
 
@@ -46,7 +46,6 @@ protected:
   void drawAreaLine(QPainter &);
   void drawDecisionPoint(QPainter &);
   void drawPlanningPoint(QPainter &);
-  void drawPlanningPath(QPainter &);
   void drawObstacleObject(QPainter &);
   void drawUltrasonicTarget(QPainter &);
   void drawRadar28Target(QPainter &);
@@ -54,7 +53,7 @@ protected:
   void drawTrackTarget(QPainter &);
   void drawTrackTargetWithPoints(QPainter &);
   void drawDecisionTargets(QPainter &);
-  void drawDecisionTargetsSL(const debug_tool::TargetPoint_<std::allocator<void>> &, QPainter &);
+  void drawDecisionTargetsSL(const debug_tool::ads_TargetPoint_<std::allocator<void>> &, QPainter &);
   void drawSplines(QPainter &);
 
   void calcMapRect();
@@ -69,7 +68,7 @@ private:
   boost::array<QPointF, 100> m_ptfsLeftRoadSide;
   boost::array<QPointF, 100> m_ptfsRightRoadSide;
 
-  debug_tool::PlanningData4Debug  m_planningData;
+  debug_tool::ads_PlanningData4Debug  m_planningData;
   int m_nShowPlanningPath;  // 规划路线显示, 0: 全显示, 1：只显示当前帧, 2：只显示前一帧
 };
 

@@ -1,18 +1,18 @@
 #include <unistd.h>
 #include <iostream>
 #include "ros/ros.h"
-#include "planning_data_ros/PlanningData4Debug.h"
+#include "planning_data_ros/ads_PlanningData4Debug.h"
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "debug_tool_planning_data_publish_test");
   ros::NodeHandle node_handle_;
   ros::Publisher planning_pub_ =
-      node_handle_.advertise<planning_data_ros::PlanningData4Debug>(
+      node_handle_.advertise<planning_data_ros::ads_PlanningData4Debug>(
         "planning_debug_data", 1000
         );
 
-  planning_data_ros::PlanningData4Debug data;
+  planning_data_ros::ads_PlanningData4Debug data;
   data.vehicle_latitude = 31.815672025974663;
   data.vehicle_longitude = 120.01310435246468;
   data.vehicle_altitude = 10.162395047244551;

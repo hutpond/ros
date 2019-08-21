@@ -1,7 +1,7 @@
 #include "QReadDataManagerRos.h"
 #include "GlobalDefine.h"
 
-void on_planning_subscirbe(const debug_tool::PlanningData4Debug &);
+void on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &);
 
 QReadDataManagerRos QReadDataManagerRos::s_instance;
 
@@ -55,7 +55,7 @@ void QReadDataManagerRos::timerEvent(QTimerEvent *)
 
  * @return
  */
-void QReadDataManagerRos::send_planning_data(const debug_tool::PlanningData4Debug &data)
+void QReadDataManagerRos::send_planning_data(const debug_tool::ads_PlanningData4Debug &data)
 {
   emit planningData(data);
 }
@@ -66,7 +66,7 @@ void QReadDataManagerRos::send_planning_data(const debug_tool::PlanningData4Debu
 
  * @return
  */
-void on_planning_subscirbe(const debug_tool::PlanningData4Debug &data)
+void on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &data)
 {
   QReadDataManagerRos::instance()->send_planning_data(data);
 }

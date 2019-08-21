@@ -10,7 +10,7 @@
 
 #include <QWidget>
 #include "QPlanningShowWidget.h"
-#include "debug_tool/PlanningData4Debug.h"
+#include "debug_tool/ads_PlanningData4Debug.h"
 
 class QLabel;
 class QGroupBox;
@@ -27,7 +27,7 @@ public:
 
   void setShowType(int);
   void setFrameCount(int);
-  void setPlanningData(const debug_tool::PlanningData4Debug &);
+  void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void showMousePosition(float, float, float, float);
   void setFrameOffset(int);
 

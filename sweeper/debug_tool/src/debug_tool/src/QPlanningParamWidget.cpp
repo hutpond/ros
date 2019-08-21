@@ -96,7 +96,7 @@ void QPlanningParamWidget::setFrameCount(int count)
   m_pSliderPlay->setSingleStep(1);
 }
 
-void QPlanningParamWidget::setPlanningData(const debug_tool::PlanningData4Debug &data)
+void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
   // 路宽值
   const float fRoadWidthLeft = data.left_half_road_width;
@@ -124,14 +124,6 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::PlanningData4Debug 
   else {
     m_pLblDecisionValue->setStyleSheet("background-color: rgb(255, 0, 0);");
   }
-
-  // 规划点位置
-  const float fPlanningS = data.trajectory_end_s;
-  const float fPlanningL = data.trajectory_end_l;
-  strText = QString("S:%1 L:%2").
-      arg(fPlanningS, 6, 'f', 2).
-      arg(fPlanningL, 6, 'f', 2);
-  m_pLblPlanningPtValue->setText(strText);
 
   // 车体
   const float fCarWidth = data.vehicle_width;

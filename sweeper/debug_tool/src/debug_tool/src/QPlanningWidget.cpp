@@ -58,8 +58,8 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
     fs::create_directories(m_fsPath);
   }
 
-  connect(QReadDataManagerRos::instance(), SIGNAL(planningData(const debug_tool::PlanningData4Debug &)),
-          this, SLOT(onParsePlanningData(const debug_tool::PlanningData4Debug &)));
+  connect(QReadDataManagerRos::instance(), SIGNAL(planningData(const debug_tool::ads_PlanningData4Debug &)),
+          this, SLOT(onParsePlanningData(const debug_tool::ads_PlanningData4Debug &)));
 
   QReadDataManagerRos::instance()->start_subscribe();
 }
@@ -96,7 +96,7 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
         m_itFile == m_listPlanningFiles.end()) {
       return;
     }
-    debug_tool::PlanningData4Debug data;
+    debug_tool::ads_PlanningData4Debug data;
     //memset(&data, 0, sizeof(data));
     std::string name = *m_itFile;
     std::size_t index = name.find_last_of('/');
@@ -198,7 +198,7 @@ void QPlanningWidget::onSetFrameIndexReplay(int index)
     }
   }
   if (m_itFile != m_listPlanningFiles.end()) {
-    debug_tool::PlanningData4Debug data;
+    debug_tool::ads_PlanningData4Debug data;
     //memset(&data, 0, sizeof(data));
     std::string name = *m_itFile;
     std::size_t index = name.find_last_of('/');
@@ -232,7 +232,7 @@ void QPlanningWidget::replayJson(const QString &path)
   m_nTimerId = startTimer(m_nIntervalMillSecs);
 }
 
-bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::PlanningData4Debug &planningData)
+bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_PlanningData4Debug &planningData)
 {
   const std::string fileName = name.substr(1, name.length() - 2);
 
@@ -264,9 +264,9 @@ bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::Plan
   return true;
 }
 
-void QPlanningWidget::onParsePlanningData(const debug_tool::PlanningData4Debug &planningData)
+void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Debug &planningData)
 {
-  debug_tool::PlanningData4Debug &data = const_cast<debug_tool::PlanningData4Debug &>(planningData);
+  debug_tool::ads_PlanningData4Debug &data = const_cast<debug_tool::ads_PlanningData4Debug &>(planningData);
   this->sortTrackTargets(data);
   this->saveDataToJsonFile(data);
   if (this->isVisible() && m_nShowType == LiveDisplay) {
@@ -277,7 +277,7 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::PlanningData4Debug &
   }
 }
 
-void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &planningData)
+void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &planningData)
 {
   // car
   Json::Value carStatus;
@@ -293,27 +293,14 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   carStatus["VEHICLE_LENGTH"] = planningData.vehicle_length;
   carStatus["HEAD_DISTANCE"] = planningData.head_distance;
 
-  // set vehicle size
-  const float CAR_W = 1.2f;
-  const float CAR_H = 2.0f;
-  if (qAbs<float>(g_rectfSweeper.width()) < 0.001) {
-    g_rectfSweeper.setWidth(CAR_H);
-    g_rectfSweeper.setHeight(CAR_W);
-    g_rectfSweeper.moveCenter(
-          QPointF(
-            0.3f - g_rectfSweeper.width() / 2,
-            0)
-          );
-  }
-
   // radar 28 target
-  const debug_tool::Radar28fTargetColl &radar28Result = planningData.radar28f_results;
+  const debug_tool::ads_Radar28fTargetColl &radar28Result = planningData.radar28f_results;
   Json::Value radar28Trargets, radar28Trarget;
   int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
   radar28Trargets["OBJECT_COUNT"] = radar28Result.object_count;
   for (int i = 0; i < sizeTarget28; ++i) {
     Json::Value item;
-    const debug_tool::RadarTarget &target = radar28Result.radar_objects[i];
+    const debug_tool::ads_RadarTarget &target = radar28Result.radar_objects[i];
     item["ID"] = target.id;
     item["RANGE"] = target.range;
     item["RANGE_LAT"] = target.range_lat;
@@ -332,13 +319,13 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   radar28Trargets["RADAR28_OBJECTS"] = radar28Trarget;
 
   // radar 73 target
-  const debug_tool::Radar73fTargetColl &radar73Result = planningData.radar73f_results;
+  const debug_tool::ads_Radar73fTargetColl &radar73Result = planningData.radar73f_results;
   Json::Value radar73Trargets, radar73Trarget;
   int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
   radar73Trargets["OBJECT_COUNT"] = radar73Result.object_count;
   for (int i = 0; i < sizeTarget73; ++i) {
     Json::Value item;
-    const debug_tool::RadarTarget &target = radar73Result.radar_objects[i];
+    const debug_tool::ads_RadarTarget &target = radar73Result.radar_objects[i];
     item["ID"] = target.id;
     item["RANGE"] = target.range;
     item["RANGE_LAT"] = target.range_lat;
@@ -357,13 +344,13 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   radar73Trargets["RADAR73_OBJECTS"] = radar73Trarget;
 
   // UltraSonic
-  const debug_tool::UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
+  const debug_tool::ads_UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
   Json::Value ultrasonicTrargets, ultrasonicTrarget;
   int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
   ultrasonicTrargets["OBJECT_COUNT"] = static_cast<int>(ultrasonicResult.object_count);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
-    const debug_tool::UltraSonicTarget &target = ultrasonicResult.us_objects[i];
+    const debug_tool::ads_UltraSonicTarget &target = ultrasonicResult.us_objects[i];
 
     item["POS_ID"] = static_cast<int>(target.radar_pos_id);
     item["DISTANCE"] = target.distance;
@@ -372,13 +359,13 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   ultrasonicTrargets["US_OBJECTS"] = ultrasonicTrarget;
 
   // Track Target
-  const debug_tool::TrackTargetColl &trackResult = planningData.fusion_results;
+  const debug_tool::ads_TrackTargetColl &trackResult = planningData.fusion_results;
   Json::Value trackTrargets, trackTrarget;
   sizeTarget = qMin<int>(250, trackResult.object_count);
   trackTrargets["OBJECT_COUNT"] = trackResult.object_count;
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
-    const debug_tool::TrackTarget &target = trackResult.track_objects[i];
+    const debug_tool::ads_TrackTarget &target = trackResult.track_objects[i];
 
     item["TRACK_ID"] = static_cast<int32_t>(target.TRACK_ID);
     item["X"] = target.X;
@@ -436,18 +423,14 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
 
   // planning
   Json::Value trajectory;
-  trajectory["A0"] = planningData.trajectory_a0;
-  trajectory["A1"] = planningData.trajectory_a1;
-  trajectory["A2"] = planningData.trajectory_a2;
-  trajectory["A3"] = planningData.trajectory_a3;
-  trajectory["SX"] = planningData.trajectory_start_x;
-  trajectory["SY"] = planningData.trajectory_start_y;
-  trajectory["SL"] = planningData.trajectory_start_l;
-  trajectory["SS"] = planningData.trajectory_start_s;
-  trajectory["EX"] = planningData.trajectory_end_x;
-  trajectory["EY"] = planningData.trajectory_end_y;
-  trajectory["EL"] = planningData.trajectory_end_l;
-  trajectory["ES"] = planningData.trajectory_end_s;
+  Json::Value planning_output;
+  //planning_output["HEADER"] = planningData.planning_output.header
+  planning_output["DECISION"] = planningData.planning_output.decision;
+  planning_output["VELOCITY"] = planningData.planning_output.velocity;
+  planning_output["POSE_POSITION_X"] = planningData.planning_output.pose.position.x;
+  planning_output["POSE_POSITION_Y"] = planningData.planning_output.pose.position.y;
+  trajectory["PLANNING_OUTPUT"] = planning_output;
+
   trajectory["NUM_SPLINES"] = static_cast<int>(planningData.num_splines);
   const int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
   Json::Value splines;
@@ -495,7 +478,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
   referenceLine["NUM_REFERENCE_POINTS"] = static_cast<int>(planningData.num_reference_points);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
-    const debug_tool::ReferencePoint &reference = planningData.reference_points[i];
+    const debug_tool::ads_ReferencePoint &reference = planningData.reference_points[i];
     item["ID"] = static_cast<int>(reference.id);
     item["L"] = reference.l;
     item["S"] = reference.s;
@@ -547,7 +530,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::PlanningData4Debug &p
 
 void QPlanningWidget::parseDataFromJson(
     const Json::Value &data,
-    debug_tool::PlanningData4Debug &planningData)
+    debug_tool::ads_PlanningData4Debug &planningData)
 {
   //memset(&planningData, 0, sizeof(planningData));
   Json::Value carStatus = data["CAR_STATUS"];
@@ -587,13 +570,13 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // radar 28 target
-  debug_tool::Radar28fTargetColl &radar28Result = planningData.radar28f_results;
+  debug_tool::ads_Radar28fTargetColl &radar28Result = planningData.radar28f_results;
   radar28Result.object_count = radar28Trargets["OBJECT_COUNT"].asInt();
   Json::Value radar28Trarget = radar28Trargets["RADAR28_OBJECTS"];
   int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
   for (int i = 0; i < sizeTarget28; ++i) {
     Json::Value item = radar28Trarget[i];
-    debug_tool::RadarTarget &target = radar28Result.radar_objects[i];
+    debug_tool::ads_RadarTarget &target = radar28Result.radar_objects[i];
     target.id = item["ID"].asInt();
     target.range = item["RANGE"].asDouble();
     target.range_lat = item["RANGE_LAT"].asDouble();
@@ -609,13 +592,13 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // radar 73 target
-  debug_tool::Radar73fTargetColl &radar73Result = planningData.radar73f_results;
+  debug_tool::ads_Radar73fTargetColl &radar73Result = planningData.radar73f_results;
   radar73Result.object_count = radar73Trargets["OBJECT_COUNT"].asInt();
   Json::Value radar73Trarget = radar73Trargets["RADAR73_OBJECTS"];
   int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
   for (int i = 0; i < sizeTarget73; ++i) {
     Json::Value item = radar73Trarget[i];
-    debug_tool::RadarTarget &target = radar73Result.radar_objects[i];
+    debug_tool::ads_RadarTarget &target = radar73Result.radar_objects[i];
     target.id = item["ID"].asInt();
     target.range = item["RANGE"].asDouble();
     target.range_lat = item["RANGE_LAT"].asDouble();
@@ -631,27 +614,27 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // UltraSonic
-  debug_tool::UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
+  debug_tool::ads_UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
   ultrasonicResult.object_count = static_cast<int8_t>(
         ultrasonicTrargets["OBJECT_COUNT"].asInt());
   Json::Value ultrasonicTrarget = ultrasonicTrargets["US_OBJECTS"];
   int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = ultrasonicTrarget[i];
-    debug_tool::UltraSonicTarget &target = ultrasonicResult.us_objects[i];
+    debug_tool::ads_UltraSonicTarget &target = ultrasonicResult.us_objects[i];
 
     target.radar_pos_id = static_cast<int8_t>(item["POS_ID"].asInt());
     target.distance = item["DISTANCE"].asFloat();
   }
 
   // Track Target
-  debug_tool::TrackTargetColl &trackResult = planningData.fusion_results;
+  debug_tool::ads_TrackTargetColl &trackResult = planningData.fusion_results;
   trackResult.object_count = trackTrargets["OBJECT_COUNT"].asInt();
   Json::Value trackTrarget = trackTrargets["TRACK_OBJECTS"];
   sizeTarget = qMin<int>(250, trackResult.object_count);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = trackTrarget[i];
-    debug_tool::TrackTarget &target = trackResult.track_objects[i];
+    debug_tool::ads_TrackTarget &target = trackResult.track_objects[i];
 
     target.TRACK_ID = static_cast<int64_t>(item["TRACK_ID"].asInt());
     target.X = item["X"].asDouble();
@@ -701,18 +684,11 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // planning
-  planningData.trajectory_a0 = trajectory["A0"].asDouble();
-  planningData.trajectory_a1 = trajectory["A1"].asDouble();
-  planningData.trajectory_a2 = trajectory["A2"].asDouble();
-  planningData.trajectory_a3 = trajectory["A3"].asDouble();
-  planningData.trajectory_start_x = trajectory["SX"].asDouble();
-  planningData.trajectory_start_y = trajectory["SY"].asDouble();
-  planningData.trajectory_start_l = trajectory["SL"].asDouble();
-  planningData.trajectory_start_s = trajectory["SS"].asDouble();
-  planningData.trajectory_end_x = trajectory["EX"].asDouble();
-  planningData.trajectory_end_y = trajectory["EY"].asDouble();
-  planningData.trajectory_end_l = trajectory["EL"].asDouble();
-  planningData.trajectory_end_s = trajectory["ES"].asDouble();
+  planningData.planning_output.decision = static_cast<uint8_t>(trajectory["PLANNING_OUTPUT"]["DECISION"].asInt());
+  planningData.planning_output.velocity = trajectory["PLANNING_OUTPUT"]["VELOCITY"].asFloat();
+  planningData.planning_output.pose.position.x = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_X"].asDouble();
+  planningData.planning_output.pose.position.y = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_Y"].asDouble();
+
   planningData.num_splines = static_cast<int8_t>(trajectory["NUM_SPLINES"].asInt());
   const int SIZE_SPLINES = static_cast<int>(trajectory["SPLINES"].size());
   for (int i = 0; i < SIZE_SPLINES; ++i) {
@@ -755,7 +731,7 @@ void QPlanningWidget::parseDataFromJson(
   sizeTarget = qMin<int>(100, planningData.num_reference_points);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = referencePoints[i];
-    debug_tool::ReferencePoint &reference = planningData.reference_points[i];
+    debug_tool::ads_ReferencePoint &reference = planningData.reference_points[i];
     reference.id = static_cast<int8_t>(item["ID"].asInt());
     reference.l = item["L"].asDouble();
     reference.s = item["S"].asDouble();
@@ -768,14 +744,14 @@ void QPlanningWidget::parseDataFromJson(
   planningData.debug_info = debugInfo.asString();
 }
 
-void QPlanningWidget::sortTrackTargets(debug_tool::PlanningData4Debug &data)
+void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
 {
-  typedef boost::array< ::debug_tool::TrackTarget_<std::allocator<void>> , 250>  \
+  typedef boost::array< ::debug_tool::ads_TrackTarget_<std::allocator<void>> , 250>  \
       _track_objects_type;
   _track_objects_type &TRACKS = data.fusion_results.track_objects;
   const int SIZE = static_cast<int>(data.fusion_results.object_count);
 
-  debug_tool::TrackTarget_<std::allocator<void>> temp;
+  debug_tool::ads_TrackTarget_<std::allocator<void>> temp;
   for (int i = 0; i < SIZE; ++i) {
     double x_min = TRACKS[i].X;
     for (int j = i + 1; j < SIZE; ++j) {

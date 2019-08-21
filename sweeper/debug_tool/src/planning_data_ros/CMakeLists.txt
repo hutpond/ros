@@ -8,28 +8,30 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ros
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation geometry_msgs)
 include_directories( ${catkin_INCLUDE_DIRS} )
 
 add_message_files (
   FILES
-  PlanningData4Debug.msg
-  ReferencePoint.msg
-  TargetPoint.msg
-  Radar28fTargetColl.msg
-  Radar73fTargetColl.msg
-  RadarTarget.msg
-  TrackTargetColl.msg
-  TrackTarget.msg
-  UltraSonicTargetColl.msg
-  UltraSonicTarget.msg
-  Spline.msg
-  Vec4f.msg
+  ads_PlanningData4Debug.msg
+  ads_Radar28fTargetColl.msg
+  ads_Radar73fTargetColl.msg
+  ads_RadarTarget.msg
+  ads_ReferencePoint.msg
+  ads_Spline.msg
+  ads_TargetPoint.msg
+  ads_TrackTarget.msg
+  ads_TrackTargetColl.msg
+  ads_UltraSonicTarget.msg
+  ads_UltraSonicTargetColl.msg
+  ads_Vec4f.msg
+  ads_planning_output.msg
   )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
   )
 
 catkin_package(

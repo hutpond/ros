@@ -14,7 +14,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation geometry_msgs)
 include_directories( ${catkin_INCLUDE_DIRS} )
 include_directories(/usr/local/pcl/include/pcl-1.9)
 include_directories(/usr/include/eigen3)
@@ -31,23 +31,25 @@ find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
 add_message_files (
   FILES
-  PlanningData4Debug.msg
-  ReferencePoint.msg
-  TargetPoint.msg 
-  Radar28fTargetColl.msg
-  Radar73fTargetColl.msg
-  RadarTarget.msg
-  TrackTargetColl.msg
-  TrackTarget.msg
-  UltraSonicTargetColl.msg
-  UltraSonicTarget.msg
-  Spline.msg
-  Vec4f.msg
+  ads_PlanningData4Debug.msg
+  ads_Radar28fTargetColl.msg
+  ads_Radar73fTargetColl.msg
+  ads_RadarTarget.msg
+  ads_ReferencePoint.msg
+  ads_Spline.msg
+  ads_TargetPoint.msg
+  ads_TrackTarget.msg
+  ads_TrackTargetColl.msg
+  ads_UltraSonicTarget.msg
+  ads_UltraSonicTargetColl.msg
+  ads_Vec4f.msg
+  ads_planning_output.msg
   )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
   )
 
 catkin_package(

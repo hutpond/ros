@@ -41,16 +41,16 @@ protected:
 
 protected:
   void replayJson(const QString &);
-  bool readFromJsonFile(const std::string &, debug_tool::PlanningData4Debug &);
+  bool readFromJsonFile(const std::string &, debug_tool::ads_PlanningData4Debug &);
 
-  void sortTrackTargets(debug_tool::PlanningData4Debug &);
-  void saveDataToJsonFile(const debug_tool::PlanningData4Debug &);
-  void parseDataFromJson(const Json::Value &, debug_tool::PlanningData4Debug &);
+  void sortTrackTargets(debug_tool::ads_PlanningData4Debug &);
+  void saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &);
+  void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
 
 protected slots:
   void onSetFrameIndexReplay(int);
 
-  void onParsePlanningData(const debug_tool::PlanningData4Debug &);
+  void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
 
 private:
   QPlanningShowWidget *m_pWdgShow;

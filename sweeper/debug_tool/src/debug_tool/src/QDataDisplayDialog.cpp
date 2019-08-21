@@ -28,7 +28,7 @@ void QDataDisplayDialog::resizeEvent(QResizeEvent *)
  * @return
 ********************************************************/
 void QDataDisplayDialog::setPlanningData(
-    const debug_tool::PlanningData4Debug &planningData)
+    const debug_tool::ads_PlanningData4Debug &planningData)
 {
   m_pTreeWidget->clear();
   // car status
@@ -163,31 +163,14 @@ void QDataDisplayDialog::setPlanningData(
   // planning path
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "TRAJECTORY");
-
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("A0: %1").arg(planningData.trajectory_a0));
+  item->setText(0, QString("decision: %1").arg(static_cast<int>(planningData.planning_output.decision)));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("A1: %1").arg(planningData.trajectory_a1));
+  item->setText(0, QString("velocity: %1").arg(planningData.planning_output.velocity));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("A2: %1").arg(planningData.trajectory_a2));
+  item->setText(0, QString("position.x: %1").arg(planningData.planning_output.pose.position.x));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("A3: %1").arg(planningData.trajectory_a3));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("EL: %1").arg(planningData.trajectory_end_l));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("ES: %1").arg(planningData.trajectory_end_s));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("EX: %1").arg(planningData.trajectory_end_x));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("EY: %1").arg(planningData.trajectory_end_y));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SL: %1").arg(planningData.trajectory_start_l));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SS: %1").arg(planningData.trajectory_start_s));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SX: %1").arg(planningData.trajectory_start_x));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SY: %1").arg(planningData.trajectory_start_y));
+  item->setText(0, QString("position.y: %1").arg(planningData.planning_output.pose.position.y));
 
   int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
   item = new QTreeWidgetItem(itemRoot);
