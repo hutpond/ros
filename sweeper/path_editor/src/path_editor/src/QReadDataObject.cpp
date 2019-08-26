@@ -100,7 +100,7 @@ void QReadDataObject::onReadData()
 void QReadDataObject::decodeData()
 {
   // find header
-  constexpr char HEADER[3] = {char(0xBD), char(0xBD), char(0x0B)};
+  constexpr char HEADER[3] = {char(0xBD), char(0xDB), char(0x0B)};
   int dataLen = m_baData.size();
   int index = -1;
   for (int i = 0; i < dataLen - 3; ++i) {

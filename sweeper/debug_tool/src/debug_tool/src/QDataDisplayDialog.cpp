@@ -160,6 +160,68 @@ void QDataDisplayDialog::setPlanningData(
                 arg(planningData.right_road_boundary_start_s).
                 arg(planningData.right_road_boundary_end_s));
 
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("ADS_PUBCURB"));
+  QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("CURB_L_FOUND: %1").
+                     arg(planningData.curb.curb_L_FOUND ? "true" : "false"));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_L1_X: %1").arg(planningData.curb.Point_L1.x));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_L1_Y: %1").arg(planningData.curb.Point_L1.y));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_L2_X: %1").arg(planningData.curb.Point_L2.x));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_L2_Y: %1").arg(planningData.curb.Point_L2.y));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("CURB_R_FOUND: %1").
+                     arg(planningData.curb.curb_R_FOUND ? "true" : "false"));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_R1_X: %1").arg(planningData.curb.Point_R1.x));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_R1_Y: %1").arg(planningData.curb.Point_R1.y));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_R2_X: %1").arg(planningData.curb.Point_R2.x));
+  itemChild = new QTreeWidgetItem(item);
+  itemChild->setText(0, QString("Point_R2_Y: %1").arg(planningData.curb.Point_R2.y));
+
+  const int SIZE_LEFT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_left_road_boundary_splines), 100);
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("LEFT_ROAD_BOUNDARY_SPLINES [%1]").arg(SIZE_LEFT_ROAD_SPLINES));
+  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++i) {
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
+        arg(i).
+        arg(planningData.left_road_boundary_splines[i].xb.x).
+        arg(planningData.left_road_boundary_splines[i].xb.y).
+        arg(planningData.left_road_boundary_splines[i].xb.z).
+        arg(planningData.left_road_boundary_splines[i].xb.w).
+        arg(planningData.left_road_boundary_splines[i].yb.x).
+        arg(planningData.left_road_boundary_splines[i].yb.y).
+        arg(planningData.left_road_boundary_splines[i].yb.z).
+        arg(planningData.left_road_boundary_splines[i].yb.w);
+    itemChild->setText(0, text);
+  }
+  const int SIZE_RIGHT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_right_road_boundary_splines), 100);
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("RIGHT_ROAD_BOUNDARY_SPLINES [%1]").arg(SIZE_RIGHT_ROAD_SPLINES));
+  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++i) {
+    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+    QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
+        arg(i).
+        arg(planningData.right_road_boundary_splines[i].xb.x).
+        arg(planningData.right_road_boundary_splines[i].xb.y).
+        arg(planningData.right_road_boundary_splines[i].xb.z).
+        arg(planningData.right_road_boundary_splines[i].xb.w).
+        arg(planningData.right_road_boundary_splines[i].yb.x).
+        arg(planningData.right_road_boundary_splines[i].yb.y).
+        arg(planningData.right_road_boundary_splines[i].yb.z).
+        arg(planningData.right_road_boundary_splines[i].yb.w);
+    itemChild->setText(0, text);
+  }
+
   // planning path
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "TRAJECTORY");
@@ -172,21 +234,21 @@ void QDataDisplayDialog::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("position.y: %1").arg(planningData.planning_output.pose.position.y));
 
-  int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
+  int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_planning_splines), 100);
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("SPLINES [%1]").arg(SIZE_SPLINES));
   for (int i = 0; i < SIZE_SPLINES; ++i) {
     QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
     QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
         arg(i).
-        arg(planningData.splines[i].xb.x).
-        arg(planningData.splines[i].xb.y).
-        arg(planningData.splines[i].xb.z).
-        arg(planningData.splines[i].xb.w).
-        arg(planningData.splines[i].yb.x).
-        arg(planningData.splines[i].yb.y).
-        arg(planningData.splines[i].yb.z).
-        arg(planningData.splines[i].yb.w);
+        arg(planningData.planning_splines[i].xb.x).
+        arg(planningData.planning_splines[i].xb.y).
+        arg(planningData.planning_splines[i].xb.z).
+        arg(planningData.planning_splines[i].xb.w).
+        arg(planningData.planning_splines[i].yb.x).
+        arg(planningData.planning_splines[i].yb.y).
+        arg(planningData.planning_splines[i].yb.z).
+        arg(planningData.planning_splines[i].yb.w);
     itemChild->setText(0, text);
   }
 
@@ -210,65 +272,25 @@ void QDataDisplayDialog::setPlanningData(
     itemChild->setText(0, QString("Y: %1").arg(planningData.reference_points[i].y));
   }
 
-  // target
-  /*itemRoot = new QTreeWidgetItem(m_pTreeWidget);
-  itemRoot->setText(0, "TARGET_POINTS");
-
-  SIZE = static_cast<int>(planningData.num_left_targets);
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("LEFT_TARGET_NUM: %1").arg(SIZE));
-  if (SIZE > 0) {
-    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("ANGLE: %1").arg(planningData.left_target_point.angle));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("X: %1").arg(planningData.left_target_point.x));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("Y: %1").arg(planningData.left_target_point.y));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("L: %1").arg(planningData.left_target_point.l));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("S: %1").arg(planningData.left_target_point.s));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("LENGHT: %1").arg(planningData.left_target_point.length));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("WIDTH: %1").arg(planningData.left_target_point.width));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("LEFT_PASS_AVAILABLE: %1").
-                       arg(static_cast<int>(planningData.left_target_point.left_pass_available)));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("RIGHT_PASS_AVAILABLE: %1").
-                       arg(static_cast<int>(planningData.left_target_point.right_pass_available)));
-  }
-
-  int SIZE_2 = static_cast<int>(planningData.num_right_targets);
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("RIGHT_TARGET_NUM: %1").arg(SIZE_2));
-  if (SIZE_2 > 0) {
-    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("ANGLE: %1").arg(planningData.right_target_point.angle));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("X: %1").arg(planningData.right_target_point.x));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("Y: %1").arg(planningData.right_target_point.y));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("L: %1").arg(planningData.right_target_point.l));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("S: %1").arg(planningData.right_target_point.s));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("LENGHT: %1").arg(planningData.right_target_point.length));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("WIDTH: %1").arg(planningData.right_target_point.width));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("LEFT_PASS_AVAILABLE: %1").
-                       arg(static_cast<int>(planningData.right_target_point.left_pass_available)));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("RIGHT_PASS_AVAILABLE: %1").
-                       arg(static_cast<int>(planningData.right_target_point.right_pass_available)));
-  }
-  if (SIZE > 0 && SIZE_2 > 0) {
+  // reference splines
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  int SIZE_REFERENCE_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_reference_splines), 100);
+  itemRoot->setText(0, QString("REFERENCE_SPLINES [%1]").arg(SIZE_REFERENCE_SPLINES));
+  for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++i) {
     item = new QTreeWidgetItem(itemRoot);
-    item->setText(0, QString("LEFT_RIGHT_DISTANCE_S: %1").arg(planningData.left_right_target_distance_s));
-  }*/
+    QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
+        arg(i).
+        arg(planningData.reference_splines[i].xb.x).
+        arg(planningData.reference_splines[i].xb.y).
+        arg(planningData.reference_splines[i].xb.z).
+        arg(planningData.reference_splines[i].xb.w).
+        arg(planningData.reference_splines[i].yb.x).
+        arg(planningData.reference_splines[i].yb.y).
+        arg(planningData.reference_splines[i].yb.z).
+        arg(planningData.reference_splines[i].yb.w);
+    item->setText(0, text);
+  }
 
   // radar 28 targets
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
@@ -392,17 +414,4 @@ void QDataDisplayDialog::setPlanningData(
     itemChild = new QTreeWidgetItem(item);
     itemChild->setText(0, QString("STATUS: %1").arg(planningData.fusion_results.track_objects[i].STATUS));
   }
-
-  // CLEANING_OPERATION
-  /*itemRoot = new QTreeWidgetItem(m_pTreeWidget);
-  itemRoot->setText(0, "CLEANING_OPERATION");
-
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("CLEAN_ASH: %1").arg(static_cast<int>(planningData.light_status)));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("CLEAN_STATUS: %1").arg(static_cast<int>(planningData.spout_water)));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("LIGHT_STATUS: %1").arg(static_cast<int>(planningData.clean_status)));
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SPOUT_WATER: %1").arg(static_cast<int>(planningData.clean_ash)));*/
 }

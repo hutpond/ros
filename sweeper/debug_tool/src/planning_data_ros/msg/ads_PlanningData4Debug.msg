@@ -15,17 +15,22 @@ ads_Radar73fTargetColl radar73f_results
 ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
 
-uint8 num_splines
-ads_Spline[100] splines
+uint8 num_planning_splines
+ads_Spline[100] planning_splines
 ads_planning_output planning_output
 
 float64 safe_dis1
 float64 safe_dis2
 float64 max_planning_distance
+ads_pubcurb curb
 bool left_road_boundary_available
 bool right_road_boundary_available
 float64[5] left_road_boundary
 float64[5] right_road_boundary
+uint8 num_left_road_boundary_splines
+ads_Spline[100] left_road_boundary_splines
+uint8 num_right_road_boundary_splines
+ads_Spline[100] right_road_boundary_splines
 float64 left_road_boundary_start_s
 float64 left_road_boundary_end_s
 float64 right_road_boundary_start_s
@@ -35,6 +40,8 @@ float64 right_half_road_width
 
 uint8 num_reference_points
 ads_ReferencePoint[100] reference_points
+uint8 num_reference_splines
+ads_Spline[100] reference_splines
 
 uint8 decision
 uint8 ultrasonic_decision

@@ -431,19 +431,19 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   planning_output["POSE_POSITION_Y"] = planningData.planning_output.pose.position.y;
   trajectory["PLANNING_OUTPUT"] = planning_output;
 
-  trajectory["NUM_SPLINES"] = static_cast<int>(planningData.num_splines);
-  const int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_splines), 100);
+  trajectory["NUM_SPLINES"] = static_cast<int>(planningData.num_planning_splines);
+  const int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_planning_splines), 100);
   Json::Value splines;
   for (int i = 0; i < SIZE_SPLINES; ++ i) {
     Json::Value item;
-    item["XB_X"] = planningData.splines[i].xb.x;
-    item["XB_Y"] = planningData.splines[i].xb.y;
-    item["XB_Z"] = planningData.splines[i].xb.z;
-    item["XB_W"] = planningData.splines[i].xb.w;
-    item["YB_X"] = planningData.splines[i].yb.x;
-    item["YB_Y"] = planningData.splines[i].yb.y;
-    item["YB_Z"] = planningData.splines[i].yb.z;
-    item["YB_W"] = planningData.splines[i].yb.w;
+    item["XB_X"] = planningData.planning_splines[i].xb.x;
+    item["XB_Y"] = planningData.planning_splines[i].xb.y;
+    item["XB_Z"] = planningData.planning_splines[i].xb.z;
+    item["XB_W"] = planningData.planning_splines[i].xb.w;
+    item["YB_X"] = planningData.planning_splines[i].yb.x;
+    item["YB_Y"] = planningData.planning_splines[i].yb.y;
+    item["YB_Z"] = planningData.planning_splines[i].yb.z;
+    item["YB_W"] = planningData.planning_splines[i].yb.w;
     splines.append(item);
   }
   trajectory["SPLINES"] = splines;
@@ -471,6 +471,54 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   roadInfo["RIGHT_ROAD_BOUNDARY_START_S"] = planningData.right_road_boundary_start_s;
   roadInfo["RIGHT_ROAD_BOUNDARY_END_S"] = planningData.right_road_boundary_end_s;
 
+  Json::Value ads_pubcurb;
+  ads_pubcurb["CURB_L_FOUND"] = planningData.curb.curb_L_FOUND;
+  ads_pubcurb["Point_L1_X"] = planningData.curb.Point_L1.x;
+  ads_pubcurb["Point_L1_Y"] = planningData.curb.Point_L1.y;
+  ads_pubcurb["Point_L2_X"] = planningData.curb.Point_L2.x;
+  ads_pubcurb["Point_L2_Y"] = planningData.curb.Point_L2.y;
+  ads_pubcurb["CURB_R_FOUND"] = planningData.curb.curb_R_FOUND;
+  ads_pubcurb["Point_R1_X"] = planningData.curb.Point_R1.x;
+  ads_pubcurb["Point_R1_Y"] = planningData.curb.Point_R1.y;
+  ads_pubcurb["Point_R2_X"] = planningData.curb.Point_R2.x;
+  ads_pubcurb["Point_R2_Y"] = planningData.curb.Point_R2.y;
+  roadInfo["ADS_PUBCURB"] = ads_pubcurb;
+
+  roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"] = planningData.num_left_road_boundary_splines;
+  const int SIZE_LEFT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_left_road_boundary_splines), 100);
+  Json::Value left_road_splines;
+  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
+    Json::Value item;
+    item["XB_X"] = planningData.left_road_boundary_splines[i].xb.x;
+    item["XB_Y"] = planningData.left_road_boundary_splines[i].xb.y;
+    item["XB_Z"] = planningData.left_road_boundary_splines[i].xb.z;
+    item["XB_W"] = planningData.left_road_boundary_splines[i].xb.w;
+    item["YB_X"] = planningData.left_road_boundary_splines[i].yb.x;
+    item["YB_Y"] = planningData.left_road_boundary_splines[i].yb.y;
+    item["YB_Z"] = planningData.left_road_boundary_splines[i].yb.z;
+    item["YB_W"] = planningData.left_road_boundary_splines[i].yb.w;
+    left_road_splines.append(item);
+  }
+  roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"] = left_road_splines;
+  roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"] = planningData.num_right_road_boundary_splines;
+  const int SIZE_RIGHT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_right_road_boundary_splines), 100);
+  Json::Value right_road_splines;
+  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
+    Json::Value item;
+    item["XB_X"] = planningData.right_road_boundary_splines[i].xb.x;
+    item["XB_Y"] = planningData.right_road_boundary_splines[i].xb.y;
+    item["XB_Z"] = planningData.right_road_boundary_splines[i].xb.z;
+    item["XB_W"] = planningData.right_road_boundary_splines[i].xb.w;
+    item["YB_X"] = planningData.right_road_boundary_splines[i].yb.x;
+    item["YB_Y"] = planningData.right_road_boundary_splines[i].yb.y;
+    item["YB_Z"] = planningData.right_road_boundary_splines[i].yb.z;
+    item["YB_W"] = planningData.right_road_boundary_splines[i].yb.w;
+    right_road_splines.append(item);
+  }
+  roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"] = right_road_splines;
+
   // referene
   Json::Value referenceLine;
   Json::Value referencePoints;
@@ -487,6 +535,24 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
     referencePoints.append(item);
   }
   referenceLine["REFERENCE_POINTS"] = referencePoints;
+
+  referenceLine["NUM_REFERENCE_SPLINES"] = static_cast<int>(planningData.num_reference_splines);
+  const int SIZE_REFERENCE_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_reference_splines), 100);
+  Json::Value reference_splines;
+  for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
+    Json::Value item;
+    item["XB_X"] = planningData.reference_splines[i].xb.x;
+    item["XB_Y"] = planningData.reference_splines[i].xb.y;
+    item["XB_Z"] = planningData.reference_splines[i].xb.z;
+    item["XB_W"] = planningData.reference_splines[i].xb.w;
+    item["YB_X"] = planningData.reference_splines[i].yb.x;
+    item["YB_Y"] = planningData.reference_splines[i].yb.y;
+    item["YB_Z"] = planningData.reference_splines[i].yb.z;
+    item["YB_W"] = planningData.reference_splines[i].yb.w;
+    reference_splines.append(item);
+  }
+  referenceLine["REFERENCE_SPLINES"] = reference_splines;
 
   Json::Value data;
   data["CAR_STATUS"] = carStatus;
@@ -555,19 +621,6 @@ void QPlanningWidget::parseDataFromJson(
   planningData.vehicle_width = carStatus["VEHICLE_WIDTH"].asDouble();
   planningData.vehicle_length = carStatus["VEHICLE_LENGTH"].asDouble();
   planningData.head_distance = carStatus["HEAD_DISTANCE"].asDouble();
-
-  // set vehicle size
-  const float CAR_W = 1.2f;
-  const float CAR_H = 2.0f;
-  if (qAbs<float>(g_rectfSweeper.width()) < 0.001) {
-    g_rectfSweeper.setWidth(CAR_H);
-    g_rectfSweeper.setHeight(CAR_W);
-    g_rectfSweeper.moveCenter(
-          QPointF(
-            0.3f - g_rectfSweeper.width() / 2,
-            0)
-          );
-  }
 
   // radar 28 target
   debug_tool::ads_Radar28fTargetColl &radar28Result = planningData.radar28f_results;
@@ -689,18 +742,18 @@ void QPlanningWidget::parseDataFromJson(
   planningData.planning_output.pose.position.x = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_X"].asDouble();
   planningData.planning_output.pose.position.y = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_Y"].asDouble();
 
-  planningData.num_splines = static_cast<int8_t>(trajectory["NUM_SPLINES"].asInt());
+  planningData.num_planning_splines = static_cast<int8_t>(trajectory["NUM_SPLINES"].asInt());
   const int SIZE_SPLINES = static_cast<int>(trajectory["SPLINES"].size());
   for (int i = 0; i < SIZE_SPLINES; ++i) {
     Json::Value item = trajectory["SPLINES"][i];
-    planningData.splines[i].xb.x = item["XB_X"].asDouble();
-    planningData.splines[i].xb.y = item["XB_Y"].asDouble();
-    planningData.splines[i].xb.z = item["XB_Z"].asDouble();
-    planningData.splines[i].xb.w = item["XB_W"].asDouble();
-    planningData.splines[i].yb.x = item["YB_X"].asDouble();
-    planningData.splines[i].yb.y = item["YB_Y"].asDouble();
-    planningData.splines[i].yb.z = item["YB_Z"].asDouble();
-    planningData.splines[i].yb.w = item["YB_W"].asDouble();
+    planningData.planning_splines[i].xb.x = item["XB_X"].asDouble();
+    planningData.planning_splines[i].xb.y = item["XB_Y"].asDouble();
+    planningData.planning_splines[i].xb.z = item["XB_Z"].asDouble();
+    planningData.planning_splines[i].xb.w = item["XB_W"].asDouble();
+    planningData.planning_splines[i].yb.x = item["YB_X"].asDouble();
+    planningData.planning_splines[i].yb.y = item["YB_Y"].asDouble();
+    planningData.planning_splines[i].yb.z = item["YB_Z"].asDouble();
+    planningData.planning_splines[i].yb.w = item["YB_W"].asDouble();
   }
 
   // road info
@@ -724,6 +777,49 @@ void QPlanningWidget::parseDataFromJson(
   planningData.right_road_boundary_start_s = roadInfo["RIGHT_ROAD_BOUNDARY_START_S"].asDouble();
   planningData.right_road_boundary_end_s = roadInfo["RIGHT_ROAD_BOUNDARY_END_S"].asDouble();
 
+  Json::Value ads_pubcurb = roadInfo["ADS_PUBCURB"];
+  planningData.curb.curb_L_FOUND = ads_pubcurb["CURB_L_FOUND"].asBool();
+  planningData.curb.Point_L1.x = ads_pubcurb["Point_L1_X"].asDouble();
+  planningData.curb.Point_L1.y = ads_pubcurb["Point_L1_Y"].asDouble();
+  planningData.curb.Point_L2.x = ads_pubcurb["Point_L2_X"].asDouble();
+  planningData.curb.Point_L2.y = ads_pubcurb["Point_L2_Y"].asDouble();
+  planningData.curb.curb_R_FOUND = ads_pubcurb["CURB_R_FOUND"].asBool();
+  planningData.curb.Point_R1.x = ads_pubcurb["Point_R1_X"].asDouble();
+  planningData.curb.Point_R1.y = ads_pubcurb["Point_R1_Y"].asDouble();
+  planningData.curb.Point_R2.x = ads_pubcurb["Point_R2_X"].asDouble();
+  planningData.curb.Point_R2.y = ads_pubcurb["Point_R2_Y"].asDouble();
+
+  planningData.num_left_road_boundary_splines = static_cast<int8_t>(
+        roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"].asInt());
+  const int SIZE_LEFT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_left_road_boundary_splines), 100);
+  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
+    Json::Value item = roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"][i];
+    planningData.left_road_boundary_splines[i].xb.x = item["XB_X"].asDouble();
+    planningData.left_road_boundary_splines[i].xb.y = item["XB_Y"].asDouble();
+    planningData.left_road_boundary_splines[i].xb.z = item["XB_Z"].asDouble();
+    planningData.left_road_boundary_splines[i].xb.w = item["XB_W"].asDouble();
+    planningData.left_road_boundary_splines[i].yb.x = item["YB_X"].asDouble();
+    planningData.left_road_boundary_splines[i].yb.y = item["YB_Y"].asDouble();
+    planningData.left_road_boundary_splines[i].yb.z = item["YB_Z"].asDouble();
+    planningData.left_road_boundary_splines[i].yb.w = item["YB_W"].asDouble();
+  }
+  planningData.num_right_road_boundary_splines = static_cast<int8_t>(
+        roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"].asInt());
+  const int SIZE_RIGHT_ROAD_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_right_road_boundary_splines), 100);
+  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
+    Json::Value item = roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"][i];
+    planningData.right_road_boundary_splines[i].xb.x = item["XB_X"].asDouble();
+    planningData.right_road_boundary_splines[i].xb.y = item["XB_Y"].asDouble();
+    planningData.right_road_boundary_splines[i].xb.z = item["XB_Z"].asDouble();
+    planningData.right_road_boundary_splines[i].xb.w = item["XB_W"].asDouble();
+    planningData.right_road_boundary_splines[i].yb.x = item["YB_X"].asDouble();
+    planningData.right_road_boundary_splines[i].yb.y = item["YB_Y"].asDouble();
+    planningData.right_road_boundary_splines[i].yb.z = item["YB_Z"].asDouble();
+    planningData.right_road_boundary_splines[i].yb.w = item["YB_W"].asDouble();
+  }
+
   // referene
   Json::Value referencePoints = referenceLine["REFERENCE_POINTS"];
   planningData.num_reference_points = static_cast<int8_t>(
@@ -737,6 +833,23 @@ void QPlanningWidget::parseDataFromJson(
     reference.s = item["S"].asDouble();
     reference.x = item["X"].asDouble();
     reference.y = item["Y"].asDouble();
+  }
+
+  planningData.num_reference_splines = static_cast<int8_t>(
+        referenceLine["NUM_REFERENCE_SPLINES"].asInt());
+  const int SIZE_REFERENCE_SPLINES = qBound<int>(
+        0, static_cast<int>(planningData.num_reference_splines), 100);
+  Json::Value reference_splines = referenceLine["REFERENCE_SPLINES"];
+  for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
+    Json::Value item = reference_splines[i];
+    planningData.reference_splines[i].xb.x = item["XB_X"].asDouble();
+    planningData.reference_splines[i].xb.y = item["XB_Y"].asDouble();
+    planningData.reference_splines[i].xb.z = item["XB_Z"].asDouble();
+    planningData.reference_splines[i].xb.w = item["XB_W"].asDouble();
+    planningData.reference_splines[i].yb.x = item["YB_X"].asDouble();
+    planningData.reference_splines[i].yb.y = item["YB_Y"].asDouble();
+    planningData.reference_splines[i].yb.z = item["YB_Z"].asDouble();
+    planningData.reference_splines[i].yb.w = item["YB_W"].asDouble();
   }
 
   // debug info

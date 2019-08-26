@@ -26,6 +26,7 @@ add_message_files (
   ads_UltraSonicTargetColl.msg
   ads_Vec4f.msg
   ads_planning_output.msg
+  ads_pubcurb.msg
   )
 
 generate_messages(
