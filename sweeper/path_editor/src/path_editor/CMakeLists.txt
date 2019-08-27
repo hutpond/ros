@@ -52,6 +52,7 @@ set(HEADERS
   src/QPanelWidget.h
   src/QReadDataObject.h
   src/QReadDataRosObject.h
+  src/gps.h
   )
 set(SOURCES
   src/main.cpp
@@ -63,6 +64,7 @@ set(SOURCES
   src/QOpenDriveObject.cpp
   src/QProjectObject.cpp
   src/QSettingDialog.cpp
+  src/gps.cpp
   )
 set(RESOURCES
   src/planningpatheditor.qrc

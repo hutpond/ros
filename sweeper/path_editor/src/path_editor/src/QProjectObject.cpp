@@ -22,6 +22,7 @@
 #include "QProjectObject.h"
 #include "QReadDataObject.h"
 #include "QOpenDriveObject.h"
+#include "gps.h"
 
 
 std::ostream & operator<<(std::ostream &out, const MapBinData &data) {
@@ -268,23 +269,23 @@ void QProjectObject::setImuData(const DataPacket *data)
 
 void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &data)
 {
-  const double PI = 3.14159265;
   if (m_strProName.isEmpty()) {
     return;
   }
   if (m_vector3dOrigin(0) > 360) {
-    m_vector3dOrigin = Eigen::Vector3d(data->lat * PI / 180.0,
-                                       data->lon * PI / 180.0,
-                                       data->height);
+    m_vector3dOrigin = Eigen::Vector3d(data->lon, data->lat, data->height);
   }
-  Eigen::Vector3d vector3d(data->lat * PI / 180,
-                           data->lon * PI / 180,
-                           data->height);
-  vector3d = this->Blh2Xyz(vector3d);
-  vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
+  GpsTran gps_tran(m_vector3dOrigin(0), m_vector3dOrigin(1), m_vector3dOrigin(2));
+
+  GpsDataType gps;
+  NedDataType ned;
+  gps.longitude = data->lon;
+  gps.latitude  = data->lat;
+  gps.altitude  = data->height;
+  gps_tran.fromGpsToNed(ned, gps);
 
   QSharedPointer<MapBinData> point(
-        new MapBinData(vector3d(0), vector3d(1), vector3d(2),
+        new MapBinData(ned.y_east, ned.x_north, -ned.z_down,
                   data->lat, data->lon, data->height,
                   data->pitch, data->roll, data->yaw));
   m_listReferensePoints.push_back(point);

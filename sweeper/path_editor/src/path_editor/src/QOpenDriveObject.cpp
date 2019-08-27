@@ -11,6 +11,7 @@
 #include <QDateTime>
 #include "QOpenDriveObject.h"
 #include "QProjectObject.h"
+#include "gps.h"
 
 QOpenDriveObject::QOpenDriveObject(QObject *parent) : QObject(parent)
 {
@@ -51,6 +52,19 @@ void QOpenDriveObject::readOpenDriveFile(const QString &path, const QString &nam
             data->lon = attributes.value("lon").toDouble();
             data->alt = attributes.value("alt").toDouble();
 
+            /*if (datas.size() > 0) {
+              GpsTran gps_tran(datas[0]->lat, datas[0]->lon, datas[0]->alt);
+
+              GpsDataType gps;
+              NedDataType ned;
+              gps.longitude = data->lat;
+              gps.latitude  = data->lon;
+              gps.altitude  = data->alt;
+              gps_tran.fromGpsToNed(ned, gps);
+              data->x = ned.y_east;
+              data->y = ned.x_north;
+              data->z = -ned.z_down;
+            }*/
             datas.append(data);
           }
           break;
