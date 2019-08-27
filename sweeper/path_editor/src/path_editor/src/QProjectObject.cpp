@@ -27,30 +27,30 @@
 
 std::ostream & operator<<(std::ostream &out, const MapBinData &data) {
   out.write(reinterpret_cast<const char*>(&data.id), sizeof(data.id));
-  out.write(reinterpret_cast<const char*>(&data.x), sizeof(data.x));
-  out.write(reinterpret_cast<const char*>(&data.y), sizeof(data.y));
-  out.write(reinterpret_cast<const char*>(&data.z), sizeof(data.z));
-  out.write(reinterpret_cast<const char*>(&data.pitch), sizeof(data.pitch));
-  out.write(reinterpret_cast<const char*>(&data.roll), sizeof(data.roll));
-  out.write(reinterpret_cast<const char*>(&data.yaw), sizeof(data.yaw));
   out.write(reinterpret_cast<const char*>(&data.lat), sizeof(data.lat));
   out.write(reinterpret_cast<const char*>(&data.lon), sizeof(data.lon));
   out.write(reinterpret_cast<const char*>(&data.alt), sizeof(data.alt));
+  out.write(reinterpret_cast<const char*>(&data.pitch), sizeof(data.pitch));
+  out.write(reinterpret_cast<const char*>(&data.roll), sizeof(data.roll));
+  out.write(reinterpret_cast<const char*>(&data.yaw), sizeof(data.yaw));
+  out.write(reinterpret_cast<const char*>(&data.x), sizeof(data.x));
+  out.write(reinterpret_cast<const char*>(&data.y), sizeof(data.y));
+  out.write(reinterpret_cast<const char*>(&data.z), sizeof(data.z));
 
   return out;
 }
 
 std::istream & operator>>(std::istream &in, MapBinData &data) {
   in.read(reinterpret_cast<char*>(&data.id), sizeof(data.id));
-  in.read(reinterpret_cast<char*>(&data.x), sizeof(data.x));
-  in.read(reinterpret_cast<char*>(&data.y), sizeof(data.y));
-  in.read(reinterpret_cast<char*>(&data.z), sizeof(data.z));
-  in.read(reinterpret_cast<char*>(&data.pitch), sizeof(data.pitch));
-  in.read(reinterpret_cast<char*>(&data.roll), sizeof(data.roll));
-  in.read(reinterpret_cast<char*>(&data.yaw), sizeof(data.yaw));
   in.read(reinterpret_cast<char*>(&data.lat), sizeof(data.lat));
   in.read(reinterpret_cast<char*>(&data.lon), sizeof(data.lon));
   in.read(reinterpret_cast<char*>(&data.alt), sizeof(data.alt));
+  in.read(reinterpret_cast<char*>(&data.pitch), sizeof(data.pitch));
+  in.read(reinterpret_cast<char*>(&data.roll), sizeof(data.roll));
+  in.read(reinterpret_cast<char*>(&data.yaw), sizeof(data.yaw));
+  in.read(reinterpret_cast<char*>(&data.x), sizeof(data.x));
+  in.read(reinterpret_cast<char*>(&data.y), sizeof(data.y));
+  in.read(reinterpret_cast<char*>(&data.z), sizeof(data.z));
 
   return in;
 }
@@ -192,6 +192,8 @@ void QProjectObject::buildProject()
   fileName.append(m_strProName.toLocal8Bit().data());
   fileName.append(".bin");
   std::ofstream out(fileName, std::ios::binary);
+  int number = 0;
+  out.write(reinterpret_cast<const char*>(&number), sizeof(int));
 
   QSharedPointer<MapBinData> data = m_listReferensePoints[0];
   data->id = -1;
@@ -205,11 +207,14 @@ void QProjectObject::buildProject()
       continue;
     }
 
+    ++ number;
     int id = data->id + 1;
     data = m_listReferensePoints[i];
     data->id = id;
     out << *data;
   }
+  out.seekp(0);
+  out.write(reinterpret_cast<const char*>(&number), sizeof(int));
   out.close();
 }
 
