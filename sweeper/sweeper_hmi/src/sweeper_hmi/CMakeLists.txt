@@ -43,6 +43,8 @@ add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>)
 
+add_dependencies(${PROJECT_NAME} ads_msgs_gencpp)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick)
 target_link_libraries(${PROJECT_NAME} xlsreader)
