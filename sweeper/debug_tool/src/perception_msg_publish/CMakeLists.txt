@@ -37,6 +37,8 @@ target_sources(${PROJECT_NAME} PRIVATE src/message_publish.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>)
 
+add_dependencies(${PROJECT_NAME} perception_msg_publish_gencpp)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} jsoncpp)
