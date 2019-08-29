@@ -37,12 +37,13 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   m_pWdgShow->setFunPosition(fun);
 
   namespace fs = boost::filesystem;
-  m_fsPath = fs::current_path();
+  //m_fsPath = fs::current_path();
+  m_fsPath = getenv("HOME");
   m_fsPath /= "PlanningData";
 
   char time_str[64] = {0};
   time_t times = time(NULL);
-  struct tm *utcTime = gmtime(&times);
+  struct tm *utcTime = localtime(&times);
 
   sprintf(time_str, "%04d%02d%02d_%02d%02d%02d",
           utcTime->tm_year + 1900,
@@ -568,7 +569,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
 
   char time_str[64] = {0};
   time_t times = time(NULL);
-  struct tm *utcTime = gmtime(&times);
+  struct tm *utcTime = localtime(&times);
   struct timeval tv;
   gettimeofday(&tv, NULL);
   sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",

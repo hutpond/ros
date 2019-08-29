@@ -67,7 +67,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   //this->createSettingToolBar();
   //this->createHelpToolBar();
 
-  this->setWindowTitle("Debug Tool V2.4");
+  this->setWindowTitle("Debug Tool V2.5");
 
   // set zmq callback function
   //auto funPlanning = std::bind(&QPlanningWidget::parseJsonData, m_pWdgPlanning,

@@ -46,7 +46,7 @@ fs::path createPathInCurrent(const std::string &name)
 {
   char time_str[64] = {0};
   time_t times = time(NULL);
-  struct tm *utcTime = gmtime(&times);
+  struct tm *utcTime = localtime(&times);
 
   sprintf(time_str, "%04d%02d%02d_%02d%02d%02d",
           utcTime->tm_year + 1900,
@@ -82,7 +82,7 @@ std::string createFileName(const fs::path &path, const std::string &ext)
 
   char time_str[64] = {0};
   time_t times = time(NULL);
-  struct tm *utcTime = gmtime(&times);
+  struct tm *utcTime = localtime(&times);
 
   struct timeval tv;
   gettimeofday(&tv, NULL);

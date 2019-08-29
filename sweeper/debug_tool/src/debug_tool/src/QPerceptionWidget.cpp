@@ -29,7 +29,7 @@ QPerceptionWidget::QPerceptionWidget(QWidget *parent)
   //m_nPointCount = 0;
   //m_cloundPoints = new Point3D[16 * 2000 * 4];
 
-  m_fspath = createPathInCurrent("PerceptionData");
+  //m_fspath = createPathInCurrent("PerceptionData");
   m_pWdgShow = new QPerceptionShowWidget(this);
   m_pWdgShow3d = new QPerceptionShow3DWidget(this);
   m_pWdgParam = new QPerceptionParamWidget(this);
