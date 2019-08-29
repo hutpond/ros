@@ -393,10 +393,15 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   // garbage
   Json::Value garbage;
   const auto &garbage_result = planningData.garbage_detection_results.result;
-  const auto garbage_size = garbage_result.size();
+  auto garbage_size = garbage_result.size();
   using size_g = decltype (garbage_size);
   for (size_g i = 0; i < garbage_size; ++i) {
-
+    Json::Value item;
+    item["ID"] = garbage_result[i].id;
+    item["SIZE"] = garbage_result[i].size;
+    item["ANGLE"] = garbage_result[i].angle;
+    item["DISTANCE"] = garbage_result[i].distance;
+    garbage.append(item);
   }
 
   // decision
@@ -570,6 +575,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   data["RADAR73_TRARGETS"] = radar73Trargets;
   data["ULTRASONIC_TRARGETS"] = ultrasonicTrargets;
   data["TRACK_TRARGETS"] = trackTrargets;
+  data["LITTERSENSOR_DATA"] = garbage;
   data["DECISION_STATE"] = decisionState;
   data["TRAJECTORY"] = trajectory;
   data["ROAD_INFO"] = roadInfo;
@@ -614,6 +620,7 @@ void QPlanningWidget::parseDataFromJson(
   Json::Value radar73Trargets = data["RADAR73_TRARGETS"];
   Json::Value ultrasonicTrargets = data["ULTRASONIC_TRARGETS"];
   Json::Value trackTrargets = data["TRACK_TRARGETS"];
+  Json::Value garbage = data["LITTERSENSOR_DATA"];
   Json::Value decisionState = data["DECISION_STATE"];
   Json::Value trajectory = data["TRAJECTORY"];
   Json::Value roadInfo = data["ROAD_INFO"];
@@ -717,6 +724,24 @@ void QPlanningWidget::parseDataFromJson(
     target.P4_Y = item["P4_Y"].asFloat();
     target.STATUS = item["STATUS"].asFloat();
   }
+
+  // garbage
+  auto &garbage_result = planningData.garbage_detection_results.result;
+  garbage_result.resize(1);
+  auto gargage_item = garbage_result[0];
+  using garbage_type = decltype (gargage_item);
+  const int garbage_size = static_cast<int>(garbage.size());
+  garbage_result.clear();
+  for (int i = 0; i < garbage_size; ++i) {
+    Json::Value item = garbage[i];
+    garbage_type result;
+    result.id = static_cast<decltype(result.id)>(item["ID"].asInt());
+    result.size = item["SIZE"].asFloat();
+    result.angle = item["ANGLE"].asFloat();
+    result.distance = item["DISTANCE"].asFloat();
+    garbage_result.push_back(result);
+  }
+
   // decision
   planningData.decision = static_cast<int8_t>(decisionState["DECISION"].asInt());
   planningData.ultrasonic_decision = static_cast<int8_t>(

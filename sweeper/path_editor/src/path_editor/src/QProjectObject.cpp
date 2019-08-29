@@ -196,7 +196,7 @@ void QProjectObject::buildProject()
   out.write(reinterpret_cast<const char*>(&number), sizeof(int));
 
   QSharedPointer<MapBinData> data = m_listReferensePoints[0];
-  data->id = -1;
+  data->id = number ++;
   out << *data;
 
   const int SIZE = static_cast<int>(m_listReferensePoints.size());
@@ -207,10 +207,8 @@ void QProjectObject::buildProject()
       continue;
     }
 
-    ++ number;
-    int id = data->id + 1;
     data = m_listReferensePoints[i];
-    data->id = id;
+    data->id = number ++;
     out << *data;
   }
   out.seekp(0);

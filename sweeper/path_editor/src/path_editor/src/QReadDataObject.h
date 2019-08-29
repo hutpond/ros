@@ -30,8 +30,8 @@ struct DataPacket
   int16_t sAccelY;     // 12 / 32768 g
   int16_t sAccelZ;     // 12 / 32768 g
 
-  int32_t nLongitude;  // 1e-7 deg
   int32_t nLatitude;   // 1e-7 deg
+  int32_t nLongitude;  // 1e-7 deg
   int32_t nAltitude;   // 1e-3 m
 
   int16_t sVelNorth;   // 1e2 / 32768 m / s

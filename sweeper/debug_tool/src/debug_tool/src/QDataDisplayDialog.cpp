@@ -414,4 +414,17 @@ void QDataDisplayDialog::setPlanningData(
     itemChild = new QTreeWidgetItem(item);
     itemChild->setText(0, QString("STATUS: %1").arg(planningData.fusion_results.track_objects[i].STATUS));
   }
+
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  SIZE = static_cast<int>(planningData.garbage_detection_results.result.size());
+  itemRoot->setText(0, QString("GARBAGE_RESULTS [%1]").arg(SIZE));
+  const auto &garbage_result = planningData.garbage_detection_results.result;
+  for (int i = 0; i < SIZE; ++i) {
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, QString("ID: %1, SIZE: %2, ANGLE: %3, DISTANCE: %4").
+                  arg(garbage_result[i].id).
+                  arg(garbage_result[i].size).
+                  arg(garbage_result[i].angle).
+                  arg(garbage_result[i].distance));
+  }
 }

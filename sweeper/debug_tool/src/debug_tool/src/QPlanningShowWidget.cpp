@@ -10,6 +10,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 #include <QThread>
+#include <QtMath>
 #include "QPlanningShowWidget.h"
 #include "GlobalDefine.h"
 
@@ -140,6 +141,7 @@ void QPlanningShowWidget::drawImage()
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawSplines(painter);
+  this->drawGarbageResults(painter);
 }
 
 /*******************************************************
@@ -732,6 +734,40 @@ void QPlanningShowWidget::drawSplines(QPainter &painter)
     path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
     painter.drawPath(path);
   }
+}
+
+/*******************************************************
+ * @brief 绘制垃圾检测结果
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawGarbageResults(QPainter &painter)
+{
+  const auto &garbage_results = m_planningData.garbage_detection_results.result;
+  const int size = static_cast<int>(garbage_results.size());
+  QPointF ptf(VEH_HEAD - m_planningData.vehicle_length / 2.0, 0);
+  QLineF linef(ptf, ptf + QPointF(2, 0));
+
+  painter.save();
+  QPen pen;
+  pen.setColor(Qt::darkGreen);
+  pen.setStyle(Qt::SolidLine);
+  painter.setPen(pen);
+
+  for (int i = 0; i < size; ++i) {
+    double width = qSqrt(garbage_results[i].size);
+    QLineF linef2 = linef;
+    linef2.setAngle(garbage_results[i].angle);
+    linef2.setLength(garbage_results[i].distance);
+    QRectF rectf(0, 0, width, width);
+    rectf.moveCenter(linef2.p2());
+
+    QPolygonF ptf = m_transform.map(rectf);
+    painter.drawPolygon(ptf);
+  }
+
+  painter.restore();
 }
 
 /*******************************************************
