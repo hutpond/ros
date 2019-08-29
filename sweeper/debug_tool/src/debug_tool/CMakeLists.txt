@@ -45,6 +45,8 @@ add_message_files (
   ads_Vec4f.msg
   ads_planning_output.msg
   ads_pubcurb.msg
+  ads_garbage_detection.msg
+  ads_littersensor_data.msg
   )
 
 generate_messages(

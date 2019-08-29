@@ -14,6 +14,7 @@ ads_Radar28fTargetColl radar28f_results
 ads_Radar73fTargetColl radar73f_results
 ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
+ads_littersensor_data garbage_detection_results
 
 uint8 num_planning_splines
 ads_Spline[100] planning_splines

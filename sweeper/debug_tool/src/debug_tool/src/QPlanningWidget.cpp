@@ -390,6 +390,15 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   }
   trackTrargets["TRACK_OBJECTS"] = trackTrarget;
 
+  // garbage
+  Json::Value garbage;
+  const auto &garbage_result = planningData.garbage_detection_results.result;
+  const auto garbage_size = garbage_result.size();
+  using size_g = decltype (garbage_size);
+  for (size_g i = 0; i < garbage_size; ++i) {
+
+  }
+
   // decision
   Json::Value decisionState;
   decisionState["DECISION"] = static_cast<int>(planningData.decision);
