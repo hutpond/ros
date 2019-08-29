@@ -291,6 +291,10 @@ void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &dat
         new MapBinData(ned.y_east, ned.x_north, -ned.z_down,
                   data->lat, data->lon, data->height,
                   data->pitch, data->roll, data->yaw));
+
+  if (point->yaw < 0) {
+    point->yaw += 360;
+  }
   m_listReferensePoints.push_back(point);
 }
 
