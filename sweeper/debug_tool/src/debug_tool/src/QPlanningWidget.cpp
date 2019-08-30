@@ -21,6 +21,8 @@
 #include "QDataDisplayDialog.h"
 #include "QDebugToolMainWnd.h"
 
+static constexpr int REPLAY_MSEC[3] = {50, 200, 400};
+
 QPlanningWidget::QPlanningWidget(QWidget *parent)
   : QBaseWidget(parent)
 {
@@ -31,6 +33,8 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
           this, &QPlanningWidget::onReplayState);
   connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
           this, &QPlanningWidget::onSetFrameIndexReplay);
+  connect(m_pWdgParam, &QPlanningParamWidget::replayInterIndex,
+          this, &QPlanningWidget::onReplayInterIndex);
 
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
@@ -63,6 +67,8 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
           this, SLOT(onParsePlanningData(const debug_tool::ads_PlanningData4Debug &)));
 
   QReadDataManagerRos::instance()->start_subscribe();
+
+  m_nIntervalMillSecs = REPLAY_MSEC[0];
 }
 
 QPlanningWidget::~QPlanningWidget()
@@ -219,7 +225,6 @@ void QPlanningWidget::onSetFrameIndexReplay(int index)
 
 void QPlanningWidget::replayJson(const QString &path)
 {
-  m_nIntervalMillSecs = 30;
   m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
   this->fileList(path.toStdString(), m_listPlanningFiles);
@@ -230,6 +235,16 @@ void QPlanningWidget::replayJson(const QString &path)
     m_nTimerId = 0;
   }
   m_bFlagPauseReplay = false;
+  m_nTimerId = startTimer(m_nIntervalMillSecs);
+}
+
+void QPlanningWidget::onReplayInterIndex(int index)
+{
+  m_nIntervalMillSecs = REPLAY_MSEC[index];
+  if (m_nTimerId == 0) {
+    return;
+  }
+  killTimer(m_nTimerId);
   m_nTimerId = startTimer(m_nIntervalMillSecs);
 }
 

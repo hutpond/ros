@@ -52,6 +52,8 @@ protected slots:
 
   void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
 
+  void onReplayInterIndex(int);
+
 private:
   QPlanningShowWidget *m_pWdgShow;
   QPlanningParamWidget *m_pWdgParam;

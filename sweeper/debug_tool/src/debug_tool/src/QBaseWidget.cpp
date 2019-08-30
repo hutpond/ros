@@ -27,9 +27,8 @@ QBaseWidget::~QBaseWidget()
 
  * @return
 ********************************************************/
-void QBaseWidget::replay(const std::string &subdir)
+void QBaseWidget::replay(const std::string &)
 {
-  std::list<std::string> paths = this->pathList(subdir);
   std::string path = m_fspath.string();
 
   m_nIntervalMillSecs = 300;

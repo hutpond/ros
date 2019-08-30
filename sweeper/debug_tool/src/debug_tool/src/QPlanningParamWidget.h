@@ -41,6 +41,7 @@ signals:
   void replayState(bool);
 signals:
   void replayFrameOffset(int);
+  void replayInterIndex(int);
 
 private slots:
   void onBtnClicked();
@@ -64,15 +65,16 @@ private:
   QLabel *m_pLblCarSLName;
   QLabel *m_pLblCarSLValue;
 
-  //QGroupBox *m_pGBoxPathSeclect;
   QGroupBox *m_pGBoxReplay;
   QPushButton *m_pBtnPause;
   QPushButton *m_pBtnResume;
   QPushButton *m_pBtnBack;
   QPushButton *m_pBtnNext;
+  QPushButton *m_pBtnVelocity;
   QSlider *m_pSliderPlay;
 
   int m_nSliderValue;
+  int m_nPlayInterIndex;
 };
 
 #endif // Q_PLANNING_PARAM_WIDGET_H
