@@ -22,6 +22,8 @@ QRectF g_rectfSweeper = QRectF(0, 0, 0, 0);
 const double MAP_TO_ROAD_COEF = 4.0;       // 显示范围是路宽的倍数
 const double VEH_HEAD = 1.85;    // 显示范围X轴起始位于车身后距离
 
+const double PI = 3.14159265;
+
 
 /*******************************************************
  * @brief 状态栏显示信息

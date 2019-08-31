@@ -54,7 +54,8 @@ protected:
   void drawTrackTargetWithPoints(QPainter &);
   void drawDecisionTargets(QPainter &);
   void drawDecisionTargetsSL(const debug_tool::ads_TargetPoint_<std::allocator<void>> &, QPainter &);
-  void drawSplines(QPainter &);
+  void drawPlanningSplines(QPainter &);
+  void drawPlanningCandidatesSplines(QPainter &);
   void drawGarbageResults(QPainter &);
 
   void calcMapRect();

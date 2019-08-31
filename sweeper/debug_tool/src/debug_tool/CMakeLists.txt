@@ -47,6 +47,7 @@ add_message_files (
   ads_pubcurb.msg
   ads_garbage_detection.msg
   ads_littersensor_data.msg
+  ads_planning_trajectory.msg
   )
 
 generate_messages(

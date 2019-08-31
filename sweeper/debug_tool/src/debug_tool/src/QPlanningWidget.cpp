@@ -461,22 +461,61 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   planning_output["POSE_POSITION_Y"] = planningData.planning_output.pose.position.y;
   trajectory["PLANNING_OUTPUT"] = planning_output;
 
-  trajectory["NUM_SPLINES"] = static_cast<int>(planningData.num_planning_splines);
-  const int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_planning_splines), 100);
-  Json::Value splines;
-  for (int i = 0; i < SIZE_SPLINES; ++ i) {
-    Json::Value item;
-    item["XB_X"] = planningData.planning_splines[i].xb.x;
-    item["XB_Y"] = planningData.planning_splines[i].xb.y;
-    item["XB_Z"] = planningData.planning_splines[i].xb.z;
-    item["XB_W"] = planningData.planning_splines[i].xb.w;
-    item["YB_X"] = planningData.planning_splines[i].yb.x;
-    item["YB_Y"] = planningData.planning_splines[i].yb.y;
-    item["YB_Z"] = planningData.planning_splines[i].yb.z;
-    item["YB_W"] = planningData.planning_splines[i].yb.w;
-    splines.append(item);
+  Json::Value json_candidates;
+  const auto &val_candidates = planningData.planning_trajectory_candidates;
+  for (int i = 0; i < 10; ++i) {
+    Json::Value item, splines;
+    item["ID"] = static_cast<int>(val_candidates[i].id);
+    item["COST"] = val_candidates[i].cost;
+    item["LATERAL_COST"] = val_candidates[i].lateral_cost;
+    item["SMOOTHNESS_COST"] = val_candidates[i].smoothness_cost;
+    item["GARBAGE_COST"] = val_candidates[i].garbage_cost;
+
+    int size_candidates_splines = static_cast<int>(val_candidates[i].splines.size());
+    for (int j = 0; j < size_candidates_splines; ++ j) {
+      Json::Value spline;
+
+      const auto &val_candidates_spine = val_candidates[i].splines[j];
+      spline["XB_X"] = val_candidates_spine.xb.x;
+      spline["XB_Y"] = val_candidates_spine.xb.y;
+      spline["XB_Z"] = val_candidates_spine.xb.z;
+      spline["XB_W"] = val_candidates_spine.xb.w;
+      spline["YB_X"] = val_candidates_spine.yb.x;
+      spline["YB_Y"] = val_candidates_spine.yb.y;
+      spline["YB_Z"] = val_candidates_spine.yb.z;
+      spline["YB_W"] = val_candidates_spine.yb.w;
+
+      splines.append(spline);
+    }
+    item["SPLINES"] = splines;
+    json_candidates.append(item);
   }
-  trajectory["SPLINES"] = splines;
+  trajectory["TRAJECTORY_CANDIDATES"] = json_candidates;
+
+  Json::Value json_trajectory, json_trajectory_splines;
+  const auto &val_trajectory = planningData.planning_trajectory;
+  json_trajectory["ID"] = static_cast<int>(val_trajectory.id);
+  json_trajectory["COST"] = val_trajectory.cost;
+  json_trajectory["LATERAL_COST"] = val_trajectory.lateral_cost;
+  json_trajectory["SMOOTHNESS_COST"] = val_trajectory.smoothness_cost;
+  json_trajectory["GARBAGE_COST"] = val_trajectory.garbage_cost;
+  int size_trajectory_splines = static_cast<int>(val_trajectory.splines.size());
+  for (int i = 0; i < size_trajectory_splines; ++ i) {
+    Json::Value spline;
+
+    spline["XB_X"] = val_trajectory.splines[i].xb.x;
+    spline["XB_Y"] = val_trajectory.splines[i].xb.y;
+    spline["XB_Z"] = val_trajectory.splines[i].xb.z;
+    spline["XB_W"] = val_trajectory.splines[i].xb.w;
+    spline["YB_X"] = val_trajectory.splines[i].yb.x;
+    spline["YB_Y"] = val_trajectory.splines[i].yb.y;
+    spline["YB_Z"] = val_trajectory.splines[i].yb.z;
+    spline["YB_W"] = val_trajectory.splines[i].yb.w;
+
+    json_trajectory_splines.append(spline);
+  }
+  json_trajectory["SPLINES"] = json_trajectory_splines;
+  trajectory["PLANNING_TRAJECTORY"] = json_trajectory;
 
   // road info
   Json::Value roadInfo;
@@ -792,18 +831,58 @@ void QPlanningWidget::parseDataFromJson(
   planningData.planning_output.pose.position.x = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_X"].asDouble();
   planningData.planning_output.pose.position.y = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_Y"].asDouble();
 
-  planningData.num_planning_splines = static_cast<int8_t>(trajectory["NUM_SPLINES"].asInt());
-  const int SIZE_SPLINES = static_cast<int>(trajectory["SPLINES"].size());
-  for (int i = 0; i < SIZE_SPLINES; ++i) {
-    Json::Value item = trajectory["SPLINES"][i];
-    planningData.planning_splines[i].xb.x = item["XB_X"].asDouble();
-    planningData.planning_splines[i].xb.y = item["XB_Y"].asDouble();
-    planningData.planning_splines[i].xb.z = item["XB_Z"].asDouble();
-    planningData.planning_splines[i].xb.w = item["XB_W"].asDouble();
-    planningData.planning_splines[i].yb.x = item["YB_X"].asDouble();
-    planningData.planning_splines[i].yb.y = item["YB_Y"].asDouble();
-    planningData.planning_splines[i].yb.z = item["YB_Z"].asDouble();
-    planningData.planning_splines[i].yb.w = item["YB_W"].asDouble();
+  auto &val_candidates = planningData.planning_trajectory_candidates;
+  for (int i = 0; i < 10; ++i) {
+    Json::Value item = trajectory["TRAJECTORY_CANDIDATES"][i];
+    val_candidates[i].id = static_cast<uint8_t>(item["ID"].asInt());
+    val_candidates[i].cost = item["COST"].asDouble();
+    val_candidates[i].lateral_cost = item["LATERAL_COST"].asDouble();
+    val_candidates[i].smoothness_cost = item["SMOOTHNESS_COST"].asDouble();
+    val_candidates[i].garbage_cost = item["GARBAGE_COST"].asDouble();
+
+    auto &val_candidates_spines = val_candidates[i].splines;
+    Json::Value json_splines = item["SPLINES"];
+    val_candidates_spines.clear();
+    int size_candidates_splines = static_cast<int>(json_splines.size());
+    for (int j = 0; j < size_candidates_splines; ++ j) {
+      debug_tool::ads_Spline_<std::allocator<void>> val_spine;
+      val_spine.xb.x = json_splines[j]["XB_X"].asDouble();
+      val_spine.xb.y = json_splines[j]["XB_Y"].asDouble();
+      val_spine.xb.z = json_splines[j]["XB_Z"].asDouble();
+      val_spine.xb.w = json_splines[j]["XB_W"].asDouble();
+      val_spine.yb.x = json_splines[j]["YB_X"].asDouble();
+      val_spine.yb.y = json_splines[j]["YB_Y"].asDouble();
+      val_spine.yb.z = json_splines[j]["YB_Z"].asDouble();
+      val_spine.yb.w = json_splines[j]["YB_W"].asDouble();
+
+      val_candidates_spines.push_back(val_spine);
+    }
+  }
+
+  auto &val_trajectory = planningData.planning_trajectory;
+  Json::Value json_trajectory = trajectory["PLANNING_TRAJECTORY"];
+  val_trajectory.id = static_cast<uint8_t>(json_trajectory["ID"].asInt());
+  val_trajectory.cost = json_trajectory["COST"].asDouble();
+  val_trajectory.lateral_cost = json_trajectory["LATERAL_COST"].asDouble();
+  val_trajectory.smoothness_cost = json_trajectory["SMOOTHNESS_COST"].asDouble();
+  val_trajectory.garbage_cost = json_trajectory["GARBAGE_COST"].asDouble();
+
+  auto &val_trajectory_spines = val_trajectory.splines;
+  Json::Value json_trajectory_spines = json_trajectory["SPLINES"];
+  val_trajectory_spines.clear();
+  int size_trajectory_splines = static_cast<int>(json_trajectory_spines.size());
+  for (int j = 0; j < size_trajectory_splines; ++ j) {
+    debug_tool::ads_Spline_<std::allocator<void>> val_spine;
+    val_spine.xb.x = json_trajectory_spines[j]["XB_X"].asDouble();
+    val_spine.xb.y = json_trajectory_spines[j]["XB_Y"].asDouble();
+    val_spine.xb.z = json_trajectory_spines[j]["XB_Z"].asDouble();
+    val_spine.xb.w = json_trajectory_spines[j]["XB_W"].asDouble();
+    val_spine.yb.x = json_trajectory_spines[j]["YB_X"].asDouble();
+    val_spine.yb.y = json_trajectory_spines[j]["YB_Y"].asDouble();
+    val_spine.yb.z = json_trajectory_spines[j]["YB_Z"].asDouble();
+    val_spine.yb.w = json_trajectory_spines[j]["YB_W"].asDouble();
+
+    val_trajectory_spines.push_back(val_spine);
   }
 
   // road info

@@ -140,7 +140,8 @@ void QPlanningShowWidget::drawImage()
   this->drawPlanningPoint(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
-  this->drawSplines(painter);
+  this->drawPlanningCandidatesSplines(painter);
+  this->drawPlanningSplines(painter);
   this->drawGarbageResults(painter);
 }
 
@@ -711,20 +712,21 @@ void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
 
  * @return
 ********************************************************/
-void QPlanningShowWidget::drawSplines(QPainter &painter)
+void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
 {
   QPen pen;
   pen.setWidth(2);
   pen.setColor(Qt::blue);
   painter.setPen(pen);
 
-  const int SIZE = qBound<int>(0, static_cast<int>(m_planningData.num_planning_splines), 100);
+  const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
+  const int SIZE = static_cast<int>(val_planning_splines.size());
   QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
   for (int i = 0; i < SIZE; ++i) {
-    ptfStart = QPointF(m_planningData.planning_splines[i].xb.x, m_planningData.planning_splines[i].yb.x);
-    ptfEnd = QPointF(m_planningData.planning_splines[i].xb.w, m_planningData.planning_splines[i].yb.w);
-    ptfControl1 = QPointF(m_planningData.planning_splines[i].xb.y, m_planningData.planning_splines[i].yb.y);
-    ptfControl2 = QPointF(m_planningData.planning_splines[i].xb.z, m_planningData.planning_splines[i].yb.z);
+    ptfStart = QPointF(val_planning_splines[i].xb.x, val_planning_splines[i].yb.x);
+    ptfEnd = QPointF(val_planning_splines[i].xb.w, val_planning_splines[i].yb.w);
+    ptfControl1 = QPointF(val_planning_splines[i].xb.y, val_planning_splines[i].yb.y);
+    ptfControl2 = QPointF(val_planning_splines[i].xb.z, val_planning_splines[i].yb.z);
     ptfStart = m_transform.map(ptfStart);
     ptfEnd = m_transform.map(ptfEnd);
     ptfControl1 = m_transform.map(ptfControl1);
@@ -737,6 +739,46 @@ void QPlanningShowWidget::drawSplines(QPainter &painter)
 }
 
 /*******************************************************
+ * @brief 绘制candidates planning path of bezier
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
+{
+  QPen pen;
+  pen.setWidth(1);
+  pen.setColor(Qt::magenta);
+  painter.setPen(pen);
+
+  int planning_id = m_planningData.planning_trajectory.id;
+  for (int i = 0; i < 10; ++ i) {
+    if (planning_id == m_planningData.planning_trajectory_candidates[i].id) {
+      continue;
+    }
+    const auto &val_candidate_splines =
+        m_planningData.planning_trajectory_candidates[i].splines;
+    const int SIZE = static_cast<int>(val_candidate_splines.size());
+    QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
+    for (int j = 0; j < SIZE; ++j) {
+      ptfStart = QPointF(val_candidate_splines[j].xb.x, val_candidate_splines[j].yb.x);
+      ptfEnd = QPointF(val_candidate_splines[j].xb.w, val_candidate_splines[j].yb.w);
+      ptfControl1 = QPointF(val_candidate_splines[j].xb.y, val_candidate_splines[j].yb.y);
+      ptfControl2 = QPointF(val_candidate_splines[j].xb.z, val_candidate_splines[j].yb.z);
+      ptfStart = m_transform.map(ptfStart);
+      ptfEnd = m_transform.map(ptfEnd);
+      ptfControl1 = m_transform.map(ptfControl1);
+      ptfControl2 = m_transform.map(ptfControl2);
+
+      QPainterPath path(ptfStart);
+      path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
+      painter.drawPath(path);
+    }
+  }
+}
+
+
+/*******************************************************
  * @brief 绘制垃圾检测结果
  * @param painter: 画笔
 
@@ -746,25 +788,30 @@ void QPlanningShowWidget::drawGarbageResults(QPainter &painter)
 {
   const auto &garbage_results = m_planningData.garbage_detection_results.result;
   const int size = static_cast<int>(garbage_results.size());
-  QPointF ptf(VEH_HEAD - m_planningData.vehicle_length / 2.0, 0);
-  QLineF linef(ptf, ptf + QPointF(2, 0));
 
   painter.save();
   QPen pen;
+  pen.setWidth(2);
   pen.setColor(Qt::darkGreen);
   pen.setStyle(Qt::SolidLine);
   painter.setPen(pen);
+  painter.setFont(QFont("Times", 10));
 
   for (int i = 0; i < size; ++i) {
     double width = qSqrt(garbage_results[i].size);
-    QLineF linef2 = linef;
-    linef2.setAngle(garbage_results[i].angle);
-    linef2.setLength(garbage_results[i].distance);
+    QLineF linef(0, 0, 2, 0);
+    linef.setAngle(-garbage_results[i].angle * 180.0 / PI);
+    linef.setLength(garbage_results[i].distance);
     QRectF rectf(0, 0, width, width);
-    rectf.moveCenter(linef2.p2());
+    rectf.moveCenter(linef.p2());
 
-    QPolygonF ptf = m_transform.map(rectf);
-    painter.drawPolygon(ptf);
+    QPolygonF pgf = m_transform.map(rectf);
+    painter.drawPolygon(pgf);
+
+    QString text = QString("D: %1 A: %2").
+        arg(garbage_results[i].distance, 5, 'f', 2).
+        arg(garbage_results[i].angle, 5, 'f', 3);
+    painter.drawText(m_transform.map(rectf.topRight()), text);
   }
 
   painter.restore();

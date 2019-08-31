@@ -234,21 +234,67 @@ void QDataDisplayDialog::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("position.y: %1").arg(planningData.planning_output.pose.position.y));
 
-  int SIZE_SPLINES = qBound<int>(0, static_cast<int>(planningData.num_planning_splines), 100);
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "PLANNING_TRAJECTORY_CANDIDATES (10)");
+  auto &val_candidates = planningData.planning_trajectory_candidates;
+  for (int i = 0; i < 10; ++ i) {
+    const auto &val_candidates_spines = val_candidates[i].splines;
+    int size_candidates_splines = static_cast<int>(val_candidates_spines.size());
+    item = new QTreeWidgetItem(itemRoot);
+    QString text = QString(
+          "id: %1, cost: %2, lateral_cost: %3, smoothness_cost: %4, garbage_cost: %5, splines: %6").
+        arg(val_candidates[i].id).
+        arg(val_candidates[i].cost).
+        arg(val_candidates[i].lateral_cost).
+        arg(val_candidates[i].smoothness_cost).
+        arg(val_candidates[i].garbage_cost).
+        arg(size_candidates_splines);
+    item->setText(0, text);
+
+    for (int j = 0; j < size_candidates_splines; ++ j) {
+      QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+      text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
+          arg(j).
+          arg(val_candidates_spines[j].xb.x).
+          arg(val_candidates_spines[j].xb.y).
+          arg(val_candidates_spines[j].xb.z).
+          arg(val_candidates_spines[j].xb.w).
+          arg(val_candidates_spines[j].yb.x).
+          arg(val_candidates_spines[j].yb.y).
+          arg(val_candidates_spines[j].yb.z).
+          arg(val_candidates_spines[j].yb.w);
+      itemChild->setText(0, text);
+    }
+  }
+
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "PLANNING_TRAJECTORY");
+  const auto &val_planning_trajectory = planningData.planning_trajectory;
+  const auto &val_planning_trajectory_spines = val_planning_trajectory.splines;
+  int size_trajectory_splines = static_cast<int>(val_planning_trajectory_spines.size());
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("SPLINES [%1]").arg(SIZE_SPLINES));
-  for (int i = 0; i < SIZE_SPLINES; ++i) {
+  QString text = QString(
+        "id: %1, cost: %2, lateral_cost: %3, smoothness_cost: %4, garbage_cost: %5, splines: %6").
+      arg(val_planning_trajectory.id).
+      arg(val_planning_trajectory.cost).
+      arg(val_planning_trajectory.lateral_cost).
+      arg(val_planning_trajectory.smoothness_cost).
+      arg(val_planning_trajectory.garbage_cost).
+      arg(size_trajectory_splines);
+  item->setText(0, text);
+
+  for (int j = 0; j < size_trajectory_splines; ++ j) {
     QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
     QString text = QString("Index:%1 xb(x: %2, y: %3, z: %4, w: %5) yb(x: %6, y: %7, z: %8, w: %9)").
-        arg(i).
-        arg(planningData.planning_splines[i].xb.x).
-        arg(planningData.planning_splines[i].xb.y).
-        arg(planningData.planning_splines[i].xb.z).
-        arg(planningData.planning_splines[i].xb.w).
-        arg(planningData.planning_splines[i].yb.x).
-        arg(planningData.planning_splines[i].yb.y).
-        arg(planningData.planning_splines[i].yb.z).
-        arg(planningData.planning_splines[i].yb.w);
+        arg(j).
+        arg(val_planning_trajectory_spines[j].xb.x).
+        arg(val_planning_trajectory_spines[j].xb.y).
+        arg(val_planning_trajectory_spines[j].xb.z).
+        arg(val_planning_trajectory_spines[j].xb.w).
+        arg(val_planning_trajectory_spines[j].yb.x).
+        arg(val_planning_trajectory_spines[j].yb.y).
+        arg(val_planning_trajectory_spines[j].yb.z).
+        arg(val_planning_trajectory_spines[j].yb.w);
     itemChild->setText(0, text);
   }
 

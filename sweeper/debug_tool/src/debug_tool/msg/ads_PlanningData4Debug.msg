@@ -16,8 +16,8 @@ ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
 ads_littersensor_data garbage_detection_results
 
-uint8 num_planning_splines
-ads_Spline[100] planning_splines
+ads_planning_trajectory[10] planning_trajectory_candidates
+ads_planning_trajectory planning_trajectory
 ads_planning_output planning_output
 
 float64 safe_dis1

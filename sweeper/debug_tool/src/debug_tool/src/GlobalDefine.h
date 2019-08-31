@@ -20,6 +20,8 @@ extern QRectF g_rectfSweeper;    // 扫地车位置
 extern const double MAP_TO_ROAD_COEF;
 extern const double VEH_HEAD;
 
+extern const double PI;
+
 void setStatusMessage(const char *, int = 0);
 
 fs::path createPathInCurrent(const std::string &);

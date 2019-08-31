@@ -11,8 +11,6 @@
 #include "QPerceptionWidget.h"
 #include "GlobalDefine.h"
 
-static const float PI = 3.14159265;
-
 QPerceptionShowWidget::QPerceptionShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
 {
