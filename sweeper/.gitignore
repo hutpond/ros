@@ -16,7 +16,7 @@ devel/
 
 # cmake
 CMakeLists.txt.user
-src/CMakeLists.txt
+*/src/CMakeLists.txt
 
 # qtcreator ros plugin
 .catkin_workspace
