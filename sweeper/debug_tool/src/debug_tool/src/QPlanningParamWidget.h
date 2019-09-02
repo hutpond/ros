@@ -16,6 +16,7 @@ class QLabel;
 class QGroupBox;
 class QPushButton;
 class QSlider;
+class QTextBrowser;
 
 class QPlanningParamWidget : public QWidget
 {
@@ -36,6 +37,8 @@ protected:
 
 protected:
   QString getDecisionText(int);
+  void showReplayControls(bool);
+  QString createTrajectoryString(const debug_tool::ads_PlanningData4Debug &);
 
 signals:
   void replayState(bool);
@@ -48,30 +51,20 @@ private slots:
   void onSliderValueChanged(int);
 
 private:
-  QLabel *m_pLblRoadWidthName;
-  QLabel *m_pLblRoadWidthValue;
   QLabel *m_pLblDecisionName;
   QLabel *m_pLblDecisionValue;
-  QLabel *m_pLblPlanningPtName;
-  QLabel *m_pLblPlanningPtValue;
 
   QLabel *m_pLblMousePosName;
   QLabel *m_pLblMousePosValue;
 
-  QLabel *m_pLblCarSizeName;
-  QLabel *m_pLblCarSizeValue;
-  QLabel *m_pLblCarEnuName;
-  QLabel *m_pLblCarEnuValue;
-  QLabel *m_pLblCarSLName;
-  QLabel *m_pLblCarSLValue;
-
-  QGroupBox *m_pGBoxReplay;
   QPushButton *m_pBtnPause;
   QPushButton *m_pBtnResume;
   QPushButton *m_pBtnBack;
   QPushButton *m_pBtnNext;
   QPushButton *m_pBtnVelocity;
   QSlider *m_pSliderPlay;
+
+  QTextBrowser *m_pTextBrowser;
 
   int m_nSliderValue;
   int m_nPlayInterIndex;

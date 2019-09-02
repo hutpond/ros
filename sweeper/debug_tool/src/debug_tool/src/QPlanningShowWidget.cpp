@@ -26,6 +26,9 @@ QPlanningShowWidget::~QPlanningShowWidget()
 
 void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 {
+  if (m_planningData.num_reference_splines == 0) {
+    return;
+  }
   m_ptfMouseMove = e->localPos();
   QTransform inverted = m_transform.inverted();
   QPointF ptf = inverted.map(m_ptfMouseMove);
@@ -56,6 +59,10 @@ void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Deb
 ********************************************************/
 void QPlanningShowWidget::calcMapRect()
 {
+  if (m_planningData.num_reference_splines == 0) {
+    return;
+  }
+
   // 计算显示区域物理范围，车体坐标系，X正向：上，Y正向：左，坐标原点：车中心
   // 显示范围，height（Y向）：路宽MAP_TO_ROAD_COEF倍，
   // width（X向）：根据显示区域比例计算，起点：车身后START_X_TO_CAR_TAIL米
@@ -126,6 +133,10 @@ void QPlanningShowWidget::setViewResolution(int index)
 ********************************************************/
 void QPlanningShowWidget::drawImage()
 {
+  if (m_planningData.num_reference_splines == 0) {
+    return;
+  }
+
   m_image = QImage(m_rectPicture.width(), m_rectPicture.height(), QImage::Format_RGB888);
   QPainter painter(&m_image);
   painter.fillRect(m_image.rect(), QColor(230, 230, 230));
@@ -749,11 +760,13 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
   QPen pen;
   pen.setWidth(1);
   pen.setColor(Qt::magenta);
+  painter.setFont(QFont("Times", 12));
   painter.setPen(pen);
 
   int planning_id = m_planningData.planning_trajectory.id;
   for (int i = 0; i < 10; ++ i) {
-    if (planning_id == m_planningData.planning_trajectory_candidates[i].id) {
+    int candidate_id = m_planningData.planning_trajectory_candidates[i].id;
+    if (planning_id == candidate_id) {
       continue;
     }
     const auto &val_candidate_splines =
@@ -773,6 +786,12 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
       QPainterPath path(ptfStart);
       path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
       painter.drawPath(path);
+    }
+
+    if (SIZE > 2) {
+      int offset = (i % 2) == 0 ? 2 : 3;
+      QPointF ptf(val_candidate_splines[SIZE - offset].xb.w, val_candidate_splines[SIZE - offset].yb.w);
+      painter.drawText(m_transform.map(ptf), QString::number(candidate_id));
     }
   }
 }

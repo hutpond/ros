@@ -467,8 +467,9 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
     Json::Value item, splines;
     item["ID"] = static_cast<int>(val_candidates[i].id);
     item["COST"] = val_candidates[i].cost;
-    item["LATERAL_COST"] = val_candidates[i].lateral_cost;
+    item["SAFETY_COST"] = val_candidates[i].safety_cost;
     item["SMOOTHNESS_COST"] = val_candidates[i].smoothness_cost;
+    item["CONSISTENCY_COST"] = val_candidates[i].consistency_cost;
     item["GARBAGE_COST"] = val_candidates[i].garbage_cost;
 
     int size_candidates_splines = static_cast<int>(val_candidates[i].splines.size());
@@ -496,8 +497,9 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   const auto &val_trajectory = planningData.planning_trajectory;
   json_trajectory["ID"] = static_cast<int>(val_trajectory.id);
   json_trajectory["COST"] = val_trajectory.cost;
-  json_trajectory["LATERAL_COST"] = val_trajectory.lateral_cost;
+  json_trajectory["SAFETY_COST"] = val_trajectory.safety_cost;
   json_trajectory["SMOOTHNESS_COST"] = val_trajectory.smoothness_cost;
+  json_trajectory["CONSISTENCY_COST"] = val_trajectory.consistency_cost;
   json_trajectory["GARBAGE_COST"] = val_trajectory.garbage_cost;
   int size_trajectory_splines = static_cast<int>(val_trajectory.splines.size());
   for (int i = 0; i < size_trajectory_splines; ++ i) {
@@ -836,8 +838,9 @@ void QPlanningWidget::parseDataFromJson(
     Json::Value item = trajectory["TRAJECTORY_CANDIDATES"][i];
     val_candidates[i].id = static_cast<uint8_t>(item["ID"].asInt());
     val_candidates[i].cost = item["COST"].asDouble();
-    val_candidates[i].lateral_cost = item["LATERAL_COST"].asDouble();
+    val_candidates[i].safety_cost = item["SAFETY_COST"].asDouble();
     val_candidates[i].smoothness_cost = item["SMOOTHNESS_COST"].asDouble();
+    val_candidates[i].consistency_cost = item["CONSISTENCY_COST"].asDouble();
     val_candidates[i].garbage_cost = item["GARBAGE_COST"].asDouble();
 
     auto &val_candidates_spines = val_candidates[i].splines;
@@ -863,8 +866,9 @@ void QPlanningWidget::parseDataFromJson(
   Json::Value json_trajectory = trajectory["PLANNING_TRAJECTORY"];
   val_trajectory.id = static_cast<uint8_t>(json_trajectory["ID"].asInt());
   val_trajectory.cost = json_trajectory["COST"].asDouble();
-  val_trajectory.lateral_cost = json_trajectory["LATERAL_COST"].asDouble();
+  val_trajectory.safety_cost = json_trajectory["SAFETY_COST"].asDouble();
   val_trajectory.smoothness_cost = json_trajectory["SMOOTHNESS_COST"].asDouble();
+  val_trajectory.consistency_cost = json_trajectory["CONSISTENCY_COST"].asDouble();
   val_trajectory.garbage_cost = json_trajectory["GARBAGE_COST"].asDouble();
 
   auto &val_trajectory_spines = val_trajectory.splines;

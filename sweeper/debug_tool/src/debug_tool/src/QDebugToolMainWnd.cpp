@@ -387,8 +387,8 @@ void QDebugToolMainWnd::onActionPerception3D()
 ********************************************************/
 void QDebugToolMainWnd::onActionPerceptionReplay()
 {
-  this->processPreShow(m_pWdgPerception);
-  m_pWdgPerception->showType(QPerceptionWidget::Replay);
+  //this->processPreShow(m_pWdgPerception);
+  //m_pWdgPerception->showType(QPerceptionWidget::Replay);
 }
 
 /*******************************************************
@@ -442,7 +442,7 @@ void QDebugToolMainWnd::onActionPlanningReplay()
   static QString strOpenPath;
   if (strOpenPath.isEmpty()) {
     namespace fs = boost::filesystem;
-    fs::path fsPath = fs::current_path();
+    fs::path fsPath = getenv("HOME");
     fsPath /= "PlanningData";
     strOpenPath = QString::fromStdString(fsPath.string());
   }

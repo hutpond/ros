@@ -242,11 +242,12 @@ void QDataDisplayDialog::setPlanningData(
     int size_candidates_splines = static_cast<int>(val_candidates_spines.size());
     item = new QTreeWidgetItem(itemRoot);
     QString text = QString(
-          "id: %1, cost: %2, lateral_cost: %3, smoothness_cost: %4, garbage_cost: %5, splines: %6").
+          "id: %1, cost: %2, safety_cost: %3, smoothness_cost: %4, consistency_cost: %5, garbage_cost: %6, splines: %7").
         arg(val_candidates[i].id).
         arg(val_candidates[i].cost).
-        arg(val_candidates[i].lateral_cost).
+        arg(val_candidates[i].safety_cost).
         arg(val_candidates[i].smoothness_cost).
+        arg(val_candidates[i].consistency_cost).
         arg(val_candidates[i].garbage_cost).
         arg(size_candidates_splines);
     item->setText(0, text);
@@ -274,11 +275,12 @@ void QDataDisplayDialog::setPlanningData(
   int size_trajectory_splines = static_cast<int>(val_planning_trajectory_spines.size());
   item = new QTreeWidgetItem(itemRoot);
   QString text = QString(
-        "id: %1, cost: %2, lateral_cost: %3, smoothness_cost: %4, garbage_cost: %5, splines: %6").
+        "id: %1, cost: %2, safety_cost: %3, smoothness_cost: %4, consistency_cost: %5, garbage_cost: %6, splines: %7").
       arg(val_planning_trajectory.id).
       arg(val_planning_trajectory.cost).
-      arg(val_planning_trajectory.lateral_cost).
+      arg(val_planning_trajectory.safety_cost).
       arg(val_planning_trajectory.smoothness_cost).
+      arg(val_planning_trajectory.consistency_cost).
       arg(val_planning_trajectory.garbage_cost).
       arg(size_trajectory_splines);
   item->setText(0, text);

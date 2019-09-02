@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QSlider>
+#include <QTextBrowser>
 #include "QPlanningParamWidget.h"
 #include "QPlanningWidget.h"
 #include "GlobalDefine.h"
@@ -19,45 +20,32 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   : QWidget(parent)
   , m_nPlayInterIndex(0)
 {
-  m_pLblRoadWidthName = new QLabel(tr("路宽"), this);
-  m_pLblRoadWidthValue = new QLabel(this);
   m_pLblDecisionName = new QLabel(tr("Decision"), this);
   m_pLblDecisionValue = new QLabel(this);
-  m_pLblPlanningPtName = new QLabel(tr("规划点SL"), this);
-  m_pLblPlanningPtValue = new QLabel(this);
 
   m_pLblMousePosName = new QLabel(tr("鼠标坐标"), this);
   m_pLblMousePosValue = new QLabel(this);
 
-  m_pLblCarSizeName = new QLabel(tr("车体大小"), this);
-  m_pLblCarSizeValue = new QLabel(this);
-  m_pLblCarEnuName = new QLabel(tr("车体ENU"), this);
-  m_pLblCarEnuValue = new QLabel(this);
-  m_pLblCarSLName = new QLabel(tr("车体SL"), this);
-  m_pLblCarSLValue = new QLabel(this);
-
-  m_pGBoxReplay = new QGroupBox(this);
-  QGridLayout *layout = new QGridLayout;
-  m_pBtnPause = new QPushButton(tr("暂停"), m_pGBoxReplay);
+  m_pBtnPause = new QPushButton(tr("暂停"), this);
   connect(m_pBtnPause, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnPause, 0, 1, 1, 1);
-  m_pBtnResume = new QPushButton(tr("恢复"), m_pGBoxReplay);
+
+  m_pBtnResume = new QPushButton(tr("恢复"), this);
   connect(m_pBtnResume, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnResume, 0, 2, 1, 1);
-  m_pBtnBack = new QPushButton(tr("后退"), m_pGBoxReplay);
+
+  m_pBtnBack = new QPushButton(tr("后退"), this);
   connect(m_pBtnBack, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnBack, 0, 3, 1, 1);
-  m_pBtnNext = new QPushButton(tr("前进"), m_pGBoxReplay);
+
+  m_pBtnNext = new QPushButton(tr("前进"), this);
   connect(m_pBtnNext, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnNext, 0, 4, 1, 1);
-  m_pBtnVelocity = new QPushButton(tr("高速"), m_pGBoxReplay);
+
+  m_pBtnVelocity = new QPushButton(tr("高速"), this);
   connect(m_pBtnVelocity, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
-  layout->addWidget(m_pBtnVelocity, 0, 5, 1, 1);
-  m_pSliderPlay = new QSlider(Qt::Horizontal, m_pGBoxReplay);
+
+  m_pSliderPlay = new QSlider(Qt::Horizontal, this);
   connect(m_pSliderPlay, &QSlider::valueChanged,
           this, &QPlanningParamWidget::onSliderValueChanged);
-  layout->addWidget(m_pSliderPlay, 1, 1, 1, 5);
-  m_pGBoxReplay->setLayout(layout);
+
+  m_pTextBrowser = new QTextBrowser(this);
 }
 
 QPlanningParamWidget::~QPlanningParamWidget()
@@ -73,11 +61,11 @@ QPlanningParamWidget::~QPlanningParamWidget()
 void QPlanningParamWidget::setShowType(int index)
 {
   if (index == QPlanningWidget::LiveDisplay) {
-    m_pGBoxReplay->hide();
+    this->showReplayControls(false);
   }
   else if (index == QPlanningWidget::Replay) {
     m_nSliderValue = 0;
-    m_pGBoxReplay->show();
+    this->showReplayControls(true);
     m_pBtnPause->setEnabled(true);
     m_pBtnResume->setEnabled(false);
     m_pBtnBack->setEnabled(false);
@@ -103,22 +91,13 @@ void QPlanningParamWidget::setFrameCount(int count)
 
 void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
-  // 路宽值
-  const float fRoadWidthLeft = data.left_half_road_width;
-  const float fRoadWidthRight = data.right_half_road_width;
-  QString strText = QString("W:%1 (L:%2, R:%3)").
-      arg(fRoadWidthLeft + fRoadWidthRight, 6, 'f', 2).
-      arg(fRoadWidthLeft, 6, 'f', 2).
-      arg(fRoadWidthRight, 6, 'f', 2);
-  m_pLblRoadWidthValue->setText(strText);
-
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
   int nIndexUs = static_cast<int>(data.ultrasonic_decision);
   int nIndexRadar = static_cast<int>(data.radar28f_decision);
   int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
   m_pLblDecisionValue->setFont(G_TEXT_FONT);
-  strText = QString("%1 [us: %2 r28: %3 r73: %4]").arg(this->getDecisionText(nIndex)).
+  QString strText = QString("%1 [us: %2 r28: %3 r73: %4]").arg(this->getDecisionText(nIndex)).
       arg(this->getDecisionText(nIndexUs)).
       arg(this->getDecisionText(nIndexRadar)).
       arg(this->getDecisionText(nIndexRadar73));
@@ -130,33 +109,8 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
     m_pLblDecisionValue->setStyleSheet("background-color: rgb(255, 0, 0);");
   }
 
-  // 车体
-  const float fCarWidth = data.vehicle_width;
-  const float fCarLength = data.vehicle_length;
-  strText = QString("%1:%2 %3:%4").
-      arg(tr("Width")).
-      arg(fCarWidth, 6, 'f', 2).
-      arg(tr("Length")).
-      arg(fCarLength, 6, 'f', 2);
-  m_pLblCarSizeValue->setText(strText);
-  // ENU
-  const float fCarE = data.vehicle_x;
-  const float fCarN = data.vehicle_y;
-  const float fCarU = data.vehicle_z;
-  strText = QString("%1 %2 %3").
-      arg(fCarE, 6, 'f', 2).
-      arg(fCarN, 6, 'f', 2).
-      arg(fCarU, 6, 'f', 2);
-  m_pLblCarEnuValue->setText(strText);
-  // SL
-  const float fCarS = data.vehicle_s;
-  const float fCarL = data.vehicle_l;
-  strText = QString("S:%1 L:%2").
-      arg(fCarS, 6, 'f', 2).
-      arg(fCarL, 6, 'f', 2);
-  m_pLblCarSLValue->setText(strText);
-
-  // 障碍
+  // data
+  m_pTextBrowser->setText(this->createTrajectoryString(data));
 }
 
 QString QPlanningParamWidget::getDecisionText(int index)
@@ -290,8 +244,8 @@ void QPlanningParamWidget::onSliderValueChanged(int value)
 void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 {
   const float F_SPACE_X_P = 0.01f;
-  const float F_SPACE_Y_P = 0.01f;
-  const float F_ITEM_H_P = 0.032f;
+  const float F_SPACE_Y_P = 0.02f;
+  const float F_ITEM_H_P = 0.037f;
   const float F_ITEM_NAME_W_P = 0.2f;
 
   const int WIDTH = this->width();
@@ -304,21 +258,9 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 
   int xPos = SPACE_X;
   int yPos = SPACE_Y;
-  m_pLblRoadWidthName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblRoadWidthValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-
-  xPos = SPACE_X;
-  yPos += ITEM_H + SPACE_Y;
   m_pLblDecisionName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
   xPos += ITEM_NAME_W + SPACE_X;
   m_pLblDecisionValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-
-  xPos = SPACE_X;
-  yPos += ITEM_H + SPACE_Y;
-  m_pLblPlanningPtName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblPlanningPtValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
@@ -326,27 +268,67 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   xPos += ITEM_NAME_W + SPACE_X;
   m_pLblMousePosValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
 
-  yPos += ITEM_H + SPACE_Y;
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
-  m_pLblCarSizeName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblCarSizeValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  const int size_btn = 5;
+  const int BTN_W = (WIDTH - SPACE_X * (size_btn + 1))  / size_btn;
+
+  m_pBtnPause->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnResume->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnBack->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnNext->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnVelocity->setGeometry(xPos, yPos, BTN_W, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
-  m_pLblCarEnuName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblCarEnuValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  m_pSliderPlay->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
-  m_pLblCarSLName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblCarSLValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 20);
+}
 
-  yPos += ITEM_H + SPACE_Y;
-  xPos = SPACE_X;
-  yPos += ITEM_H + SPACE_Y;
-  m_pGBoxReplay->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 8);
+void QPlanningParamWidget::showReplayControls(bool show)
+{
+  m_pBtnPause->setHidden(!show);
+  m_pBtnResume->setHidden(!show);
+  m_pBtnBack->setHidden(!show);
+  m_pBtnNext->setHidden(!show);
+  m_pBtnVelocity->setHidden(!show);
+  m_pSliderPlay->setHidden(!show);
+}
+
+QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_PlanningData4Debug &data)
+{
+  constexpr int presice = 3;
+  QString text = "id, cost, safety, smoothness, consistency, garbage: \n";
+
+  const auto &val_candidates = data.planning_trajectory_candidates;
+  for (int i = 0; i < 10; ++ i) {
+    text += QString(
+          "%1, %2, %3, %4, %5, %6").
+        arg(val_candidates[i].id).
+        arg(val_candidates[i].cost, 0, 'f', presice).
+        arg(val_candidates[i].safety_cost, 0, 'f', presice).
+        arg(val_candidates[i].smoothness_cost, 0, 'f', presice).
+        arg(val_candidates[i].consistency_cost, 0, 'f', presice).
+        arg(val_candidates[i].garbage_cost, 0, 'f', presice);
+    text.append('\n');
+  }
+
+  const auto &val_planning_trajectory = data.planning_trajectory;
+  text += QString(
+        "* %1, %2, %3, %4, %5, %6").
+      arg(val_planning_trajectory.id).
+      arg(val_planning_trajectory.cost, 0, 'f', presice).
+      arg(val_planning_trajectory.safety_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.smoothness_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.consistency_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);
+
+  return text;
 }
