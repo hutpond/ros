@@ -68,11 +68,13 @@ void QDataDisplayDialog::setPlanningData(
   item->setText(0, QString("RADAR73_DECISION: %1").arg(planningData.radar73f_decision));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("ULTRASONIC_DECISION: %1").arg(planningData.ultrasonic_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("TRACK_TARGET_DECISION: %1").arg(planningData.track_target_decision));
 
   // target points
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "TARGET_POINT");
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < 4; ++i) {
     item = new QTreeWidgetItem(itemRoot);
     item->setText(0, QString("Index: %1").arg(i));
 
@@ -242,10 +244,11 @@ void QDataDisplayDialog::setPlanningData(
     int size_candidates_splines = static_cast<int>(val_candidates_spines.size());
     item = new QTreeWidgetItem(itemRoot);
     QString text = QString(
-          "id: %1, cost: %2, safety_cost: %3, smoothness_cost: %4, consistency_cost: %5, garbage_cost: %6, splines: %7").
+          "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8").
         arg(val_candidates[i].id).
         arg(val_candidates[i].cost).
         arg(val_candidates[i].safety_cost).
+        arg(val_candidates[i].lateral_cost).
         arg(val_candidates[i].smoothness_cost).
         arg(val_candidates[i].consistency_cost).
         arg(val_candidates[i].garbage_cost).
@@ -275,10 +278,11 @@ void QDataDisplayDialog::setPlanningData(
   int size_trajectory_splines = static_cast<int>(val_planning_trajectory_spines.size());
   item = new QTreeWidgetItem(itemRoot);
   QString text = QString(
-        "id: %1, cost: %2, safety_cost: %3, smoothness_cost: %4, consistency_cost: %5, garbage_cost: %6, splines: %7").
+        "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8").
       arg(val_planning_trajectory.id).
       arg(val_planning_trajectory.cost).
       arg(val_planning_trajectory.safety_cost).
+      arg(val_planning_trajectory.lateral_cost).
       arg(val_planning_trajectory.smoothness_cost).
       arg(val_planning_trajectory.consistency_cost).
       arg(val_planning_trajectory.garbage_cost).

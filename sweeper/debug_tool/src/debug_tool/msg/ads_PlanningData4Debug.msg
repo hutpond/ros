@@ -48,6 +48,7 @@ uint8 decision
 uint8 ultrasonic_decision
 uint8 radar28f_decision
 uint8 radar73f_decision
-ads_TargetPoint[6] decision_targets
+uint8 track_target_decision
+ads_TargetPoint[4] decision_targets
 
 string debug_info

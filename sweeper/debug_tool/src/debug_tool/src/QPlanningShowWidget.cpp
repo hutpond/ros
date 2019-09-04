@@ -552,6 +552,8 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
   pen.setColor(Qt::black);
   pen.setStyle(Qt::DashLine);
   painter.setPen(pen);
+
+  //this->drawBezierLine(painter, m_planningData.reference_splines);
   const int SIZE_REF = qBound<int>(
         0, static_cast<int>(m_planningData.num_reference_splines), 100);
   for (int i = 0; i < SIZE_REF; ++ i) {
@@ -731,22 +733,7 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
   painter.setPen(pen);
 
   const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
-  const int SIZE = static_cast<int>(val_planning_splines.size());
-  QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
-  for (int i = 0; i < SIZE; ++i) {
-    ptfStart = QPointF(val_planning_splines[i].xb.x, val_planning_splines[i].yb.x);
-    ptfEnd = QPointF(val_planning_splines[i].xb.w, val_planning_splines[i].yb.w);
-    ptfControl1 = QPointF(val_planning_splines[i].xb.y, val_planning_splines[i].yb.y);
-    ptfControl2 = QPointF(val_planning_splines[i].xb.z, val_planning_splines[i].yb.z);
-    ptfStart = m_transform.map(ptfStart);
-    ptfEnd = m_transform.map(ptfEnd);
-    ptfControl1 = m_transform.map(ptfControl1);
-    ptfControl2 = m_transform.map(ptfControl2);
-
-    QPainterPath path(ptfStart);
-    path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
-    painter.drawPath(path);
-  }
+  this->drawBezierLine(painter, val_planning_splines);
 }
 
 /*******************************************************
@@ -766,27 +753,15 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
   int planning_id = m_planningData.planning_trajectory.id;
   for (int i = 0; i < 10; ++ i) {
     int candidate_id = m_planningData.planning_trajectory_candidates[i].id;
-    if (planning_id == candidate_id) {
+    int decision = static_cast<int>(m_planningData.decision);
+    if (planning_id == candidate_id && (decision >= 0 && decision < 4)) {
       continue;
     }
+
     const auto &val_candidate_splines =
         m_planningData.planning_trajectory_candidates[i].splines;
     const int SIZE = static_cast<int>(val_candidate_splines.size());
-    QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
-    for (int j = 0; j < SIZE; ++j) {
-      ptfStart = QPointF(val_candidate_splines[j].xb.x, val_candidate_splines[j].yb.x);
-      ptfEnd = QPointF(val_candidate_splines[j].xb.w, val_candidate_splines[j].yb.w);
-      ptfControl1 = QPointF(val_candidate_splines[j].xb.y, val_candidate_splines[j].yb.y);
-      ptfControl2 = QPointF(val_candidate_splines[j].xb.z, val_candidate_splines[j].yb.z);
-      ptfStart = m_transform.map(ptfStart);
-      ptfEnd = m_transform.map(ptfEnd);
-      ptfControl1 = m_transform.map(ptfControl1);
-      ptfControl2 = m_transform.map(ptfControl2);
-
-      QPainterPath path(ptfStart);
-      path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
-      painter.drawPath(path);
-    }
+    this->drawBezierLine(painter, val_candidate_splines);
 
     if (SIZE > 2) {
       int offset = (i % 2) == 0 ? 2 : 3;
@@ -1191,7 +1166,7 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
 void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
 {
   painter.save();
-  for (int i = 0; i < 6; ++ i) {
+  for (int i = 0; i < 4; ++ i) {
     debug_tool::ads_TargetPoint_<std::allocator<void>> &targets =
         m_planningData.decision_targets[i];
 
@@ -1206,7 +1181,7 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
           QLine line2(rect.bottomLeft(), rect.topRight());
 
           QPen pen;
-          pen.setColor("black");
+          pen.setColor(Qt::black);
           pen.setWidth(2);
           painter.setPen(pen);
           painter.drawLine(line);
@@ -1224,7 +1199,7 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
           QLine line2(rect.bottomLeft(), rect.topRight());
 
           QPen pen;
-          pen.setColor("green");
+          pen.setColor(Qt::green);
           pen.setWidth(2);
           painter.setPen(pen);
           painter.drawLine(line);
@@ -1241,7 +1216,7 @@ void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
           pgf = m_transform.map(pgf);
 
           QPen pen;
-          pen.setColor("red");
+          pen.setColor(Qt::darkCyan);
           pen.setWidth(2);
           painter.setPen(pen);
           painter.drawPolygon(pgf);
@@ -1334,6 +1309,33 @@ void QPlanningShowWidget::drawDecisionTargetsSL(
   }
 
   painter.restore();
+}
+
+/*******************************************************
+ * @brief 绘制贝塞尔曲线
+ * @param painter: 画笔
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::drawBezierLine(
+    QPainter &painter,
+    const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &spines)
+{
+  QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
+  for (const auto &spine : spines) {
+    ptfStart = QPointF(spine.xb.x, spine.yb.x);
+    ptfEnd = QPointF(spine.xb.w, spine.yb.w);
+    ptfControl1 = QPointF(spine.xb.y, spine.yb.y);
+    ptfControl2 = QPointF(spine.xb.z, spine.yb.z);
+    ptfStart = m_transform.map(ptfStart);
+    ptfEnd = m_transform.map(ptfEnd);
+    ptfControl1 = m_transform.map(ptfControl1);
+    ptfControl2 = m_transform.map(ptfControl2);
+
+    QPainterPath path(ptfStart);
+    path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
+    painter.drawPath(path);
+  }
 }
 
 /**

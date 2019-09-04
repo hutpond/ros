@@ -96,11 +96,14 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
   int nIndexUs = static_cast<int>(data.ultrasonic_decision);
   int nIndexRadar = static_cast<int>(data.radar28f_decision);
   int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
+  int nIndexTrack = static_cast<int>(data.track_target_decision);
   m_pLblDecisionValue->setFont(G_TEXT_FONT);
-  QString strText = QString("%1 [us: %2 r28: %3 r73: %4]").arg(this->getDecisionText(nIndex)).
+  QString strText = QString("%1 [us: %2 r28: %3 r73: %4 track: %5]").
+      arg(this->getDecisionText(nIndex)).
       arg(this->getDecisionText(nIndexUs)).
       arg(this->getDecisionText(nIndexRadar)).
-      arg(this->getDecisionText(nIndexRadar73));
+      arg(this->getDecisionText(nIndexRadar73)).
+      arg(this->getDecisionText(nIndexTrack));
   m_pLblDecisionValue->setText(strText);
   if (nIndex >= 0 && nIndex < 4) {
     m_pLblDecisionValue->setStyleSheet("background-color: rgb(0, 0, 0, 0);");
@@ -305,15 +308,16 @@ void QPlanningParamWidget::showReplayControls(bool show)
 QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_PlanningData4Debug &data)
 {
   constexpr int presice = 3;
-  QString text = "id, cost, safety, smoothness, consistency, garbage: \n";
+  QString text = "id, cost, safety, lateral, smoothness, consistency, garbage: \n";
 
   const auto &val_candidates = data.planning_trajectory_candidates;
   for (int i = 0; i < 10; ++ i) {
     text += QString(
-          "%1, %2, %3, %4, %5, %6").
+          "%1, %2, %3, %4, %5, %6, %7").
         arg(val_candidates[i].id).
         arg(val_candidates[i].cost, 0, 'f', presice).
         arg(val_candidates[i].safety_cost, 0, 'f', presice).
+        arg(val_candidates[i].lateral_cost, 0, 'f', presice).
         arg(val_candidates[i].smoothness_cost, 0, 'f', presice).
         arg(val_candidates[i].consistency_cost, 0, 'f', presice).
         arg(val_candidates[i].garbage_cost, 0, 'f', presice);
@@ -322,10 +326,11 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
 
   const auto &val_planning_trajectory = data.planning_trajectory;
   text += QString(
-        "* %1, %2, %3, %4, %5, %6").
+        "* %1, %2, %3, %4, %5, %6, %7").
       arg(val_planning_trajectory.id).
       arg(val_planning_trajectory.cost, 0, 'f', presice).
       arg(val_planning_trajectory.safety_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.lateral_cost, 0, 'f', presice).
       arg(val_planning_trajectory.smoothness_cost, 0, 'f', presice).
       arg(val_planning_trajectory.consistency_cost, 0, 'f', presice).
       arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);

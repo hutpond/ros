@@ -6,8 +6,8 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-SET(CMAKE_C_COMPILER gcc-5)
-SET(CMAKE_CXX_COMPILER g++-5)
+#SET(CMAKE_C_COMPILER gcc-5)
+#SET(CMAKE_CXX_COMPILER g++-5)
 add_compile_options(-std=c++11)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -81,11 +81,8 @@ target_sources(debug_tool PRIVATE src/QBaseShowWidget.cpp)
 target_sources(debug_tool PRIVATE src/QEulerAngleWidget.cpp)
 target_sources(debug_tool PRIVATE src/QPerceptionShow3DWidget.cpp)
 target_sources(debug_tool PRIVATE src/QPlanningShowWidget.cpp)
-#target_sources(debug_tool PRIVATE src/ReadDataManager.cpp)
 target_sources(debug_tool PRIVATE src/QReadDataManagerRos.cpp)
 target_sources(debug_tool PRIVATE src/QDataDisplayDialog.cpp)
-target_sources(debug_tool PRIVATE src/DBAds.h)
-target_sources(debug_tool PRIVATE src/ads_perception_export.h)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)
@@ -95,7 +92,6 @@ target_include_directories(debug_tool PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
-#target_link_libraries(debug_tool zmq)
 
 target_link_libraries(debug_tool ${catkin_LIBRARIES})
 

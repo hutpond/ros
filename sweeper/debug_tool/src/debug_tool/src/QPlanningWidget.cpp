@@ -425,9 +425,10 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   decisionState["ULTRASONIC_DECISION"] = static_cast<int>(planningData.ultrasonic_decision);
   decisionState["RADAR28_DECISION"] = static_cast<int>(planningData.radar28f_decision);
   decisionState["RADAR73_DECISION"] = static_cast<int>(planningData.radar73f_decision);
+  decisionState["TRACK_TARGET_DECISION"] = static_cast<int>(planningData.track_target_decision);
 
   Json::Value decision_targets;
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < 4; ++i) {
     Json::Value item;
     item["sensor_type"] = static_cast<int>(planningData.decision_targets[i].sensor_type);
     item["x"] = planningData.decision_targets[i].x;
@@ -468,6 +469,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
     item["ID"] = static_cast<int>(val_candidates[i].id);
     item["COST"] = val_candidates[i].cost;
     item["SAFETY_COST"] = val_candidates[i].safety_cost;
+    item["LATERAL_COST"] = val_candidates[i].lateral_cost;
     item["SMOOTHNESS_COST"] = val_candidates[i].smoothness_cost;
     item["CONSISTENCY_COST"] = val_candidates[i].consistency_cost;
     item["GARBAGE_COST"] = val_candidates[i].garbage_cost;
@@ -498,6 +500,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   json_trajectory["ID"] = static_cast<int>(val_trajectory.id);
   json_trajectory["COST"] = val_trajectory.cost;
   json_trajectory["SAFETY_COST"] = val_trajectory.safety_cost;
+  json_trajectory["LATERAL_COST"] = val_trajectory.lateral_cost;
   json_trajectory["SMOOTHNESS_COST"] = val_trajectory.smoothness_cost;
   json_trajectory["CONSISTENCY_COST"] = val_trajectory.consistency_cost;
   json_trajectory["GARBAGE_COST"] = val_trajectory.garbage_cost;
@@ -804,7 +807,9 @@ void QPlanningWidget::parseDataFromJson(
         decisionState["ULTRASONIC_DECISION"].asInt());
   planningData.radar28f_decision = static_cast<int8_t>(decisionState["RADAR28_DECISION"].asInt());
   planningData.radar73f_decision = static_cast<int8_t>(decisionState["RADAR73_DECISION"].asInt());
-  const int SIZE_DECISION = static_cast<int>(decisionState["DECISION_TARGETS"].size());
+  planningData.track_target_decision = static_cast<int8_t>(decisionState["TRACK_TARGET_DECISION"].asInt());
+  const int SIZE_DECISION =
+      qBound<int>(0, static_cast<int>(decisionState["DECISION_TARGETS"].size()), 4);
   for (int i = 0; i < SIZE_DECISION; ++i) {
     Json::Value item = decisionState["DECISION_TARGETS"][i];
     planningData.decision_targets[i].sensor_type = static_cast<uint8_t>(item["sensor_type"].asInt());
@@ -839,6 +844,7 @@ void QPlanningWidget::parseDataFromJson(
     val_candidates[i].id = static_cast<uint8_t>(item["ID"].asInt());
     val_candidates[i].cost = item["COST"].asDouble();
     val_candidates[i].safety_cost = item["SAFETY_COST"].asDouble();
+    val_candidates[i].lateral_cost = item["LATERAL_COST"].asDouble();
     val_candidates[i].smoothness_cost = item["SMOOTHNESS_COST"].asDouble();
     val_candidates[i].consistency_cost = item["CONSISTENCY_COST"].asDouble();
     val_candidates[i].garbage_cost = item["GARBAGE_COST"].asDouble();
@@ -867,6 +873,7 @@ void QPlanningWidget::parseDataFromJson(
   val_trajectory.id = static_cast<uint8_t>(json_trajectory["ID"].asInt());
   val_trajectory.cost = json_trajectory["COST"].asDouble();
   val_trajectory.safety_cost = json_trajectory["SAFETY_COST"].asDouble();
+  val_trajectory.lateral_cost = json_trajectory["LATERAL_COST"].asDouble();
   val_trajectory.smoothness_cost = json_trajectory["SMOOTHNESS_COST"].asDouble();
   val_trajectory.consistency_cost = json_trajectory["CONSISTENCY_COST"].asDouble();
   val_trajectory.garbage_cost = json_trajectory["GARBAGE_COST"].asDouble();
