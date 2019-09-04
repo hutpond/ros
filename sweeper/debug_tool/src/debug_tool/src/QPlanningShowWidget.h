@@ -33,6 +33,7 @@ public:
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void setFunPosition(boost::function<void(float, float, float, float)>);
   void setViewResolution(int);
+  void setShowAllTargets(bool);
 
 protected:
   virtual void mousePressEvent(QMouseEvent *);
@@ -73,6 +74,7 @@ private:
 
   debug_tool::ads_PlanningData4Debug  m_planningData;
   int m_nShowPlanningPath;  // 规划路线显示, 0: 全显示, 1：只显示当前帧, 2：只显示前一帧
+  bool m_bFlagShowAllTargets;
 };
 
 #endif // Q_PLANNING_SHOW_WIDGET_H

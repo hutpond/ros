@@ -34,6 +34,7 @@ public:
   void setViewResolution(int);
   void showType(int, const QString &);
   void stopDisplay();
+  void setShowAllTargets(bool);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

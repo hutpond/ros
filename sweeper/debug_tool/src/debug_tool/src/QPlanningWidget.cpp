@@ -144,6 +144,17 @@ void QPlanningWidget::stopDisplay()
 }
 
 /*******************************************************
+ * @brief 是否显示所有target
+ * @param show: true, 显示所有
+
+ * @return
+********************************************************/
+void QPlanningWidget::setShowAllTargets(bool show)
+{
+  m_pWdgShow->setShowAllTargets(show);
+}
+
+/*******************************************************
  * @brief 设置显示画面
  * @param type: LiveDisplay，实时显示; Replay, 回放
 

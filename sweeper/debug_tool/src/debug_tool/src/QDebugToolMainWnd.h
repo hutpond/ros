@@ -63,7 +63,7 @@ protected slots:
   void onActionViewZoomOut();
   void onActionViewReset();
 
-  void onActionSettingSaveJson();
+  void onActionShowTargets();
   void onActionHelpAbout();
 
 private:
@@ -79,9 +79,8 @@ private:
 
   QWidget *m_pWdgCurrent;
 
-  bool m_bFlagSaveJson;
-  QAction *m_pActionSaveJson;
-  QAction *m_pActionMenuSaveJson;
+  bool m_bFlagShowAllTargets;
+  QAction *m_pActionShowTargets;
 
 public:
   static QStatusBar *s_pStatusBar;

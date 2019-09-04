@@ -64,7 +64,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->createPerceptionToolBar();
   this->createPlanningToolBar();
   this->createViewToolBar();
-  //this->createSettingToolBar();
+  this->createSettingToolBar();
   //this->createHelpToolBar();
 
   this->setWindowTitle("Debug Tool V2.5");
@@ -553,34 +553,34 @@ void QDebugToolMainWnd::createSettingToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
 
-  m_bFlagSaveJson = false;
-  m_pActionSaveJson = new QAction(tr("SAVE\nJSON"), this);
-  connect(m_pActionSaveJson, &QAction::triggered,
-          this, &QDebugToolMainWnd::onActionSettingSaveJson);
+  m_bFlagShowAllTargets = false;
+  m_pActionShowTargets = new QAction(tr("T"), this);
+  connect(m_pActionShowTargets, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionShowTargets);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(m_pActionSaveJson);
-  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionSaveJson);
+  pToolBar->addAction(m_pActionShowTargets);
+  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
 }
 
 /*******************************************************
- * @brief 设置是否保存Json到文件
+ * @brief 设置是否全部显示target
  * @param
 
  * @return
 ********************************************************/
-void QDebugToolMainWnd::onActionSettingSaveJson()
+void QDebugToolMainWnd::onActionShowTargets()
 {
-  m_bFlagSaveJson = !m_bFlagSaveJson;
-  if (m_bFlagSaveJson) {
-    m_pActionSaveJson->setText(tr("STOP\nSAVE"));
+  m_bFlagShowAllTargets = !m_bFlagShowAllTargets;
+  if (m_bFlagShowAllTargets) {
+    m_pActionShowTargets->setText(tr("T A"));
   }
   else {
-    m_pActionSaveJson->setText(tr("SAVE\nJSON"));
+    m_pActionShowTargets->setText(tr("T"));
   }
-  m_pActionMenuSaveJson->setChecked(m_bFlagSaveJson);
-  //ReadDataManager::instance()->setSaveJson(m_bFlagSaveJson);
+  m_pActionShowTargets->setChecked(m_bFlagShowAllTargets);
+  m_pWdgPlanning->setShowAllTargets(m_bFlagShowAllTargets);
 }
 
 /*******************************************************

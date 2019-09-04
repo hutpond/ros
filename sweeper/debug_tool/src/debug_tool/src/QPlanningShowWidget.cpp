@@ -17,6 +17,7 @@
 QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
   , m_nShowPlanningPath(0)
+  , m_bFlagShowAllTargets(false)
 {
 }
 
@@ -121,6 +122,20 @@ void QPlanningShowWidget::setViewResolution(int index)
     default:
       break;
   }
+  this->calcMapRect();
+  this->drawImage();
+  this->update();
+}
+
+/*******************************************************
+ * @brief 是否显示所有target
+ * @param show: true, 显示所有
+
+ * @return
+********************************************************/
+void QPlanningShowWidget::setShowAllTargets(bool show)
+{
+  m_bFlagShowAllTargets = show;
   this->calcMapRect();
   this->drawImage();
   this->update();
@@ -429,17 +444,8 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
     m_ptfsLeftRoadSide[i] = ptfLeft;
   }
   for (size_t i = indexLeft; i < indexLeft2; ++ i) {
-    double s = m_planningData.reference_points[i].s;
-    double l = 0;
-    for (int j = 0; j < SIZE_LEFT_ROAD_SPLINES; ++ j) {
-      if (s >= m_planningData.left_road_boundary_splines[j].xb.x &&
-          s < m_planningData.left_road_boundary_splines[j + 1].xb.x)
-      {
-        l = m_planningData.left_road_boundary_splines[j].yb.x;
-      }
-    }
     QPointF ptfLeft;
-    this->slToXy(s, l, ptfLeft);
+    this->slToXy(pts[i].s, leftWidth, ptfLeft);
     m_ptfsLeftRoadSide[i] = ptfLeft;
   }
   for (size_t i = indexLeft2; i < SIZE; ++ i) {
@@ -458,17 +464,8 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
     m_ptfsRightRoadSide[i] = ptfRight;
   }
   for (size_t i = indexRight; i < indexRight2; ++ i) {
-    double s = m_planningData.reference_points[i].s;
-    double l = 0;
-    for (int j = 0; j < SIZE_RIGHT_ROAD_SPLINES; ++ j) {
-      if (s >= m_planningData.right_road_boundary_splines[j].xb.x &&
-          s < m_planningData.right_road_boundary_splines[j + 1].xb.x)
-      {
-        l = m_planningData.right_road_boundary_splines[j].yb.x;
-      }
-    }
     QPointF ptfRight;
-    this->slToXy(s, l, ptfRight);
+    this->slToXy(pts[i].s, - rightWidth, ptfRight);
     m_ptfsRightRoadSide[i] = ptfRight;
   }
   for (size_t i = indexRight2; i < SIZE; ++ i) {
@@ -1057,11 +1054,12 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
       int indexRight = -1;
 
       // find x range
+      const qreal x_max = m_planningData.max_planning_distance + m_planningData.head_distance;
       for (int j = 0; j < SIZE_REF - 1; ++j) {
         if (indexLeft != -1 && indexRight != -1) {
           break;
         }
-        if (m_ptfsLeftRoadSide[j].x() > 10 || m_ptfsRightRoadSide[j].x() > 10) {
+        if (m_ptfsLeftRoadSide[j].x() > x_max || m_ptfsRightRoadSide[j].x() > x_max) {
           break;
         }
         if (indexLeft == -1 && ptf.x() > m_ptfsLeftRoadSide[j].x() &&
@@ -1121,36 +1119,39 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
            QPointF(TRACKS[i].P3_X, TRACKS[i].P3_Y) <<
            QPointF(TRACKS[i].P4_X, TRACKS[i].P4_Y);
 
-    bool contains = false;
-    foreach (const QPointF &ptf, pgf) {
-      int indexLeft = -1;
-      int indexRight = -1;
+    bool contains = m_bFlagShowAllTargets;
+    const qreal x_max = m_planningData.max_planning_distance + m_planningData.head_distance;
+    if (!m_bFlagShowAllTargets) {
+      foreach (const QPointF &ptf, pgf) {
+        int indexLeft = -1;
+        int indexRight = -1;
 
-      // find x range
-      for (int j = 0; j < SIZE_REF - 1; ++j) {
-        if (indexLeft != -1 && indexRight != -1) {
+        // find x range
+        for (int j = 0; j < SIZE_REF - 1; ++j) {
+          if (indexLeft != -1 && indexRight != -1) {
+            break;
+          }
+          if (m_ptfsLeftRoadSide[j].x() > x_max || m_ptfsRightRoadSide[j].x() > x_max) {
+            break;
+          }
+          if (indexLeft == -1 && ptf.x() > m_ptfsLeftRoadSide[j].x() &&
+              ptf.x() <= m_ptfsLeftRoadSide[j + 1].x()) {
+            indexLeft = j;
+          }
+          if (indexRight == -1 && ptf.x() > m_ptfsRightRoadSide[j].x() &&
+              ptf.x() <= m_ptfsRightRoadSide[j + 1].x()) {
+            indexRight = j;
+          }
+        }
+        if (indexLeft == -1 && indexRight == -1) {
+          continue;
+        }
+        // check y range
+        contains = ( (indexLeft != -1 && ptf.y() <= m_ptfsLeftRoadSide[indexLeft].y()) &&
+                     (indexRight != -1 && ptf.y() >= m_ptfsRightRoadSide[indexRight].y()) );
+        if (contains) {
           break;
         }
-        if (m_ptfsLeftRoadSide[j].x() > 10 || m_ptfsRightRoadSide[j].x() > 10) {
-          break;
-        }
-        if (indexLeft == -1 && ptf.x() > m_ptfsLeftRoadSide[j].x() &&
-             ptf.x() <= m_ptfsLeftRoadSide[j + 1].x()) {
-          indexLeft = j;
-        }
-        if (indexRight == -1 && ptf.x() > m_ptfsRightRoadSide[j].x() &&
-            ptf.x() <= m_ptfsRightRoadSide[j + 1].x()) {
-          indexRight = j;
-        }
-      }
-      if (indexLeft == -1 && indexRight == -1) {
-        continue;
-      }
-      // check y range
-      contains = ( (indexLeft != -1 && ptf.y() <= m_ptfsLeftRoadSide[indexLeft].y()) &&
-          (indexRight != -1 && ptf.y() >= m_ptfsRightRoadSide[indexRight].y()) );
-      if (contains) {
-        break;
       }
     }
     if (contains) {
