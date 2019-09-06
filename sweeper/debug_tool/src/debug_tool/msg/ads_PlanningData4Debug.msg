@@ -16,7 +16,7 @@ ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
 ads_littersensor_data garbage_detection_results
 
-ads_planning_trajectory[10] planning_trajectory_candidates
+ads_planning_trajectory[] planning_trajectory_candidates
 ads_planning_trajectory planning_trajectory
 ads_planning_output planning_output
 

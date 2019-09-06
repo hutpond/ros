@@ -20,37 +20,25 @@ class QBaseWidget : public QWidget
   Q_OBJECT
 
 public:
-  enum
-  {
-    TypeNone = -1,
-    LiveDisplay,
-    Replay
-  };
-
-public:
   QBaseWidget(QWidget *parent);
   ~QBaseWidget();
 
 protected:
-  void replay(const std::string &);
+  void replay(int);
   std::list<std::string> pathList(const std::string &);
   void fileList(const std::string &, std::vector<std::string> &);
 
 protected slots:
   void setReplayInterval(int);
-  void onReplayState(bool);
+  void onReplayState(int, bool);
 
 protected:
-  boost::atomic_int m_nShowType;  // 0: live display; 1: replay
-
-  boost::filesystem::path m_fspath;
-  boost::atomic_int m_nIntervalMillSecs; // replay interval mill seconds
-  boost::atomic_bool m_bFlagPauseReplay; // replay pause state;
-  std::vector<std::string> m_listPlanningFiles;
-  std::vector<std::string>::iterator m_itFile;  // 文件名链表迭代器
+  boost::filesystem::path m_fspath[2];
+//  boost::atomic_int m_nIntervalMillSecs; // replay interval mill seconds
+  boost::atomic_bool m_bFlagPauseReplay[2]; // replay pause state;
+  std::vector<std::string> m_listPlanningFiles[2];
+  std::vector<std::string>::iterator m_itFile[2];  // 文件名链表迭代器
   int m_nTimerId;         // replay定时器id
-
-  QDataDisplayDialog *m_pDlgDataDisplay;
 };
 
 #endif // Q_BASE_WIDGET_H

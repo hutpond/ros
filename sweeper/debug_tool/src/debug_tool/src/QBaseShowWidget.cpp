@@ -24,6 +24,8 @@ QBaseShowWidget::~QBaseShowWidget()
 void QBaseShowWidget::resizeEvent(QResizeEvent *)
 {
   m_rectPicture = this->rect();
+  this->calcMapRect();
+  this->drawImage();
 }
 
 void QBaseShowWidget::mouseMoveEvent(QMouseEvent *e)
@@ -96,7 +98,7 @@ void QBaseShowWidget::drawMapBorder(QPainter &painter)
   QPen pen;
   pen.setWidth(4);
   pen.setColor(Qt::red);
-  pen.setBrush(Qt::green);
+  pen.setBrush(m_bFlagSelected ? Qt::green : Qt::gray);
   painter.setPen(pen);
   QRectF border(
         m_rectfMap.topLeft(),

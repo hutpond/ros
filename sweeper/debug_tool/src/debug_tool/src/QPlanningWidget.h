@@ -32,35 +32,43 @@ public:
   ~QPlanningWidget();
 
   void setViewResolution(int);
-  void showType(int, const QString &);
+  void startReplay(int, const QString &);
   void stopDisplay();
   void setShowAllTargets(bool);
+  void setShowIndex(int, bool);
+  bool isIndexShow(int);
+  void setReplaySpeedIndex(int);
+  int replaySpeedIndex();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
   virtual void timerEvent(QTimerEvent *);
+  virtual void showEvent(QShowEvent *);
 
 protected:
-  void replayJson(const QString &);
+  void replayJson(int, const QString &);
   bool readFromJsonFile(const std::string &, debug_tool::ads_PlanningData4Debug &);
 
   void sortTrackTargets(debug_tool::ads_PlanningData4Debug &);
   void saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &);
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
 
+  void showWidgets();
+
 protected slots:
-  void onSetFrameIndexReplay(int);
-
+  void onSetFrameIndexReplay(int, int);
   void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
-
-  void onReplayInterIndex(int);
+  void onSelectedShow();
 
 private:
-  QPlanningShowWidget *m_pWdgShow;
+  QPlanningShowWidget *m_pWdgShow[3];
   QPlanningParamWidget *m_pWdgParam;
-  boost::atomic_int m_nShowType;  // 0: live display; 1: replay
 
+  bool m_bShowVisible[3];
   boost::filesystem::path m_fsPath;
+  QRect m_rectShow;
+
+  int m_nReplaySpeedIndex;
 };
 
 #endif // Q_PLANNING_WIDGET_H

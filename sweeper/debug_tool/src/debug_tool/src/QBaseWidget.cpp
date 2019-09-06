@@ -10,10 +10,8 @@
 
 QBaseWidget::QBaseWidget(QWidget *parent)
   : QWidget(parent)
-  , m_nShowType(TypeNone)
   , m_nTimerId(0)
 {
-  m_pDlgDataDisplay = NULL;
 }
 
 QBaseWidget::~QBaseWidget()
@@ -27,22 +25,23 @@ QBaseWidget::~QBaseWidget()
 
  * @return
 ********************************************************/
-void QBaseWidget::replay(const std::string &)
+void QBaseWidget::replay(int index)
 {
-  std::string path = m_fspath.string();
+  if (index != 0 && index != 1) return;
 
-  m_nIntervalMillSecs = 300;
-  m_bFlagPauseReplay = false;
-  m_listPlanningFiles.clear();
-  this->fileList(path, m_listPlanningFiles);
+  std::string path = m_fspath[index].string();
 
-  m_itFile = m_listPlanningFiles.begin();
+  m_bFlagPauseReplay[index] = false;
+  m_listPlanningFiles[index].clear();
+  this->fileList(path, m_listPlanningFiles[index]);
+
+  m_itFile[index] = m_listPlanningFiles[index].begin();
   if (m_nTimerId != 0) {
     killTimer(m_nTimerId);
     m_nTimerId = 0;
   }
-  m_bFlagPauseReplay = false;
-  m_nTimerId = startTimer(m_nIntervalMillSecs);
+  m_bFlagPauseReplay[index] = false;
+  //m_nTimerId = startTimer(m_nIntervalMillSecs);
 }
 
 /*******************************************************
@@ -94,7 +93,7 @@ void QBaseWidget::fileList(const std::string &path, std::vector<std::string> &fi
 ********************************************************/
 void QBaseWidget::setReplayInterval(int ms)
 {
-  m_nIntervalMillSecs = ms;
+  //m_nIntervalMillSecs = ms;
 }
 
 /*******************************************************
@@ -103,7 +102,8 @@ void QBaseWidget::setReplayInterval(int ms)
 
  * @return
 ********************************************************/
-void QBaseWidget::onReplayState(bool pause)
+void QBaseWidget::onReplayState(int index, bool pause)
 {
-  m_bFlagPauseReplay = pause;
+  if (index != 0 && index != 1) return;
+  m_bFlagPauseReplay[index] = pause;
 }

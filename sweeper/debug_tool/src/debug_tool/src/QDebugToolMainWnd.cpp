@@ -13,16 +13,9 @@
 #include <QTextBrowser>
 #include <QDockWidget>
 #include "QDebugToolMainWnd.h"
-#include "QLocationWidget.h"
-#include "QVarianceWidget.h"
-#include "QAlgorithmWidget.h"
-#include "QLocusWidget.h"
-#include "QEulerAngleWidget.h"
-#include "QErrorFigureWidget.h"
-#include "QPerceptionWidget.h"
 #include "QPlanningWidget.h"
 #include "QDataDisplayDialog.h"
-//#include "ReadDataManager.h"
+#include "QPlanningCostWidget.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
 static const char *LOCATION_TOOL_BAR = "LOCATION";
@@ -32,47 +25,24 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-QStatusBar * QDebugToolMainWnd::s_pStatusBar = NULL;
-QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = NULL;
-QDataDisplayDialog * QDebugToolMainWnd::s_pDataDisplay = NULL;
+QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
+QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
+QDataDisplayDialog * QDebugToolMainWnd::s_pDataDisplay = Q_NULLPTR;
+QPlanningCostWidget * QDebugToolMainWnd::s_pWdgPlanningCost = Q_NULLPTR;
 
 QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   : QMainWindow(parent)
   , m_pWdgCurrent(Q_NULLPTR)
 {
   this->setCentralWidget(new QWidget);
-  m_pWdgLocation = new QLocationWidget(this->centralWidget());
-  m_pWdgLocation->hide();
-  m_pWdgVariance = new QVarianceWidget(this->centralWidget());
-  m_pWdgVariance->hide();
-  m_pWdgAlgorithm = new QAlgorithmWidget(this->centralWidget());
-  m_pWdgAlgorithm->hide();
-  m_pWdgLocus = new QLocusWidget(this->centralWidget());
-  m_pWdgLocus->hide();
-  m_pWdgEulerAngle = new QEulerAngleWidget(this->centralWidget());
-  m_pWdgEulerAngle->hide();
-  m_pWdgErrorFigure = new QErrorFigureWidget(this->centralWidget());
-  m_pWdgErrorFigure->hide();
-
-  m_pWdgPerception = new QPerceptionWidget(this->centralWidget());
-  m_pWdgPerception->hide();
   m_pWdgPlanning = new QPlanningWidget(this->centralWidget());
-  m_pWdgPlanning->hide();
 
   this->createMenu();
-  //this->createLocationToolBar();
-  this->createPerceptionToolBar();
   this->createPlanningToolBar();
   this->createViewToolBar();
   this->createSettingToolBar();
-  //this->createHelpToolBar();
 
-  this->setWindowTitle("Debug Tool V2.5");
-
-  // set zmq callback function
-  //auto funPlanning = std::bind(&QPlanningWidget::parseJsonData, m_pWdgPlanning,
-  //	std::placeholders::_1);
-  //ReadDataManager::instance()->setPlanningParseFunction(funPlanning);
+  this->setWindowTitle("Debug Tool V3.0");
 
   QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
@@ -86,6 +56,11 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   pTabWidget->addTab(s_pTextBrowser, tr("Output"));
   s_pDataDisplay = new QDataDisplayDialog(this);
   pTabWidget->addTab(s_pDataDisplay, tr("Data"));
+
+  // plannig cost
+  s_pWdgPlanningCost = new QPlanningCostWidget(this);
+  pTabWidget->addTab(s_pWdgPlanningCost, tr("Cost"));
+
   pDockWdg->setWidget(pTabWidget);
 
   s_pStatusBar = this->statusBar();
@@ -100,27 +75,19 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
 ********************************************************/
 void QDebugToolMainWnd::stopProcess()
 {
-  m_pWdgPerception->stopDisplay();
   m_pWdgPlanning->stopDisplay();
 }
 
 void QDebugToolMainWnd::resizeEvent(QResizeEvent *)
 {
   QRect rect = this->centralWidget()->rect();
-  m_pWdgLocation->setGeometry(rect);
-  m_pWdgVariance->setGeometry(rect);
-  m_pWdgAlgorithm->setGeometry(rect);
-  m_pWdgLocus->setGeometry(rect);
-  m_pWdgEulerAngle->setGeometry(rect);
-  m_pWdgErrorFigure->setGeometry(rect);
-  m_pWdgPerception->setGeometry(rect);
   m_pWdgPlanning->setGeometry(rect);
 }
 
 void QDebugToolMainWnd::showEvent(QShowEvent *)
 {
   if (m_pWdgCurrent == NULL) {
-    this->onActionPlanningLiveDisplay();
+    this->processPreShow(m_pWdgPlanning);
   }
 }
 
@@ -254,7 +221,7 @@ void QDebugToolMainWnd::createLocationToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionLocation()
 {
-  this->processPreShow(m_pWdgLocation);
+//  this->processPreShow(m_pWdgLocation);
   m_pWdgCurrent->show();
 }
 
@@ -266,7 +233,7 @@ void QDebugToolMainWnd::onActionLocation()
 ********************************************************/
 void QDebugToolMainWnd::onActionVariance()
 {
-  this->processPreShow(m_pWdgVariance);
+//  this->processPreShow(m_pWdgVariance);
   m_pWdgCurrent->show();
 }
 
@@ -278,7 +245,7 @@ void QDebugToolMainWnd::onActionVariance()
 ********************************************************/
 void QDebugToolMainWnd::onActionAlgorithm()
 {
-  this->processPreShow(m_pWdgAlgorithm);
+//  this->processPreShow(m_pWdgAlgorithm);
   m_pWdgCurrent->show();
 }
 
@@ -290,7 +257,7 @@ void QDebugToolMainWnd::onActionAlgorithm()
 ********************************************************/
 void QDebugToolMainWnd::onActionLocus()
 {
-  this->processPreShow(m_pWdgLocus);
+//  this->processPreShow(m_pWdgLocus);
   m_pWdgCurrent->show();
 }
 
@@ -302,7 +269,7 @@ void QDebugToolMainWnd::onActionLocus()
 ********************************************************/
 void QDebugToolMainWnd::onActionEulerAngle()
 {
-  this->processPreShow(m_pWdgEulerAngle);
+//  this->processPreShow(m_pWdgEulerAngle);
   m_pWdgCurrent->show();
 }
 
@@ -314,7 +281,7 @@ void QDebugToolMainWnd::onActionEulerAngle()
 ********************************************************/
 void QDebugToolMainWnd::onActionErrorFigure()
 {
-  this->processPreShow(m_pWdgErrorFigure);
+//  this->processPreShow(m_pWdgErrorFigure);
   m_pWdgCurrent->show();
 }
 
@@ -363,8 +330,6 @@ void QDebugToolMainWnd::createPerceptionToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionPerception2D()
 {
-  this->processPreShow(m_pWdgPerception);
-  m_pWdgPerception->showPerception(QPerceptionWidget::Perception2D);
 }
 
 /*******************************************************
@@ -375,8 +340,6 @@ void QDebugToolMainWnd::onActionPerception2D()
 ********************************************************/
 void QDebugToolMainWnd::onActionPerception3D()
 {
-  this->processPreShow(m_pWdgPerception);
-  m_pWdgPerception->showPerception(QPerceptionWidget::Perception3D);
 }
 
 /*******************************************************
@@ -401,7 +364,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(PLANNING_TOOL_BAR);
 
-  QAction *newAct = new QAction(tr("LIVE\nDISPLAY"), this);
+  QAction *newAct = new QAction(tr("REPLAY"), this);
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningLiveDisplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -409,7 +372,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(255, 250, 220);");
 
-  newAct = new QAction(tr("REPLAY"), this);
+  newAct = new QAction(tr("REPLAY2"), this);
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningReplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -427,8 +390,25 @@ void QDebugToolMainWnd::createPlanningToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionPlanningLiveDisplay()
 {
-  this->processPreShow(m_pWdgPlanning);
-  m_pWdgPlanning->showType(QPlanningWidget::LiveDisplay, "");
+  static QString strOpenPath;
+  if (strOpenPath.isEmpty()) {
+    namespace fs = boost::filesystem;
+    fs::path fsPath = getenv("HOME");
+    fsPath /= "PlanningData";
+    strOpenPath = QString::fromStdString(fsPath.string());
+  }
+  QString strPath = QFileDialog::getExistingDirectory(this, tr("Json Directory"),
+                                    strOpenPath,
+                                    QFileDialog::ShowDirsOnly
+                                    | QFileDialog::DontResolveSymlinks);
+  if (!strPath.isEmpty()) {
+    int index = strPath.lastIndexOf('/');
+    strOpenPath = strPath.mid(0, index);
+    if (!m_pWdgPlanning->isIndexShow(1)) {
+      this->onActionShowWidget2();
+    }
+    m_pWdgPlanning->startReplay(1, strPath);
+  }
 }
 
 /*******************************************************
@@ -446,7 +426,6 @@ void QDebugToolMainWnd::onActionPlanningReplay()
     fsPath /= "PlanningData";
     strOpenPath = QString::fromStdString(fsPath.string());
   }
-  this->processPreShow(m_pWdgPlanning);
   QString strPath = QFileDialog::getExistingDirectory(this, tr("Json Directory"),
                                     strOpenPath,
                                     QFileDialog::ShowDirsOnly
@@ -454,7 +433,10 @@ void QDebugToolMainWnd::onActionPlanningReplay()
   if (!strPath.isEmpty()) {
     int index = strPath.lastIndexOf('/');
     strOpenPath = strPath.mid(0, index);
-    m_pWdgPlanning->showType(QPlanningWidget::Replay, strPath);
+    if (!m_pWdgPlanning->isIndexShow(2)) {
+      this->onActionShowWidget3();
+    }
+    m_pWdgPlanning->startReplay(2, strPath);
   }
 }
 
@@ -493,6 +475,16 @@ void QDebugToolMainWnd::createViewToolBar()
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(255, 200, 200);");
   pToolBar->insertSeparator(newAct);
+
+  m_pActionReplaySpeed = new QAction(tr("M"), this);
+  connect(m_pActionReplaySpeed, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionReplaySpeed);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(m_pActionReplaySpeed);
+  pWdgAction = pToolBar->widgetForAction(m_pActionReplaySpeed);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(255, 200, 200);");
+  pToolBar->insertSeparator(m_pActionReplaySpeed);
 }
 
 /*******************************************************
@@ -505,9 +497,6 @@ void QDebugToolMainWnd::onActionViewZoomIn()
 {
   if (m_pWdgPlanning->isVisible()) {
     m_pWdgPlanning->setViewResolution(1);
-  }
-  if (m_pWdgPerception->isVisible()) {
-    m_pWdgPerception->setViewResolution(1);
   }
 }
 
@@ -522,9 +511,6 @@ void QDebugToolMainWnd::onActionViewZoomOut()
   if (m_pWdgPlanning->isVisible()) {
     m_pWdgPlanning->setViewResolution(-1);
   }
-  if (m_pWdgPerception->isVisible()) {
-    m_pWdgPerception->setViewResolution(-1);
-  }
 }
 
 /*******************************************************
@@ -538,9 +524,6 @@ void QDebugToolMainWnd::onActionViewReset()
   if (m_pWdgPlanning->isVisible()) {
     m_pWdgPlanning->setViewResolution(0);
   }
-  if (m_pWdgPerception->isVisible()) {
-    m_pWdgPerception->setViewResolution(0);
-  }
 }
 
 /*******************************************************
@@ -553,15 +536,79 @@ void QDebugToolMainWnd::createSettingToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
 
+  m_pActionShowWidget = new QAction(tr("S1"), this);
+  connect(m_pActionShowWidget, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionShowWidget);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(m_pActionShowWidget);
+  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+
+  m_pActionShowWidget2 = new QAction(tr("H2"), this);
+  connect(m_pActionShowWidget2, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionShowWidget2);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(m_pActionShowWidget2);
+  pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget2);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(m_pActionShowWidget2);
+
+  m_pActionShowWidget3 = new QAction(tr("H3"), this);
+  connect(m_pActionShowWidget3, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionShowWidget3);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(m_pActionShowWidget3);
+  pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget3);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(m_pActionShowWidget3);
+
   m_bFlagShowAllTargets = false;
   m_pActionShowTargets = new QAction(tr("T"), this);
   connect(m_pActionShowTargets, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionShowTargets);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(m_pActionShowTargets);
-  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
+  pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(m_pActionShowTargets);
+}
+
+void QDebugToolMainWnd::onActionShowWidget()
+{
+  m_pWdgPlanning->setShowIndex(0, !m_pWdgPlanning->isIndexShow(0));
+
+  if (m_pWdgPlanning->isIndexShow(0)) {
+    m_pActionShowWidget->setText(tr("S1"));
+  }
+  else {
+    m_pActionShowWidget->setText(tr("H1"));
+  }
+}
+
+void QDebugToolMainWnd::onActionShowWidget2()
+{
+  m_pWdgPlanning->setShowIndex(1, !m_pWdgPlanning->isIndexShow(1));
+  if (m_pWdgPlanning->isIndexShow(1)) {
+    m_pActionShowWidget2->setText(tr("S2"));
+  }
+  else {
+    m_pActionShowWidget2->setText(tr("H2"));
+  }
+}
+
+void QDebugToolMainWnd::onActionShowWidget3()
+{
+  m_pWdgPlanning->setShowIndex(2, !m_pWdgPlanning->isIndexShow(2));
+  if (m_pWdgPlanning->isIndexShow(2)) {
+    m_pActionShowWidget3->setText(tr("S3"));
+  }
+  else {
+    m_pActionShowWidget3->setText(tr("H3"));
+  }
 }
 
 /*******************************************************
@@ -581,6 +628,22 @@ void QDebugToolMainWnd::onActionShowTargets()
   }
   m_pActionShowTargets->setChecked(m_bFlagShowAllTargets);
   m_pWdgPlanning->setShowAllTargets(m_bFlagShowAllTargets);
+}
+
+void QDebugToolMainWnd::onActionReplaySpeed()
+{
+  int index = m_pWdgPlanning->replaySpeedIndex();
+  ++ index %= 3;
+  m_pWdgPlanning->setReplaySpeedIndex(index);
+  if (index == 0) {
+    m_pActionReplaySpeed->setText(tr("H"));
+  }
+  else if (index == 1) {
+    m_pActionReplaySpeed->setText(tr("M"));
+  }
+  else {
+    m_pActionReplaySpeed->setText(tr("L"));
+  }
 }
 
 /*******************************************************

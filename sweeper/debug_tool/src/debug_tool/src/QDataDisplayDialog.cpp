@@ -236,10 +236,11 @@ void QDataDisplayDialog::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("position.y: %1").arg(planningData.planning_output.pose.position.y));
 
-  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
-  itemRoot->setText(0, "PLANNING_TRAJECTORY_CANDIDATES (10)");
   auto &val_candidates = planningData.planning_trajectory_candidates;
-  for (int i = 0; i < 10; ++ i) {
+  const int size_candidates = val_candidates.size();
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, QString("PLANNING_TRAJECTORY_CANDIDATES (%1)").arg(size_candidates));
+  for (int i = 0; i < size_candidates; ++ i) {
     const auto &val_candidates_spines = val_candidates[i].splines;
     int size_candidates_splines = static_cast<int>(val_candidates_spines.size());
     item = new QTreeWidgetItem(itemRoot);

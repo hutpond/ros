@@ -10,16 +10,10 @@
 
 #include <QtWidgets/QMainWindow>
 
-class QLocationWidget;
-class QVarianceWidget;
-class QAlgorithmWidget;
-class QLocusWidget;
-class QEulerAngleWidget;
-class QErrorFigureWidget;
-class QPerceptionWidget;
 class QPlanningWidget;
 class QTextBrowser;
 class QDataDisplayDialog;
+class QPlanningCostWidget;
 
 class QDebugToolMainWnd : public QMainWindow
 {
@@ -63,22 +57,23 @@ protected slots:
   void onActionViewZoomOut();
   void onActionViewReset();
 
+  void onActionShowWidget();
+  void onActionShowWidget2();
+  void onActionShowWidget3();
   void onActionShowTargets();
+  void onActionReplaySpeed();
   void onActionHelpAbout();
 
 private:
-  QLocationWidget *m_pWdgLocation;
-  QVarianceWidget *m_pWdgVariance;
-  QAlgorithmWidget *m_pWdgAlgorithm;
-  QLocusWidget *m_pWdgLocus;
-  QEulerAngleWidget *m_pWdgEulerAngle;
-  QErrorFigureWidget *m_pWdgErrorFigure;
-
-  QPerceptionWidget *m_pWdgPerception;
   QPlanningWidget *m_pWdgPlanning;
 
   QWidget *m_pWdgCurrent;
 
+  QAction *m_pActionReplaySpeed;
+
+  QAction *m_pActionShowWidget;
+  QAction *m_pActionShowWidget2;
+  QAction *m_pActionShowWidget3;
   bool m_bFlagShowAllTargets;
   QAction *m_pActionShowTargets;
 
@@ -86,6 +81,7 @@ public:
   static QStatusBar *s_pStatusBar;
   static QTextBrowser *s_pTextBrowser;
   static QDataDisplayDialog *s_pDataDisplay;
+  static QPlanningCostWidget *s_pWdgPlanningCost;
 };
 
 #endif  // Q_DEBUG_TOOL_MAIN_WND_H
