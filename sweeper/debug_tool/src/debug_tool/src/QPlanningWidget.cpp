@@ -78,6 +78,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   QReadDataManagerRos::instance()->start_subscribe();
 
   m_nReplaySpeedIndex = 1;
+  memset(m_dCostValue, 0, sizeof(double) * QPlanningCostWidget::Count);
 }
 
 QPlanningWidget::~QPlanningWidget()
@@ -282,6 +283,45 @@ int QPlanningWidget::replaySpeedIndex()
   return m_nReplaySpeedIndex;
 }
 
+void QPlanningWidget::setCostValue(double value[])
+{
+  memcpy(m_dCostValue, value, sizeof(double) * QPlanningCostWidget::Count);
+}
+
+void QPlanningWidget::getCostValue(double value[])
+{
+  memcpy(value, m_dCostValue, sizeof(double) * QPlanningCostWidget::Count);
+}
+
+void QPlanningWidget::calcCostValue(debug_tool::ads_PlanningData4Debug &data)
+{
+  bool calc = false;
+  for (int i = 1; i < QPlanningCostWidget::Count; ++i) {
+    if (!qFuzzyCompare(m_dCostValue[i], 0)) {
+      calc = true;
+      break;
+    }
+  }
+  if (!calc) return;
+
+  auto &candidates = data.planning_trajectory_candidates;
+  const int size_candidates = candidates.size();
+  for (int i = 0; i < size_candidates; ++i) {
+    candidates[i].cost = m_dCostValue[QPlanningCostWidget::Safety] * candidates[i].safety_cost
+        + m_dCostValue[QPlanningCostWidget::Lateral] * candidates[i].lateral_cost
+        + m_dCostValue[QPlanningCostWidget::Smoothness] * candidates[i].smoothness_cost
+        + m_dCostValue[QPlanningCostWidget::Consistency] * candidates[i].consistency_cost
+        + m_dCostValue[QPlanningCostWidget::Garbage] * candidates[i].garbage_cost;
+  }
+
+  auto &trajectory = data.planning_trajectory;
+  trajectory.cost = m_dCostValue[QPlanningCostWidget::Safety] * trajectory.safety_cost
+      + m_dCostValue[QPlanningCostWidget::Lateral] * trajectory.lateral_cost
+      + m_dCostValue[QPlanningCostWidget::Smoothness] * trajectory.smoothness_cost
+      + m_dCostValue[QPlanningCostWidget::Consistency] * trajectory.consistency_cost
+      + m_dCostValue[QPlanningCostWidget::Garbage] * trajectory.garbage_cost;
+}
+
 void QPlanningWidget::onSelectedShow()
 {
   QObject *sender = this->sender();
@@ -318,6 +358,7 @@ bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_
   delete buffer;
   this->parseDataFromJson(root, planningData);
   this->sortTrackTargets(planningData);
+  this->calcCostValue(planningData);
 
   return true;
 }
@@ -327,6 +368,7 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
   debug_tool::ads_PlanningData4Debug &data = const_cast<debug_tool::ads_PlanningData4Debug &>(planningData);
   this->sortTrackTargets(data);
   this->saveDataToJsonFile(data);
+  this->calcCostValue(data);
   if (m_bShowVisible[0]) {
     m_pWdgShow[0]->setPlanningData(data);
     if (m_pWdgShow[0]->isSelected()) {

@@ -61,7 +61,7 @@ void QPlotWidget::plot()
   constexpr int x_size = 5;
   double x_min = 0;
   double x_max = 100;
-  constexpr int y_size = 6;
+  int y_size = 6;
   double y_min = 0;
   double y_max = 2.0;
   const size_t size_pts = m_points.size();
@@ -116,7 +116,8 @@ void QPlotWidget::plot()
       bound = bound / 10 * 10 + 10;
     }
     y_unit = double(bound) / qPow(10, bit);
-    y_min = y_unit * (int(y_min / y_unit));
+    y_min = y_unit * (int(y_min / y_unit) - 1);
+    y_size += 2;
     y_max = y_min + y_unit * y_size;
   }
 

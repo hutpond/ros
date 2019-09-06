@@ -10,6 +10,7 @@ class QPlanningCostWidget : public QWidget
 {
   Q_OBJECT
 
+public:
   enum
   {
     Cost,

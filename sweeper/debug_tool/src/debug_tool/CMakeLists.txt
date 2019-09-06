@@ -73,6 +73,7 @@ target_sources(debug_tool PRIVATE src/QReadDataManagerRos.cpp)
 target_sources(debug_tool PRIVATE src/QDataDisplayDialog.cpp)
 target_sources(debug_tool PRIVATE src/QPlanningCostWidget.cpp)
 target_sources(debug_tool PRIVATE src/QPlotWidget.cpp)
+target_sources(debug_tool PRIVATE src/QCostValueDialog.cpp)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)

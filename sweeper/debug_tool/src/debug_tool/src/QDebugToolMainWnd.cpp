@@ -16,6 +16,7 @@
 #include "QPlanningWidget.h"
 #include "QDataDisplayDialog.h"
 #include "QPlanningCostWidget.h"
+#include "QCostValueDialog.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
 static const char *LOCATION_TOOL_BAR = "LOCATION";
@@ -575,6 +576,28 @@ void QDebugToolMainWnd::createSettingToolBar()
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   pToolBar->insertSeparator(m_pActionShowTargets);
+
+  QAction *newAction = new QAction(tr("C"), this);
+  connect(newAction, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionSetCost);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(newAction);
+  pWdgAction = pToolBar->widgetForAction(newAction);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(newAction);
+}
+
+void QDebugToolMainWnd::onActionSetCost()
+{
+  double value[QPlanningCostWidget::Count];
+  m_pWdgPlanning->getCostValue(value);
+  QCostValueDialog dlg;
+  dlg.setCostValue(value);
+  if (dlg.exec() == QDialog::Accepted) {
+    dlg.getCostValue(value);
+    m_pWdgPlanning->setCostValue(value);
+  }
 }
 
 void QDebugToolMainWnd::onActionShowWidget()

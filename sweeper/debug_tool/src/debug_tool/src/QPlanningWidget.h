@@ -18,6 +18,7 @@
 #else
 # include "QReadDataManagerRos.h"
 #endif
+#include "QPlanningCostWidget.h"
 
 class QPlanningShowWidget;
 class QPlanningParamWidget;
@@ -39,6 +40,8 @@ public:
   bool isIndexShow(int);
   void setReplaySpeedIndex(int);
   int replaySpeedIndex();
+  void setCostValue(double []);
+  void getCostValue(double []);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -54,6 +57,7 @@ protected:
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
 
   void showWidgets();
+  void calcCostValue(debug_tool::ads_PlanningData4Debug &);
 
 protected slots:
   void onSetFrameIndexReplay(int, int);
@@ -69,6 +73,8 @@ private:
   QRect m_rectShow;
 
   int m_nReplaySpeedIndex;
+
+  double m_dCostValue[QPlanningCostWidget::Count];
 };
 
 #endif // Q_PLANNING_WIDGET_H

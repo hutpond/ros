@@ -56,12 +56,13 @@ protected slots:
   void onActionViewZoomIn();
   void onActionViewZoomOut();
   void onActionViewReset();
+  void onActionReplaySpeed();
 
   void onActionShowWidget();
   void onActionShowWidget2();
   void onActionShowWidget3();
   void onActionShowTargets();
-  void onActionReplaySpeed();
+  void onActionSetCost();
   void onActionHelpAbout();
 
 private:
