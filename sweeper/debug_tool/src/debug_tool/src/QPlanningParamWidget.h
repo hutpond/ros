@@ -26,7 +26,7 @@ public:
   QPlanningParamWidget(QWidget *parent);
   ~QPlanningParamWidget();
 
-  void setShowType();
+  void setShowType(int);
   void setFrameCount(int, int);
   void setPlanningData(int, bool, const debug_tool::ads_PlanningData4Debug &);
   void showMousePosition(float, float, float, float);

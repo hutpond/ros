@@ -56,17 +56,14 @@ QPlanningParamWidget::~QPlanningParamWidget()
 
  * @return
 ********************************************************/
-void QPlanningParamWidget::setShowType()
+void QPlanningParamWidget::setShowType(int index)
 {
-  this->showReplayControls(true);
-  for (int i = 0; i < 2; ++i) {
-    m_pBtnPause[i]->setEnabled(true);
-    m_pBtnResume[i]->setEnabled(false);
-    m_pBtnBack[i]->setEnabled(false);
-    m_pBtnNext[i]->setEnabled(false);
-    m_pSliderPlay[i]->setEnabled(false);
-    m_nSliderValue[i] = 0;
-  }
+  m_pBtnPause[index]->setEnabled(true);
+  m_pBtnResume[index]->setEnabled(false);
+  m_pBtnBack[index]->setEnabled(false);
+  m_pBtnNext[index]->setEnabled(false);
+  m_pSliderPlay[index]->setEnabled(false);
+  m_nSliderValue[index] = 0;
 }
 
 /*******************************************************

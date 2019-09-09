@@ -29,6 +29,8 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
 {
   this->setFont(G_TEXT_FONT);
   m_pWdgParam = new QPlanningParamWidget(this);
+  m_pWdgParam->setShowType(0);
+  m_pWdgParam->setShowType(1);
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
   connect(m_pWdgParam, &QPlanningParamWidget::replayState,
@@ -258,6 +260,7 @@ void QPlanningWidget::replayJson(int index, const QString &path)
   m_bFlagPauseReplay[index - 1] = false;
   m_listPlanningFiles[index - 1].clear();
   this->fileList(path.toStdString(), m_listPlanningFiles[index - 1]);
+  m_pWdgParam->setShowType(index - 1);
 
   m_itFile[index - 1] = m_listPlanningFiles[index - 1].begin();
   if (m_nTimerId != 0) {
