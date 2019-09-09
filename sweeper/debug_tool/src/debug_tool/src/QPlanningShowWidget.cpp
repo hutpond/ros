@@ -146,9 +146,11 @@ void QPlanningShowWidget::setShowAllTargets(bool show)
 void QPlanningShowWidget::setSelected(bool selected)
 {
   m_bFlagSelected = selected;
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  if (this->isVisible()) {
+    this->calcMapRect();
+    this->drawImage();
+    this->update();
+  }
 }
 
 bool QPlanningShowWidget::isSelected()
@@ -167,10 +169,10 @@ void QPlanningShowWidget::drawImage()
   QPainter painter(&m_image);
   painter.fillRect(m_image.rect(), QColor(230, 230, 230));
   this->drawMapBorder(painter);
+
   if (m_planningData.num_reference_splines == 0) {
     return;
   }
-
   this->drawRoadSide(painter);
   this->drawSweeper(painter);
   this->drawAxis(painter);
@@ -227,10 +229,10 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
   painter.setPen(pen);
   painter.drawPolygon(pgf);
 
+  painter.restore();
+
   this->drawUltrasonic(painter);
   this->drawRadar(painter);
-
-  painter.restore();
 }
 
 void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
@@ -738,11 +740,13 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
 {
   QPen pen;
   pen.setWidth(2);
-  pen.setColor(Qt::blue);
+  pen.setBrush(Qt::blue);
+  painter.save();
   painter.setPen(pen);
 
   const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
   this->drawBezierLine(painter, val_planning_splines);
+  painter.restore();
 }
 
 /*******************************************************
@@ -760,7 +764,17 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
   painter.setPen(pen);
 
   int planning_id = m_planningData.planning_trajectory.id;
-  for (int i = 0; i < 10; ++ i) {
+  auto &candidates = m_planningData.planning_trajectory_candidates;
+  int size_candidates = candidates.size();
+  if (size_candidates > 10) {
+    using type_candidates = decltype(candidates[0]);
+    std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,
+              const type_candidates &val2){
+      return val.cost < val2.cost;
+    });
+  }
+  size_candidates = qBound<int>(0, size_candidates, 10);
+  for (int i = 0; i < size_candidates; ++ i) {
     int candidate_id = m_planningData.planning_trajectory_candidates[i].id;
     int decision = static_cast<int>(m_planningData.decision);
     if (planning_id == candidate_id && (decision >= 0 && decision < 4)) {

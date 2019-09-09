@@ -16,8 +16,6 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation geometry_msgs)
 include_directories( ${catkin_INCLUDE_DIRS} )
-include_directories(/usr/local/pcl/include/pcl-1.9)
-include_directories(/usr/include/eigen3)
 
 # find dependencies
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

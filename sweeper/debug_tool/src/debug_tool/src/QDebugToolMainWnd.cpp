@@ -536,6 +536,7 @@ void QDebugToolMainWnd::onActionViewReset()
 void QDebugToolMainWnd::createSettingToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
+  m_pToolBarSetting = pToolBar;
 
   m_pActionShowWidget = new QAction(tr("S1"), this);
   connect(m_pActionShowWidget, &QAction::triggered,
@@ -553,7 +554,7 @@ void QDebugToolMainWnd::createSettingToolBar()
   pToolBar->addAction(m_pActionShowWidget2);
   pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget2);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pWdgAction->setStyleSheet("background-color: gray;");
   pToolBar->insertSeparator(m_pActionShowWidget2);
 
   m_pActionShowWidget3 = new QAction(tr("H3"), this);
@@ -563,7 +564,7 @@ void QDebugToolMainWnd::createSettingToolBar()
   pToolBar->addAction(m_pActionShowWidget3);
   pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget3);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pWdgAction->setStyleSheet("background-color: gray;");
   pToolBar->insertSeparator(m_pActionShowWidget3);
 
   m_bFlagShowAllTargets = false;
@@ -604,33 +605,44 @@ void QDebugToolMainWnd::onActionShowWidget()
 {
   m_pWdgPlanning->setShowIndex(0, !m_pWdgPlanning->isIndexShow(0));
 
+  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget);
   if (m_pWdgPlanning->isIndexShow(0)) {
     m_pActionShowWidget->setText(tr("S1"));
+    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   }
   else {
     m_pActionShowWidget->setText(tr("H1"));
+    pWdgAction->setStyleSheet("background-color: gray;");
   }
 }
 
 void QDebugToolMainWnd::onActionShowWidget2()
 {
   m_pWdgPlanning->setShowIndex(1, !m_pWdgPlanning->isIndexShow(1));
+
+  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget2);
   if (m_pWdgPlanning->isIndexShow(1)) {
     m_pActionShowWidget2->setText(tr("S2"));
+    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   }
   else {
     m_pActionShowWidget2->setText(tr("H2"));
+    pWdgAction->setStyleSheet("background-color: gray;");
   }
 }
 
 void QDebugToolMainWnd::onActionShowWidget3()
 {
   m_pWdgPlanning->setShowIndex(2, !m_pWdgPlanning->isIndexShow(2));
+
+  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget3);
   if (m_pWdgPlanning->isIndexShow(2)) {
     m_pActionShowWidget3->setText(tr("S3"));
+    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   }
   else {
     m_pActionShowWidget3->setText(tr("H3"));
+    pWdgAction->setStyleSheet("background-color: gray;");
   }
 }
 

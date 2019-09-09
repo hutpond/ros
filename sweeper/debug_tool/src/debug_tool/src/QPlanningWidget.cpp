@@ -326,7 +326,9 @@ void QPlanningWidget::onSelectedShow()
 {
   QObject *sender = this->sender();
   for (int i = 0; i < 3; ++i) {
-    m_pWdgShow[i]->setSelected(m_pWdgShow[i] == sender);
+    if (m_bShowVisible[i]) {
+      m_pWdgShow[i]->setSelected(m_pWdgShow[i] == sender);
+    }
   }
 }
 

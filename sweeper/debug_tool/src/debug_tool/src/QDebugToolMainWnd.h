@@ -72,6 +72,7 @@ private:
 
   QAction *m_pActionReplaySpeed;
 
+  QToolBar *m_pToolBarSetting;
   QAction *m_pActionShowWidget;
   QAction *m_pActionShowWidget2;
   QAction *m_pActionShowWidget3;
