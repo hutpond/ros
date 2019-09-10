@@ -40,8 +40,9 @@ public:
   bool isIndexShow(int);
   void setReplaySpeedIndex(int);
   int replaySpeedIndex();
+
+public:
   void setCostValue(double []);
-  void getCostValue(double []);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

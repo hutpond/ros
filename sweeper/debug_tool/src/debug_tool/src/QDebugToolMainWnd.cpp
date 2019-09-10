@@ -591,14 +591,16 @@ void QDebugToolMainWnd::createSettingToolBar()
 
 void QDebugToolMainWnd::onActionSetCost()
 {
-  double value[QPlanningCostWidget::Count];
-  m_pWdgPlanning->getCostValue(value);
-  QCostValueDialog dlg;
-  dlg.setCostValue(value);
-  if (dlg.exec() == QDialog::Accepted) {
-    dlg.getCostValue(value);
-    m_pWdgPlanning->setCostValue(value);
-  }
+  QCostValueDialog dlg(this);
+  QRect rect(0, 0, this->width() * 0.35, this->height() * 0.25);
+  rect.moveCenter(this->rect().center());
+  dlg.setGeometry(rect);
+  connect(&dlg, &QCostValueDialog::costValue,
+          m_pWdgPlanning, &QPlanningWidget::setCostValue);
+
+  dlg.exec();
+  disconnect(&dlg, &QCostValueDialog::costValue,
+          m_pWdgPlanning, &QPlanningWidget::setCostValue);
 }
 
 void QDebugToolMainWnd::onActionShowWidget()

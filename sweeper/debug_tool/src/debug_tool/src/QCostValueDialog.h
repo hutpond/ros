@@ -4,8 +4,9 @@
 #include <QDialog>
 #include "QPlanningCostWidget.h"
 
-class QLineEdit;
+class QSlider;
 class QPushButton;
+class QLabel;
 
 class QCostValueDialog : public QDialog
 {
@@ -13,13 +14,26 @@ class QCostValueDialog : public QDialog
 
 public:
   explicit QCostValueDialog(QWidget * = Q_NULLPTR);
+
+protected:
+
+protected:
   void setCostValue(double []);
-  void getCostValue(double []);
+  void calcPerccent(double []);
+
+protected:
+  void showEvent(QShowEvent *);
+
+protected slots:
+  void onValueChanged(int);
+
+signals:
+  void costValue(double []);
 
 private:
-  QLineEdit *m_pEditValue[QPlanningCostWidget::Count];
-  QPushButton *m_pBtnOk;
-  QPushButton *m_pBtnCancel;
+  QSlider *m_pSlider[QPlanningCostWidget::Count];
+  QLabel *m_pLblValue[QPlanningCostWidget::Count];
+  static int s_nValue[QPlanningCostWidget::Count];
 };
 
 #endif // QCOSTVALUEDIALOG_H

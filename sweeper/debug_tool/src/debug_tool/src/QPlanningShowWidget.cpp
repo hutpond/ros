@@ -177,11 +177,11 @@ void QPlanningShowWidget::drawImage()
   this->drawSweeper(painter);
   this->drawAxis(painter);
   this->drawAreaLine(painter);
-  this->drawPlanningPoint(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawPlanningCandidatesSplines(painter);
   this->drawPlanningSplines(painter);
+  this->drawPlanningPoint(painter);
   this->drawGarbageResults(painter);
 }
 
@@ -722,7 +722,7 @@ void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
 
   painter.save();
   QPen pen;
-  pen.setColor(Qt::magenta);
+  pen.setColor(Qt::black);
   pen.setWidth(4);
   painter.setPen(pen);
   painter.drawLine(line);

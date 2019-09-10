@@ -1,53 +1,80 @@
-#include <QLineEdit>
 #include <QPushButton>
+#include <QSlider>
 #include <QLabel>
 #include <QGridLayout>
 #include "QCostValueDialog.h"
+
+int QCostValueDialog::s_nValue[QPlanningCostWidget::Count] = {0};
 
 QCostValueDialog::QCostValueDialog(QWidget *parent)
   : QDialog(parent)
 {
   for (int i = 1; i < QPlanningCostWidget::Count; ++i) {
-    m_pEditValue[i] = new QLineEdit(this);
+    m_pSlider[i] = new QSlider(Qt::Horizontal, this);
+    m_pSlider[i]->setRange(0, 100);
+    m_pSlider[i]->setTickInterval(1);
+    m_pSlider[i]->setValue(s_nValue[i]);
+    connect(m_pSlider[i], &QSlider::valueChanged, this, &QCostValueDialog::onValueChanged);
+
+    m_pLblValue[i] = new QLabel(this);
   }
-  m_pBtnOk = new QPushButton("OK", this);
-  m_pBtnCancel = new QPushButton("Cancel", this);
-  connect(m_pBtnOk, &QPushButton::clicked, this, &QDialog::accept);
-  connect(m_pBtnCancel, &QPushButton::clicked, this, &QDialog::reject);
 
   QGridLayout *layout = new QGridLayout;
   layout->addWidget(new QLabel("Safety"), 0, 0, 1, 2);
-  layout->addWidget(m_pEditValue[QPlanningCostWidget::Safety], 0, 2, 1, 3);
+  layout->addWidget(m_pSlider[QPlanningCostWidget::Safety], 0, 2, 1, 9);
+  layout->addWidget(m_pLblValue[QPlanningCostWidget::Safety], 0, 11, 1, 1);
 
   layout->addWidget(new QLabel("Lateral"), 1, 0, 1, 2);
-  layout->addWidget(m_pEditValue[QPlanningCostWidget::Lateral], 1, 2, 1, 3);
+  layout->addWidget(m_pSlider[QPlanningCostWidget::Lateral], 1, 2, 1, 9);
+  layout->addWidget(m_pLblValue[QPlanningCostWidget::Lateral], 1, 11, 1, 1);
 
   layout->addWidget(new QLabel("Smoothness"), 2, 0, 1, 2);
-  layout->addWidget(m_pEditValue[QPlanningCostWidget::Smoothness], 2, 2, 1, 3);
+  layout->addWidget(m_pSlider[QPlanningCostWidget::Smoothness], 2, 2, 1, 9);
+  layout->addWidget(m_pLblValue[QPlanningCostWidget::Smoothness], 2, 11, 1, 1);
 
   layout->addWidget(new QLabel("Consistency"), 3, 0, 1, 2);
-  layout->addWidget(m_pEditValue[QPlanningCostWidget::Consistency], 3, 2, 1, 3);
+  layout->addWidget(m_pSlider[QPlanningCostWidget::Consistency], 3, 2, 1, 9);
+  layout->addWidget(m_pLblValue[QPlanningCostWidget::Consistency], 3, 11, 1, 1);
 
   layout->addWidget(new QLabel("Garbage"), 4, 0, 1, 2);
-  layout->addWidget(m_pEditValue[QPlanningCostWidget::Garbage], 4, 2, 1, 3);
-
-  layout->addWidget(m_pBtnOk, 5, 1, 1, 1);
-  layout->addWidget(m_pBtnCancel, 5, 3, 1, 1);
+  layout->addWidget(m_pSlider[QPlanningCostWidget::Garbage], 4, 2, 1, 9);
+  layout->addWidget(m_pLblValue[QPlanningCostWidget::Garbage], 4, 11, 1, 1);
 
   this->setLayout(layout);
+}
+
+void QCostValueDialog::showEvent(QShowEvent *)
+{
+  this->onValueChanged(0);
 }
 
 void QCostValueDialog::setCostValue(double value[])
 {
   for (int i = 1; i < QPlanningCostWidget::Count; ++i) {
-    m_pEditValue[i]->setText(QString::number(value[i]));
+    m_pLblValue[i]->setText(QString("%1").arg(value[i], -1, 'f', 2));
   }
 }
 
-void QCostValueDialog::getCostValue(double value[])
+void QCostValueDialog::calcPerccent(double value[])
 {
+  int sum = 0;
   for (int i = 1; i < QPlanningCostWidget::Count; ++i) {
-    QString text = m_pEditValue[i]->text();
-    value[i] = text.toDouble();
+    s_nValue[i] = m_pSlider[i]->value();
+    sum += m_pSlider[i]->value();
   }
+  if (sum == 0) {
+    return;
+  }
+  for (int i = 1; i < QPlanningCostWidget::Count; ++i) {
+    value[i] = (double)m_pSlider[i]->value() / (double)sum;
+  }
+}
+
+void QCostValueDialog::onValueChanged(int)
+{
+  double value[QPlanningCostWidget::Count];
+  memset(value, 0, sizeof(double) * QPlanningCostWidget::Count);
+  this->calcPerccent(value);
+  this->setCostValue(value);
+  emit costValue(value);
 }

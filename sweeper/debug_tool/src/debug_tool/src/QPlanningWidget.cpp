@@ -80,7 +80,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   QReadDataManagerRos::instance()->start_subscribe();
 
   m_nReplaySpeedIndex = 1;
-  memset(m_dCostValue, 0, sizeof(double) * QPlanningCostWidget::Count);
+  memset(m_dCostValue, 0, sizeof(int) * QPlanningCostWidget::Count);
 }
 
 QPlanningWidget::~QPlanningWidget()
@@ -289,11 +289,11 @@ int QPlanningWidget::replaySpeedIndex()
 void QPlanningWidget::setCostValue(double value[])
 {
   memcpy(m_dCostValue, value, sizeof(double) * QPlanningCostWidget::Count);
-}
-
-void QPlanningWidget::getCostValue(double value[])
-{
-  memcpy(value, m_dCostValue, sizeof(double) * QPlanningCostWidget::Count);
+  for (int i = 0; i < 3; ++i) {
+    if (m_bShowVisible[i]) {
+      this->onSetFrameIndexReplay(i - 1, 0);
+    }
+  }
 }
 
 void QPlanningWidget::calcCostValue(debug_tool::ads_PlanningData4Debug &data)
@@ -331,6 +331,9 @@ void QPlanningWidget::onSelectedShow()
   for (int i = 0; i < 3; ++i) {
     if (m_bShowVisible[i]) {
       m_pWdgShow[i]->setSelected(m_pWdgShow[i] == sender);
+      if (i != 0 && m_pWdgShow[i] == sender) {
+        this->onSetFrameIndexReplay(i - 1, 0);
+      }
     }
   }
 }

@@ -317,8 +317,17 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
   constexpr int presice = 3;
   QString text = "id, cost, safety, lateral, smoothness, consistency, garbage: \n";
 
-  const auto &val_candidates = data.planning_trajectory_candidates;
-  const int size_candidates = qBound<int>(0, val_candidates.size(), 10);
+  auto val_candidates = data.planning_trajectory_candidates;
+  int size_candidates = val_candidates.size();
+  if (size_candidates > 10) {
+    using type_candidates = decltype(val_candidates[0]);
+    std::sort(val_candidates.begin(), val_candidates.end(), [](const type_candidates &val,
+              const type_candidates &val2){
+      return val.cost < val2.cost;
+    });
+  }
+
+  size_candidates = qBound<int>(0, size_candidates, 10);
   for (int i = 0; i < size_candidates; ++ i) {
     text += QString(
           "%1, %2, %3, %4, %5, %6, %7").
