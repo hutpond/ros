@@ -34,8 +34,6 @@ public:
   void setFunPosition(boost::function<void(float, float, float, float)>);
   void setViewResolution(int);
   void setShowAllTargets(bool);
-  void setSelected(bool);
-  bool isSelected();
 
 protected:
   virtual void mousePressEvent(QMouseEvent *);
@@ -68,9 +66,6 @@ protected:
   void xyToSl(const QPointF &, double &s, double &l);
   void slToXy(const double s, const double l, QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
-
-signals:
-  void selected();
 
 private:
   boost::function<void(float, float, float, float)> m_funPosition;

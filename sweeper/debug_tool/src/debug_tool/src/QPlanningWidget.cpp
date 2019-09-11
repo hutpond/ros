@@ -29,8 +29,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
 {
   this->setFont(G_TEXT_FONT);
   m_pWdgParam = new QPlanningParamWidget(this);
-  m_pWdgParam->setShowType(0);
-  m_pWdgParam->setShowType(1);
+  m_pWdgParam->setShowType(LivePlay);
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
   connect(m_pWdgParam, &QPlanningParamWidget::replayState,
@@ -38,19 +37,9 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
           this, &QPlanningWidget::onSetFrameIndexReplay);
 
-  for (int i = 0; i < 3; ++i) {
-    m_pWdgShow[i] = new QPlanningShowWidget(this);
-    m_pWdgShow[i]->setFunPosition(fun);
-    m_pWdgShow[i]->hide();
-    m_bShowVisible[i] = false;
-
-    m_pWdgShow[i]->setFunPosition(fun);
-    connect(m_pWdgShow[i], &QPlanningShowWidget::selected,
-            this, &QPlanningWidget::onSelectedShow);
-  }
-  m_pWdgShow[0]->show();
-  //m_pWdgShow[0]->setSelected(true);
-  m_bShowVisible[0] = true;
+  m_pWdgShow = new QPlanningShowWidget(this);
+  m_pWdgShow->setFunPosition(fun);
+  m_nShowType = LivePlay;
 
   namespace fs = boost::filesystem;
   m_fsPath = getenv("HOME");
@@ -80,7 +69,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   QReadDataManagerRos::instance()->start_subscribe();
 
   m_nReplaySpeedIndex = 1;
-  memset(m_dCostValue, 0, sizeof(int) * QPlanningCostWidget::Count);
+  memset(m_dCostValue, 0, sizeof(double) * QPlanningCostWidget::Count);
 }
 
 QPlanningWidget::~QPlanningWidget()
@@ -93,7 +82,7 @@ void QPlanningWidget::resizeEvent(QResizeEvent *)
   const int WIDTH = this->width();
   const int HEIGHT = this->height();
 
-  m_rectShow = QRect(
+  m_pWdgShow->setGeometry(
         0,
         0,
         WIDTH * W_PERCENT / 100,
@@ -105,46 +94,35 @@ void QPlanningWidget::resizeEvent(QResizeEvent *)
         WIDTH * (100 - W_PERCENT) / 100,
         HEIGHT
         );
-  this->showWidgets();
-}
-
-void QPlanningWidget::showEvent(QShowEvent *)
-{
-  this->showWidgets();
 }
 
 void QPlanningWidget::timerEvent(QTimerEvent *e)
 {
   int id = e->timerId();
   if (id == m_nTimerId) {
-    for (int i = 0; i < 2; ++i) {
-      if (m_bFlagPauseReplay[i]) {
-        continue;
-      }
-      if (m_itFile[i] == m_listPlanningFiles[i].end()) {
-        continue;
-      }
-      debug_tool::ads_PlanningData4Debug data;
-      //memset(&data, 0, sizeof(data));
-      std::string name = *m_itFile[i];
-      std::size_t index = name.find_last_of('/');
-      name = name.substr(index + 1, name.length() - (index + 1) - 1);
-      if (this->readFromJsonFile(*m_itFile[i], data)) {
-        m_pWdgShow[i + 1]->setPlanningData(data);
-        m_pWdgParam->setPlanningData(i, m_pWdgShow[i + 1]->isSelected(),data);
-        if (m_pWdgShow[i + 1]->isSelected()) {
-          QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
-          QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-          QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
-        }
-      }
-      else {
-        name += "-------- FAILED !!!!!!!!!!!!!!!!1";
-      }
-      QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
-      m_pWdgParam->setFrameOffset(i, 1);
-      ++m_itFile[i];
+    if (m_bFlagPauseReplay) {
+      return;
     }
+    if (m_itFile == m_listPlanningFiles.end()) {
+      return;
+    }
+    debug_tool::ads_PlanningData4Debug data;
+    std::string name = *m_itFile;
+    std::size_t index = name.find_last_of('/');
+    name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    if (this->readFromJsonFile(*m_itFile, data)) {
+      m_pWdgShow->setPlanningData(data);
+      m_pWdgParam->setPlanningData(data);
+      QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+      QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
+      QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
+    }
+    else {
+      name += "-------- FAILED !!!!!!!!!!!!!!!!1";
+    }
+    QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
+    m_pWdgParam->setFrameOffset(1);
+    ++m_itFile;
   }
 }
 
@@ -171,9 +149,7 @@ void QPlanningWidget::stopDisplay()
 ********************************************************/
 void QPlanningWidget::setShowAllTargets(bool show)
 {
-  for (int i = 0; i < 3; ++i) {
-    m_pWdgShow[i]->setShowAllTargets(show);
-  }
+  m_pWdgShow->setShowAllTargets(show);
 }
 
 /*******************************************************
@@ -183,12 +159,20 @@ void QPlanningWidget::setShowAllTargets(bool show)
 
  * @return
 ********************************************************/
-void QPlanningWidget::startReplay(int index, const QString &path)
+void QPlanningWidget::startReplay(const QString &path)
 {
-  if (index == 1 || index == 2) {
-    this->replayJson(index, path);
-    m_pWdgParam->setFrameCount(index - 1, m_listPlanningFiles[index - 1].size());
+  m_bFlagPauseReplay = false;
+  m_listPlanningFiles.clear();
+  this->fileList(path.toStdString(), m_listPlanningFiles);
+  m_pWdgParam->setFrameCount(m_listPlanningFiles.size());
+
+  m_itFile = m_listPlanningFiles.begin();
+  if (m_nTimerId != 0) {
+    killTimer(m_nTimerId);
+    m_nTimerId = 0;
   }
+  m_bFlagPauseReplay = false;
+  m_nTimerId = startTimer(REPLAY_MSEC[m_nReplaySpeedIndex]);
 }
 
 /*******************************************************
@@ -199,10 +183,7 @@ void QPlanningWidget::startReplay(int index, const QString &path)
 ********************************************************/
 void QPlanningWidget::setViewResolution(int index)
 {
-  this->showWidgets();
-  for (int i = 0; i < 3; ++i) {
-    m_pWdgShow[i]->setViewResolution(index);
-  }
+  m_pWdgShow->setViewResolution(index);
 }
 
 /*******************************************************
@@ -211,64 +192,38 @@ void QPlanningWidget::setViewResolution(int index)
 
  * @return
 ********************************************************/
-void QPlanningWidget::onSetFrameIndexReplay(int index, int frame)
+void QPlanningWidget::onSetFrameIndexReplay(int frame)
 {
-  if (index != 0 && index != 1) {
-    return;
-  }
-
   if (frame < 0) {
-    while (frame < 0 && m_itFile[index] != m_listPlanningFiles[index].begin()) {
+    while (frame < 0 && m_itFile != m_listPlanningFiles.begin()) {
       ++frame;
-      --m_itFile[index];
+      --m_itFile;
     }
   }
   else if (frame > 0) {
-    while (frame > 0 && m_itFile[index] != m_listPlanningFiles[index].end()) {
+    while (frame > 0 && m_itFile != m_listPlanningFiles.end()) {
       --frame;
-      ++m_itFile[index];
+      ++m_itFile;
     }
   }
-  if (m_itFile[index] != m_listPlanningFiles[index].end()) {
+  if (m_itFile != m_listPlanningFiles.end()) {
     debug_tool::ads_PlanningData4Debug data;
     //memset(&data, 0, sizeof(data));
-    std::string name = *m_itFile[index];
+    std::string name = *m_itFile;
     std::size_t pos = name.find_last_of('/');
     name = name.substr(pos + 1, name.length() - (pos + 1) - 1);
-    if (this->readFromJsonFile(*m_itFile[index], data)) {
-      m_pWdgShow[index + 1]->setPlanningData(data);
-      m_pWdgParam->setPlanningData(index, m_pWdgShow[index + 1]->isSelected(),data);
-      if (m_pWdgShow[index + 1]->isSelected()) {
-        QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
-        QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-        QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
-      }
+    if (this->readFromJsonFile(*m_itFile, data)) {
+      m_pWdgShow->setPlanningData(data);
+      m_pWdgParam->setPlanningData(data);
+      QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+      QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
+      //QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
     }
     else {
       name += "-------- FAILED !!!!!!!!!!!!!!!!1";
     }
     QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
   }
-}
-
-void QPlanningWidget::replayJson(int index, const QString &path)
-{
-  if (index != 1 && index != 2) return;
-
-  this->setShowIndex(index, true);
-  this->showWidgets();
-  m_bFlagPauseReplay[index - 1] = false;
-  m_listPlanningFiles[index - 1].clear();
-  this->fileList(path.toStdString(), m_listPlanningFiles[index - 1]);
-  m_pWdgParam->setShowType(index - 1);
-
-  m_itFile[index - 1] = m_listPlanningFiles[index - 1].begin();
-  if (m_nTimerId != 0) {
-    killTimer(m_nTimerId);
-    m_nTimerId = 0;
-  }
-  m_bFlagPauseReplay[index - 1] = false;
-  m_nTimerId = startTimer(REPLAY_MSEC[m_nReplaySpeedIndex]);
 }
 
 void QPlanningWidget::setReplaySpeedIndex(int index)
@@ -286,13 +241,21 @@ int QPlanningWidget::replaySpeedIndex()
   return m_nReplaySpeedIndex;
 }
 
+void QPlanningWidget::setShowType(int type)
+{
+  m_nShowType = type;
+  m_pWdgParam->setShowType(type);
+  if (type == LivePlay && m_nTimerId != 0) {
+    killTimer(m_nTimerId);
+    m_nTimerId = 0;
+  }
+}
+
 void QPlanningWidget::setCostValue(double value[])
 {
   memcpy(m_dCostValue, value, sizeof(double) * QPlanningCostWidget::Count);
-  for (int i = 0; i < 3; ++i) {
-    if (m_bShowVisible[i]) {
-      this->onSetFrameIndexReplay(i - 1, 0);
-    }
+  if (m_nShowType == RePlay) {
+    this->onSetFrameIndexReplay(0);
   }
 }
 
@@ -323,19 +286,6 @@ void QPlanningWidget::calcCostValue(debug_tool::ads_PlanningData4Debug &data)
       + m_dCostValue[QPlanningCostWidget::Smoothness] * trajectory.smoothness_cost
       + m_dCostValue[QPlanningCostWidget::Consistency] * trajectory.consistency_cost
       + m_dCostValue[QPlanningCostWidget::Garbage] * trajectory.garbage_cost;
-}
-
-void QPlanningWidget::onSelectedShow()
-{
-  QObject *sender = this->sender();
-  for (int i = 0; i < 3; ++i) {
-    if (m_bShowVisible[i]) {
-      m_pWdgShow[i]->setSelected(m_pWdgShow[i] == sender);
-      if (i != 0 && m_pWdgShow[i] == sender) {
-        this->onSetFrameIndexReplay(i - 1, 0);
-      }
-    }
-  }
 }
 
 bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_PlanningData4Debug &planningData)
@@ -376,15 +326,13 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
   debug_tool::ads_PlanningData4Debug &data = const_cast<debug_tool::ads_PlanningData4Debug &>(planningData);
   this->sortTrackTargets(data);
   this->saveDataToJsonFile(data);
-  this->calcCostValue(data);
-  if (m_bShowVisible[0]) {
-    m_pWdgShow[0]->setPlanningData(data);
-    if (m_pWdgShow[0]->isSelected()) {
-      m_pWdgParam->setPlanningData(0, true, data);
-      QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
-      QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-      QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
-    }
+  if (m_nShowType == LivePlay) {
+    this->calcCostValue(data);
+    m_pWdgShow->setPlanningData(data);
+    m_pWdgParam->setPlanningData(data);
+    QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
+    QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
+    //QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
   }
 }
 
@@ -1118,67 +1066,3 @@ void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
     }
   }
 }
-
-void QPlanningWidget::setShowIndex(int index, bool visible)
-{
-  if (index < 0 || index > 2) {
-    return;
-  }
-  if (!visible) {
-    int sum = 0;
-    for (int i = 0; i < 3; ++i) {
-      if (m_bShowVisible[i]) ++ sum;
-    }
-    if (sum <= 1) return;
-  }
-  m_pWdgShow[index]->setVisible(visible);
-  m_bShowVisible[index] = visible;
-  if (visible) {
-    for (int i = 0; i < 3; ++i) {
-      m_pWdgShow[i]->setSelected(i == index);
-    }
-  }
-  else if (m_pWdgShow[index]->isSelected()) {
-    m_pWdgShow[index]->setSelected(false);
-    for (int i = 0; i < 3; ++i) {
-      if (i == index) continue;
-      if (m_bShowVisible[i]) {
-        m_pWdgShow[i]->setSelected(true);
-        break;
-      }
-    }
-  }
-
-  this->showWidgets();
-}
-
-bool QPlanningWidget::isIndexShow(int index)
-{
-  if (index < 0 || index > 2) {
-    return false;
-  }
-  return m_bShowVisible[index];
-}
-
-void QPlanningWidget::showWidgets()
-{
-  int sum = 0;
-  for (int i = 0; i < 3; ++i) {
-    if (m_bShowVisible[i]) ++ sum;
-  }
-  int pos_x = 0;
-  const int width = m_rectShow.width() / sum;
-  for (int i = 0; i < 3; ++i) {
-    if (m_bShowVisible[i]) {
-      QRect rect = QRect(
-            pos_x,
-            m_rectShow.y(),
-            width,
-            m_rectShow.height()
-            );
-      m_pWdgShow[i]->setGeometry(rect);
-      pos_x += width;
-    }
-  }
-}
-

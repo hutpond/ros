@@ -27,10 +27,10 @@ public:
   ~QPlanningParamWidget();
 
   void setShowType(int);
-  void setFrameCount(int, int);
-  void setPlanningData(int, bool, const debug_tool::ads_PlanningData4Debug &);
+  void setFrameCount(int);
+  void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void showMousePosition(float, float, float, float);
-  void setFrameOffset(int, int);
+  void setFrameOffset(int);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -41,9 +41,9 @@ protected:
   QString createTrajectoryString(const debug_tool::ads_PlanningData4Debug &);
 
 signals:
-  void replayState(int, bool);
+  void replayState(bool);
 signals:
-  void replayFrameOffset(int, int);
+  void replayFrameOffset(int);
 
 private slots:
   void onBtnClicked();
@@ -53,18 +53,18 @@ private:
   QLabel *m_pLblMousePosName;
   QLabel *m_pLblMousePosValue;
 
-  QLabel *m_pLblDecisionName[2];
-  QLabel *m_pLblDecisionValue[2];
+  QLabel *m_pLblDecisionName;
+  QLabel *m_pLblDecisionValue;
 
-  QPushButton *m_pBtnPause[2];
-  QPushButton *m_pBtnResume[2];
-  QPushButton *m_pBtnBack[2];
-  QPushButton *m_pBtnNext[2];
-  QSlider *m_pSliderPlay[2];
+  QPushButton *m_pBtnPause;
+  QPushButton *m_pBtnResume;
+  QPushButton *m_pBtnBack;
+  QPushButton *m_pBtnNext;
+  QSlider *m_pSliderPlay;
 
   QTextBrowser *m_pTextBrowser;
 
-  int m_nSliderValue[2];
+  int m_nSliderValue;
 };
 
 #endif // Q_PLANNING_PARAM_WIDGET_H

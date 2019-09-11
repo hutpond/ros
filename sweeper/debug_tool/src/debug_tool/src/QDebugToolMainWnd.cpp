@@ -43,7 +43,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->createViewToolBar();
   this->createSettingToolBar();
 
-  this->setWindowTitle("Debug Tool V3.0");
+  this->setWindowTitle("Debug Tool V3.1");
 
   QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
@@ -365,7 +365,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(PLANNING_TOOL_BAR);
 
-  QAction *newAct = new QAction(tr("REPLAY"), this);
+  QAction *newAct = new QAction(tr("LIVE"), this);
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningLiveDisplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -373,7 +373,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(255, 250, 220);");
 
-  newAct = new QAction(tr("REPLAY2"), this);
+  newAct = new QAction(tr("REPLAY"), this);
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningReplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -391,25 +391,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionPlanningLiveDisplay()
 {
-  static QString strOpenPath;
-  if (strOpenPath.isEmpty()) {
-    namespace fs = boost::filesystem;
-    fs::path fsPath = getenv("HOME");
-    fsPath /= "PlanningData";
-    strOpenPath = QString::fromStdString(fsPath.string());
-  }
-  QString strPath = QFileDialog::getExistingDirectory(this, tr("Json Directory"),
-                                    strOpenPath,
-                                    QFileDialog::ShowDirsOnly
-                                    | QFileDialog::DontResolveSymlinks);
-  if (!strPath.isEmpty()) {
-    int index = strPath.lastIndexOf('/');
-    strOpenPath = strPath.mid(0, index);
-    if (!m_pWdgPlanning->isIndexShow(1)) {
-      this->onActionShowWidget2();
-    }
-    m_pWdgPlanning->startReplay(1, strPath);
-  }
+  m_pWdgPlanning->setShowType(QPlanningWidget::LivePlay);
 }
 
 /*******************************************************
@@ -434,10 +416,8 @@ void QDebugToolMainWnd::onActionPlanningReplay()
   if (!strPath.isEmpty()) {
     int index = strPath.lastIndexOf('/');
     strOpenPath = strPath.mid(0, index);
-    if (!m_pWdgPlanning->isIndexShow(2)) {
-      this->onActionShowWidget3();
-    }
-    m_pWdgPlanning->startReplay(2, strPath);
+    m_pWdgPlanning->setShowType(QPlanningWidget::RePlay);
+    m_pWdgPlanning->startReplay(strPath);
   }
 }
 
@@ -536,36 +516,6 @@ void QDebugToolMainWnd::onActionViewReset()
 void QDebugToolMainWnd::createSettingToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
-  m_pToolBarSetting = pToolBar;
-
-  m_pActionShowWidget = new QAction(tr("S1"), this);
-  connect(m_pActionShowWidget, &QAction::triggered,
-          this, &QDebugToolMainWnd::onActionShowWidget);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(m_pActionShowWidget);
-  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
-
-  m_pActionShowWidget2 = new QAction(tr("H2"), this);
-  connect(m_pActionShowWidget2, &QAction::triggered,
-          this, &QDebugToolMainWnd::onActionShowWidget2);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(m_pActionShowWidget2);
-  pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget2);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: gray;");
-  pToolBar->insertSeparator(m_pActionShowWidget2);
-
-  m_pActionShowWidget3 = new QAction(tr("H3"), this);
-  connect(m_pActionShowWidget3, &QAction::triggered,
-          this, &QDebugToolMainWnd::onActionShowWidget3);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(m_pActionShowWidget3);
-  pWdgAction = pToolBar->widgetForAction(m_pActionShowWidget3);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: gray;");
-  pToolBar->insertSeparator(m_pActionShowWidget3);
 
   m_bFlagShowAllTargets = false;
   m_pActionShowTargets = new QAction(tr("T"), this);
@@ -573,7 +523,7 @@ void QDebugToolMainWnd::createSettingToolBar()
           this, &QDebugToolMainWnd::onActionShowTargets);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(m_pActionShowTargets);
-  pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
+  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   pToolBar->insertSeparator(m_pActionShowTargets);
@@ -601,51 +551,6 @@ void QDebugToolMainWnd::onActionSetCost()
   dlg.exec();
   disconnect(&dlg, &QCostValueDialog::costValue,
           m_pWdgPlanning, &QPlanningWidget::setCostValue);
-}
-
-void QDebugToolMainWnd::onActionShowWidget()
-{
-  m_pWdgPlanning->setShowIndex(0, !m_pWdgPlanning->isIndexShow(0));
-
-  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget);
-  if (m_pWdgPlanning->isIndexShow(0)) {
-    m_pActionShowWidget->setText(tr("S1"));
-    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
-  }
-  else {
-    m_pActionShowWidget->setText(tr("H1"));
-    pWdgAction->setStyleSheet("background-color: gray;");
-  }
-}
-
-void QDebugToolMainWnd::onActionShowWidget2()
-{
-  m_pWdgPlanning->setShowIndex(1, !m_pWdgPlanning->isIndexShow(1));
-
-  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget2);
-  if (m_pWdgPlanning->isIndexShow(1)) {
-    m_pActionShowWidget2->setText(tr("S2"));
-    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
-  }
-  else {
-    m_pActionShowWidget2->setText(tr("H2"));
-    pWdgAction->setStyleSheet("background-color: gray;");
-  }
-}
-
-void QDebugToolMainWnd::onActionShowWidget3()
-{
-  m_pWdgPlanning->setShowIndex(2, !m_pWdgPlanning->isIndexShow(2));
-
-  QWidget *pWdgAction = m_pToolBarSetting->widgetForAction(m_pActionShowWidget3);
-  if (m_pWdgPlanning->isIndexShow(2)) {
-    m_pActionShowWidget3->setText(tr("S3"));
-    pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
-  }
-  else {
-    m_pActionShowWidget3->setText(tr("H3"));
-    pWdgAction->setStyleSheet("background-color: gray;");
-  }
 }
 
 /*******************************************************

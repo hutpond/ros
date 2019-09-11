@@ -27,7 +27,6 @@ QPlanningShowWidget::~QPlanningShowWidget()
 
 void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 {
-  emit selected();
   if (m_planningData.num_reference_splines == 0) {
     return;
   }
@@ -48,7 +47,6 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
   m_planningData = data;
-  //memcpy(&m_planningData, &data, sizeof(data));
   this->calcMapRect();
   this->drawImage();
   this->update();
@@ -64,6 +62,7 @@ void QPlanningShowWidget::calcMapRect()
   if (m_planningData.num_reference_splines == 0) {
     m_planningData.left_half_road_width = 5;
     m_planningData.right_half_road_width = 3;
+    m_planningData.vehicle_length = 2.2;
   }
 
   // 计算显示区域物理范围，车体坐标系，X正向：上，Y正向：左，坐标原点：车中心
@@ -143,21 +142,6 @@ void QPlanningShowWidget::setShowAllTargets(bool show)
   this->update();
 }
 
-void QPlanningShowWidget::setSelected(bool selected)
-{
-  m_bFlagSelected = selected;
-  if (this->isVisible()) {
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
-  }
-}
-
-bool QPlanningShowWidget::isSelected()
-{
-  return m_bFlagSelected;
-}
-
 /*******************************************************
  * @brief 根据数据将图像画在QImage上
 
@@ -168,14 +152,12 @@ void QPlanningShowWidget::drawImage()
   m_image = QImage(m_rectPicture.width(), m_rectPicture.height(), QImage::Format_RGB888);
   QPainter painter(&m_image);
   painter.fillRect(m_image.rect(), QColor(230, 230, 230));
-  this->drawMapBorder(painter);
-
+  this->drawAxis(painter);
   if (m_planningData.num_reference_splines == 0) {
     return;
   }
   this->drawRoadSide(painter);
   this->drawSweeper(painter);
-  this->drawAxis(painter);
   this->drawAreaLine(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);

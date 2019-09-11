@@ -58,9 +58,6 @@ protected slots:
   void onActionViewReset();
   void onActionReplaySpeed();
 
-  void onActionShowWidget();
-  void onActionShowWidget2();
-  void onActionShowWidget3();
   void onActionShowTargets();
   void onActionSetCost();
   void onActionHelpAbout();
@@ -72,10 +69,6 @@ private:
 
   QAction *m_pActionReplaySpeed;
 
-  QToolBar *m_pToolBarSetting;
-  QAction *m_pActionShowWidget;
-  QAction *m_pActionShowWidget2;
-  QAction *m_pActionShowWidget3;
   bool m_bFlagShowAllTargets;
   QAction *m_pActionShowTargets;
 

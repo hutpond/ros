@@ -29,17 +29,22 @@ class QPlanningWidget : public QBaseWidget
   Q_OBJECT
 
 public:
+  enum {
+    LivePlay,
+    RePlay
+  };
+
+public:
   QPlanningWidget(QWidget *parent);
   ~QPlanningWidget();
 
   void setViewResolution(int);
-  void startReplay(int, const QString &);
+  void startReplay(const QString &);
   void stopDisplay();
   void setShowAllTargets(bool);
-  void setShowIndex(int, bool);
-  bool isIndexShow(int);
   void setReplaySpeedIndex(int);
   int replaySpeedIndex();
+  void setShowType(int);
 
 public:
   void setCostValue(double []);
@@ -47,31 +52,26 @@ public:
 protected:
   virtual void resizeEvent(QResizeEvent *);
   virtual void timerEvent(QTimerEvent *);
-  virtual void showEvent(QShowEvent *);
 
 protected:
-  void replayJson(int, const QString &);
   bool readFromJsonFile(const std::string &, debug_tool::ads_PlanningData4Debug &);
 
   void sortTrackTargets(debug_tool::ads_PlanningData4Debug &);
   void saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &);
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
 
-  void showWidgets();
   void calcCostValue(debug_tool::ads_PlanningData4Debug &);
 
 protected slots:
-  void onSetFrameIndexReplay(int, int);
+  void onSetFrameIndexReplay(int);
   void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
-  void onSelectedShow();
 
 private:
-  QPlanningShowWidget *m_pWdgShow[3];
+  QPlanningShowWidget *m_pWdgShow;
   QPlanningParamWidget *m_pWdgParam;
 
-  bool m_bShowVisible[3];
+  int m_nShowType;
   boost::filesystem::path m_fsPath;
-  QRect m_rectShow;
 
   int m_nReplaySpeedIndex;
 

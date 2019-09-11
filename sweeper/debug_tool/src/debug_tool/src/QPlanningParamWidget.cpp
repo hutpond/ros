@@ -22,26 +22,24 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pLblMousePosName = new QLabel(tr("鼠标坐标"), this);
   m_pLblMousePosValue = new QLabel(this);
 
-  for (int i = 0; i < 2; ++i) {
-    m_pLblDecisionName[i] = new QLabel(tr("Decision"), this);
-    m_pLblDecisionValue[i] = new QLabel(this);
+  m_pLblDecisionName = new QLabel(tr("Decision"), this);
+  m_pLblDecisionValue = new QLabel(this);
 
-    m_pBtnPause[i] = new QPushButton(tr("暂停"), this);
-    connect(m_pBtnPause[i], &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
+  m_pBtnPause = new QPushButton(tr("暂停"), this);
+  connect(m_pBtnPause, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
 
-    m_pBtnResume[i] = new QPushButton(tr("恢复"), this);
-    connect(m_pBtnResume[i], &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
+  m_pBtnResume = new QPushButton(tr("恢复"), this);
+  connect(m_pBtnResume, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
 
-    m_pBtnBack[i] = new QPushButton(tr("后退"), this);
-    connect(m_pBtnBack[i], &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
+  m_pBtnBack = new QPushButton(tr("后退"), this);
+  connect(m_pBtnBack, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
 
-    m_pBtnNext[i] = new QPushButton(tr("前进"), this);
-    connect(m_pBtnNext[i], &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
+  m_pBtnNext = new QPushButton(tr("前进"), this);
+  connect(m_pBtnNext, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
 
-    m_pSliderPlay[i] = new QSlider(Qt::Horizontal, this);
-    connect(m_pSliderPlay[i], &QSlider::valueChanged,
-            this, &QPlanningParamWidget::onSliderValueChanged);
-  }
+  m_pSliderPlay = new QSlider(Qt::Horizontal, this);
+  connect(m_pSliderPlay, &QSlider::valueChanged,
+          this, &QPlanningParamWidget::onSliderValueChanged);
 
   m_pTextBrowser = new QTextBrowser(this);
 }
@@ -56,14 +54,29 @@ QPlanningParamWidget::~QPlanningParamWidget()
 
  * @return
 ********************************************************/
-void QPlanningParamWidget::setShowType(int index)
+void QPlanningParamWidget::setShowType(int type)
 {
-  m_pBtnPause[index]->setEnabled(true);
-  m_pBtnResume[index]->setEnabled(false);
-  m_pBtnBack[index]->setEnabled(false);
-  m_pBtnNext[index]->setEnabled(false);
-  m_pSliderPlay[index]->setEnabled(false);
-  m_nSliderValue[index] = 0;
+  if (type == QPlanningWidget::LivePlay) {
+    m_pBtnPause->setVisible(false);
+    m_pBtnResume->setVisible(false);
+    m_pBtnBack->setVisible(false);
+    m_pBtnNext->setVisible(false);
+    m_pSliderPlay->setVisible(false);
+  }
+  else {
+    m_pBtnPause->setVisible(true);
+    m_pBtnResume->setVisible(true);
+    m_pBtnBack->setVisible(true);
+    m_pBtnNext->setVisible(true);
+    m_pSliderPlay->setVisible(true);
+
+    m_pBtnPause->setEnabled(true);
+    m_pBtnResume->setEnabled(false);
+    m_pBtnBack->setEnabled(false);
+    m_pBtnNext->setEnabled(false);
+    m_pSliderPlay->setEnabled(false);
+    m_nSliderValue = 0;
+  }
 }
 
 /*******************************************************
@@ -72,18 +85,18 @@ void QPlanningParamWidget::setShowType(int index)
 
  * @return
 ********************************************************/
-void QPlanningParamWidget::setFrameCount(int index, int count)
+void QPlanningParamWidget::setFrameCount(int count)
 {
-  m_pSliderPlay[index]->setMinimum(0);
-  m_pSliderPlay[index]->setMaximum(count);
-  m_pSliderPlay[index]->setPageStep(1);
-  m_pSliderPlay[index]->setSingleStep(1);
+  m_pSliderPlay->setMinimum(0);
+  m_pSliderPlay->setMaximum(count);
+  m_pSliderPlay->setPageStep(1);
+  m_pSliderPlay->setSingleStep(1);
 
-  m_pSliderPlay[index]->setValue(0);
-  m_nSliderValue[index] = 0;
+  m_pSliderPlay->setValue(0);
+  m_nSliderValue = 0;
 }
 
-void QPlanningParamWidget::setPlanningData(int i, bool cost, const debug_tool::ads_PlanningData4Debug &data)
+void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
@@ -91,25 +104,23 @@ void QPlanningParamWidget::setPlanningData(int i, bool cost, const debug_tool::a
   int nIndexRadar = static_cast<int>(data.radar28f_decision);
   int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
   int nIndexTrack = static_cast<int>(data.track_target_decision);
-  m_pLblDecisionValue[i]->setFont(G_TEXT_FONT);
+  m_pLblDecisionValue->setFont(G_TEXT_FONT);
   QString strText = QString("%1 [us: %2 r28: %3 r73: %4 track: %5]").
       arg(this->getDecisionText(nIndex)).
       arg(this->getDecisionText(nIndexUs)).
       arg(this->getDecisionText(nIndexRadar)).
       arg(this->getDecisionText(nIndexRadar73)).
       arg(this->getDecisionText(nIndexTrack));
-  m_pLblDecisionValue[i]->setText(strText);
+  m_pLblDecisionValue->setText(strText);
   if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue[i]->setStyleSheet("background-color: rgb(0, 0, 0, 0);");
+    m_pLblDecisionValue->setStyleSheet("background-color: rgb(0, 0, 0, 0);");
   }
   else {
-    m_pLblDecisionValue[i]->setStyleSheet("background-color: rgb(255, 0, 0);");
+    m_pLblDecisionValue->setStyleSheet("background-color: rgb(255, 0, 0);");
   }
 
   // data
-  if (cost) {
-    m_pTextBrowser->setText(this->createTrajectoryString(data));
-  }
+  m_pTextBrowser->setText(this->createTrajectoryString(data));
 }
 
 QString QPlanningParamWidget::getDecisionText(int index)
@@ -165,12 +176,12 @@ void QPlanningParamWidget::showMousePosition(float x, float y, float s, float l)
 
  * @return
 ********************************************************/
-void QPlanningParamWidget::setFrameOffset(int index, int offset)
+void QPlanningParamWidget::setFrameOffset(int offset)
 {
-  int nValue = m_nSliderValue[index] + offset;
-  m_nSliderValue[index] = qBound<int>(m_pSliderPlay[index]->minimum(),
-                                      nValue, m_pSliderPlay[index]->maximum());
-  m_pSliderPlay[index]->setValue(m_nSliderValue[index]);
+  int nValue = m_nSliderValue + offset;
+  m_nSliderValue = qBound<int>(m_pSliderPlay->minimum(),
+                                      nValue, m_pSliderPlay->maximum());
+  m_pSliderPlay->setValue(m_nSliderValue);
 }
 
 /*******************************************************
@@ -182,53 +193,29 @@ void QPlanningParamWidget::setFrameOffset(int index, int offset)
 void QPlanningParamWidget::onBtnClicked()
 {
   QObject *sender = this->sender();
-  if (sender == m_pBtnPause[0]) {
-    m_pBtnPause[0]->setEnabled(false);
-    m_pBtnResume[0]->setEnabled(true);
-    m_pBtnBack[0]->setEnabled(true);
-    m_pBtnNext[0]->setEnabled(true);
-    m_pSliderPlay[0]->setEnabled(true);
-    emit replayState(0, true);
+  if (sender == m_pBtnPause) {
+    m_pBtnPause->setEnabled(false);
+    m_pBtnResume->setEnabled(true);
+    m_pBtnBack->setEnabled(true);
+    m_pBtnNext->setEnabled(true);
+    m_pSliderPlay->setEnabled(true);
+    emit replayState(true);
   }
-  else if (sender == m_pBtnPause[1]) {
-    m_pBtnPause[1]->setEnabled(false);
-    m_pBtnResume[1]->setEnabled(true);
-    m_pBtnBack[1]->setEnabled(true);
-    m_pBtnNext[1]->setEnabled(true);
-    m_pSliderPlay[1]->setEnabled(true);
-    emit replayState(1, true);
+  else if (sender == m_pBtnResume) {
+    m_pBtnPause->setEnabled(true);
+    m_pBtnResume->setEnabled(false);
+    m_pBtnBack->setEnabled(false);
+    m_pBtnNext->setEnabled(false);
+    m_pSliderPlay->setEnabled(false);
+    emit replayState(false);
   }
-  else if (sender == m_pBtnResume[0]) {
-    m_pBtnPause[0]->setEnabled(true);
-    m_pBtnResume[0]->setEnabled(false);
-    m_pBtnBack[0]->setEnabled(false);
-    m_pBtnNext[0]->setEnabled(false);
-    m_pSliderPlay[0]->setEnabled(false);
-    emit replayState(0, false);
+  else if (sender == m_pBtnBack) {
+    this->setFrameOffset(-1);
+    emit replayFrameOffset(-1);
   }
-  else if (sender == m_pBtnResume[1]) {
-    m_pBtnPause[1]->setEnabled(true);
-    m_pBtnResume[1]->setEnabled(false);
-    m_pBtnBack[1]->setEnabled(false);
-    m_pBtnNext[1]->setEnabled(false);
-    m_pSliderPlay[1]->setEnabled(false);
-    emit replayState(1, false);
-  }
-  else if (sender == m_pBtnBack[0]) {
-    this->setFrameOffset(0, -1);
-    emit replayFrameOffset(0, -1);
-  }
-  else if (sender == m_pBtnBack[1]) {
-    this->setFrameOffset(1, -1);
-    emit replayFrameOffset(1, -1);
-  }
-  else if (sender == m_pBtnNext[0]) {
-    this->setFrameOffset(0, 1);
-    emit replayFrameOffset(0, 1);
-  }
-  else if (sender == m_pBtnNext[1]) {
-    this->setFrameOffset(1, 1);
-    emit replayFrameOffset(1, 1);
+  else if (sender == m_pBtnNext) {
+    this->setFrameOffset(1);
+    emit replayFrameOffset(1);
   }
 }
 
@@ -240,12 +227,9 @@ void QPlanningParamWidget::onBtnClicked()
 ********************************************************/
 void QPlanningParamWidget::onSliderValueChanged(int value)
 {
-  QObject *sender = this->sender();
-  for (int i = 0; i < 2; ++i) {
-    if (sender == m_pSliderPlay[i] && m_nSliderValue[i] != value) {
-      emit replayFrameOffset(i, value - m_nSliderValue[i]);
-      m_nSliderValue[i] = value;
-    }
+  if (m_nSliderValue != value) {
+    emit replayFrameOffset(value - m_nSliderValue);
+    m_nSliderValue = value;
   }
 }
 
@@ -273,28 +257,26 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   const int size_btn = 4;
   const int BTN_W = (WIDTH - SPACE_X * (size_btn + 1))  / size_btn;
 
-  for (int i = 0; i < 2; ++i) {
-    xPos = SPACE_X;
-    yPos += ITEM_H + SPACE_Y;
+  xPos = SPACE_X;
+  yPos += ITEM_H + SPACE_Y;
 
-    m_pLblDecisionName[i]->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-    xPos += ITEM_NAME_W + SPACE_X;
-    m_pLblDecisionValue[i]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-    yPos += ITEM_H + SPACE_Y;
+  m_pLblDecisionName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
+  xPos += ITEM_NAME_W + SPACE_X;
+  m_pLblDecisionValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  yPos += ITEM_H + SPACE_Y;
 
-    xPos = SPACE_X;
-    m_pBtnPause[i]->setGeometry(xPos, yPos, BTN_W, ITEM_H);
-    xPos += BTN_W + SPACE_X;
-    m_pBtnResume[i]->setGeometry(xPos, yPos, BTN_W, ITEM_H);
-    xPos += BTN_W + SPACE_X;
-    m_pBtnBack[i]->setGeometry(xPos, yPos, BTN_W, ITEM_H);
-    xPos += BTN_W + SPACE_X;
-    m_pBtnNext[i]->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos = SPACE_X;
+  m_pBtnPause->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnResume->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnBack->setGeometry(xPos, yPos, BTN_W, ITEM_H);
+  xPos += BTN_W + SPACE_X;
+  m_pBtnNext->setGeometry(xPos, yPos, BTN_W, ITEM_H);
 
-    xPos = SPACE_X;
-    yPos += ITEM_H + SPACE_Y;
-    m_pSliderPlay[i]->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H);
-  }
+  xPos = SPACE_X;
+  yPos += ITEM_H + SPACE_Y;
+  m_pSliderPlay->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
@@ -303,13 +285,11 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 
 void QPlanningParamWidget::showReplayControls(bool show)
 {
-  for (int i = 0; i < 2; ++i) {
-    m_pBtnPause[i]->setHidden(!show);
-    m_pBtnResume[i]->setHidden(!show);
-    m_pBtnBack[i]->setHidden(!show);
-    m_pBtnNext[i]->setHidden(!show);
-    m_pSliderPlay[i]->setHidden(!show);
-  }
+  m_pBtnPause->setHidden(!show);
+  m_pBtnResume->setHidden(!show);
+  m_pBtnBack->setHidden(!show);
+  m_pBtnNext->setHidden(!show);
+  m_pSliderPlay->setHidden(!show);
 }
 
 QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_PlanningData4Debug &data)

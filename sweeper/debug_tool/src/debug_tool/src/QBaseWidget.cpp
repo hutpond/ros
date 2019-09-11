@@ -25,22 +25,20 @@ QBaseWidget::~QBaseWidget()
 
  * @return
 ********************************************************/
-void QBaseWidget::replay(int index)
+void QBaseWidget::replay()
 {
-  if (index != 0 && index != 1) return;
+  std::string path = m_fspath.string();
 
-  std::string path = m_fspath[index].string();
+  m_bFlagPauseReplay = false;
+  m_listPlanningFiles.clear();
+  this->fileList(path, m_listPlanningFiles);
 
-  m_bFlagPauseReplay[index] = false;
-  m_listPlanningFiles[index].clear();
-  this->fileList(path, m_listPlanningFiles[index]);
-
-  m_itFile[index] = m_listPlanningFiles[index].begin();
+  m_itFile = m_listPlanningFiles.begin();
   if (m_nTimerId != 0) {
     killTimer(m_nTimerId);
     m_nTimerId = 0;
   }
-  m_bFlagPauseReplay[index] = false;
+  m_bFlagPauseReplay = false;
   //m_nTimerId = startTimer(m_nIntervalMillSecs);
 }
 
@@ -102,8 +100,7 @@ void QBaseWidget::setReplayInterval(int ms)
 
  * @return
 ********************************************************/
-void QBaseWidget::onReplayState(int index, bool pause)
+void QBaseWidget::onReplayState(bool pause)
 {
-  if (index != 0 && index != 1) return;
-  m_bFlagPauseReplay[index] = pause;
+  m_bFlagPauseReplay = pause;
 }

@@ -24,20 +24,20 @@ public:
   ~QBaseWidget();
 
 protected:
-  void replay(int);
+  void replay();
   std::list<std::string> pathList(const std::string &);
   void fileList(const std::string &, std::vector<std::string> &);
 
 protected slots:
   void setReplayInterval(int);
-  void onReplayState(int, bool);
+  void onReplayState(bool);
 
 protected:
-  boost::filesystem::path m_fspath[2];
+  boost::filesystem::path m_fspath;
 //  boost::atomic_int m_nIntervalMillSecs; // replay interval mill seconds
-  boost::atomic_bool m_bFlagPauseReplay[2]; // replay pause state;
-  std::vector<std::string> m_listPlanningFiles[2];
-  std::vector<std::string>::iterator m_itFile[2];  // 文件名链表迭代器
+  boost::atomic_bool m_bFlagPauseReplay; // replay pause state;
+  std::vector<std::string> m_listPlanningFiles;
+  std::vector<std::string>::iterator m_itFile;  // 文件名链表迭代器
   int m_nTimerId;         // replay定时器id
 };
 
