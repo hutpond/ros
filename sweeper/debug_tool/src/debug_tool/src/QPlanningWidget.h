@@ -46,9 +46,6 @@ public:
   int replaySpeedIndex();
   void setShowType(int);
 
-public:
-  void setCostValue(double []);
-
 protected:
   virtual void resizeEvent(QResizeEvent *);
   virtual void timerEvent(QTimerEvent *);
@@ -65,9 +62,10 @@ protected:
 protected slots:
   void onSetFrameIndexReplay(int);
   void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
+  void onCostValueChanged();
 
 private:
-  QPlanningShowWidget *m_pWdgShow;
+  QPlanningShowWidget *m_pWdgShow[2];
   QPlanningParamWidget *m_pWdgParam;
 
   int m_nShowType;

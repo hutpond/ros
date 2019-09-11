@@ -42,8 +42,6 @@ protected:
   QPointF m_ptfMouseMove;   // 鼠标移动位置记录
   QPointF m_ptfTranslate;   // 移动距离
   float m_fDisplayRatio;    // 缩放比例
-
-  bool m_bFlagSelected;     // 选中
 };
 
 #endif // Q_BASE_SHOW_WIDGET_H

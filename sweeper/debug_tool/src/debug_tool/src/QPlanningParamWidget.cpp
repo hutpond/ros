@@ -15,6 +15,7 @@
 #include "QPlanningParamWidget.h"
 #include "QPlanningWidget.h"
 #include "GlobalDefine.h"
+#include "QCostValueWidget.h"
 
 QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   : QWidget(parent)
@@ -41,6 +42,9 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   connect(m_pSliderPlay, &QSlider::valueChanged,
           this, &QPlanningParamWidget::onSliderValueChanged);
 
+  m_pWdgCostValue = new QCostValueWidget(this);
+  connect(m_pWdgCostValue, &QCostValueWidget::costValueChanged,
+          this, &QPlanningParamWidget::costValueChanged);
   m_pTextBrowser = new QTextBrowser(this);
 }
 
@@ -278,9 +282,12 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   yPos += ITEM_H + SPACE_Y;
   m_pSliderPlay->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H);
 
-  xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
-  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 20);
+  m_pWdgCostValue->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 8);
+
+  xPos = SPACE_X;
+  yPos += ITEM_H * 8 + SPACE_Y;
+  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 13);
 }
 
 void QPlanningParamWidget::showReplayControls(bool show)
@@ -294,8 +301,28 @@ void QPlanningParamWidget::showReplayControls(bool show)
 
 QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_PlanningData4Debug &data)
 {
+  double value[QPlanningCostWidget::Count];
+  QCostValueWidget::getCostValue(value);
+
   constexpr int presice = 3;
   QString text = "id, cost, safety, lateral, smoothness, consistency, garbage: \n";
+
+  const auto &val_planning_trajectory = data.planning_trajectory;
+//  double new_cost = value[QPlanningCostWidget::Safety] * val_planning_trajectory.safety_cost
+//      + value[QPlanningCostWidget::Lateral] * val_planning_trajectory.lateral_cost
+//      + value[QPlanningCostWidget::Smoothness] * val_planning_trajectory.smoothness_cost
+//      + value[QPlanningCostWidget::Consistency] * val_planning_trajectory.consistency_cost
+//      + value[QPlanningCostWidget::Garbage] * val_planning_trajectory.garbage_cost;
+  text += QString(
+        "* %1,  %2,  %3,  %4,  %5,  %6,  %7").
+      arg(val_planning_trajectory.id).
+      arg(val_planning_trajectory.cost, 0, 'f', presice).
+      arg(val_planning_trajectory.safety_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.lateral_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.smoothness_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.consistency_cost, 0, 'f', presice).
+      arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);
+  text.append("\n\n");
 
   auto val_candidates = data.planning_trajectory_candidates;
   int size_candidates = val_candidates.size();
@@ -306,11 +333,10 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
       return val.cost < val2.cost;
     });
   }
-
   size_candidates = qBound<int>(0, size_candidates, 10);
   for (int i = 0; i < size_candidates; ++ i) {
     text += QString(
-          "%1, %2, %3, %4, %5, %6, %7").
+          "%1,  %2,  %3,  %4,  %5,  %6,  %7").
         arg(val_candidates[i].id).
         arg(val_candidates[i].cost, 0, 'f', presice).
         arg(val_candidates[i].safety_cost, 0, 'f', presice).
@@ -321,16 +347,17 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
     text.append('\n');
   }
 
-  const auto &val_planning_trajectory = data.planning_trajectory;
+  text.append('\n');
   text += QString(
-        "* %1, %2, %3, %4, %5, %6, %7").
-      arg(val_planning_trajectory.id).
-      arg(val_planning_trajectory.cost, 0, 'f', presice).
-      arg(val_planning_trajectory.safety_cost, 0, 'f', presice).
-      arg(val_planning_trajectory.lateral_cost, 0, 'f', presice).
-      arg(val_planning_trajectory.smoothness_cost, 0, 'f', presice).
-      arg(val_planning_trajectory.consistency_cost, 0, 'f', presice).
-      arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);
+        "# %1,  %2,  %3,  %4,  %5,  %6,  %7").
+      arg("/").
+      arg(1.0, 0, 'f', presice).
+      arg(value[QPlanningCostWidget::Safety], 0, 'f', presice).
+      arg(value[QPlanningCostWidget::Lateral], 0, 'f', presice).
+      arg(value[QPlanningCostWidget::Smoothness], 0, 'f', presice).
+      arg(value[QPlanningCostWidget::Consistency], 0, 'f', presice).
+      arg(value[QPlanningCostWidget::Garbage], 0, 'f', presice);
+  text.append("\n\n");
 
   return text;
 }

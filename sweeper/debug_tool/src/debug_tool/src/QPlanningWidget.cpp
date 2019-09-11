@@ -30,15 +30,20 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   this->setFont(G_TEXT_FONT);
   m_pWdgParam = new QPlanningParamWidget(this);
   m_pWdgParam->setShowType(LivePlay);
-  boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
-                       _1, _2, _3, _4);
   connect(m_pWdgParam, &QPlanningParamWidget::replayState,
           this, &QPlanningWidget::onReplayState);
   connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
           this, &QPlanningWidget::onSetFrameIndexReplay);
+  connect(m_pWdgParam, &QPlanningParamWidget::costValueChanged,
+          this, &QPlanningWidget::onCostValueChanged);
 
-  m_pWdgShow = new QPlanningShowWidget(this);
-  m_pWdgShow->setFunPosition(fun);
+  boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
+                       _1, _2, _3, _4);
+  for (int i = 0; i < 2; ++i) {
+    m_pWdgShow[i] = new QPlanningShowWidget(this);
+    m_pWdgShow[i]->setFunPosition(fun);
+  }
+  m_pWdgShow[1]->setCostType(QPlanningShowWidget::NEW_COST);
   m_nShowType = LivePlay;
 
   namespace fs = boost::filesystem;
@@ -82,12 +87,15 @@ void QPlanningWidget::resizeEvent(QResizeEvent *)
   const int WIDTH = this->width();
   const int HEIGHT = this->height();
 
-  m_pWdgShow->setGeometry(
-        0,
-        0,
-        WIDTH * W_PERCENT / 100,
-        HEIGHT
-        );
+  const int WDG_SHWO_W = WIDTH * W_PERCENT / 200;
+  for (int i = 0; i < 2; ++i) {
+    m_pWdgShow[i]->setGeometry(
+          i * WDG_SHWO_W,
+          0,
+          WDG_SHWO_W,
+          HEIGHT
+          );
+  }
   m_pWdgParam->setGeometry(
         WIDTH * W_PERCENT / 100,
         0,
@@ -111,7 +119,8 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
     std::size_t index = name.find_last_of('/');
     name = name.substr(index + 1, name.length() - (index + 1) - 1);
     if (this->readFromJsonFile(*m_itFile, data)) {
-      m_pWdgShow->setPlanningData(data);
+      m_pWdgShow[0]->setPlanningData(data);
+      m_pWdgShow[1]->setPlanningData(data);
       m_pWdgParam->setPlanningData(data);
       QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
       QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
@@ -149,7 +158,8 @@ void QPlanningWidget::stopDisplay()
 ********************************************************/
 void QPlanningWidget::setShowAllTargets(bool show)
 {
-  m_pWdgShow->setShowAllTargets(show);
+  m_pWdgShow[0]->setShowAllTargets(show);
+  m_pWdgShow[1]->setShowAllTargets(show);
 }
 
 /*******************************************************
@@ -183,7 +193,8 @@ void QPlanningWidget::startReplay(const QString &path)
 ********************************************************/
 void QPlanningWidget::setViewResolution(int index)
 {
-  m_pWdgShow->setViewResolution(index);
+  m_pWdgShow[0]->setViewResolution(index);
+  m_pWdgShow[1]->setViewResolution(index);
 }
 
 /*******************************************************
@@ -208,16 +219,16 @@ void QPlanningWidget::onSetFrameIndexReplay(int frame)
   }
   if (m_itFile != m_listPlanningFiles.end()) {
     debug_tool::ads_PlanningData4Debug data;
-    //memset(&data, 0, sizeof(data));
     std::string name = *m_itFile;
     std::size_t pos = name.find_last_of('/');
     name = name.substr(pos + 1, name.length() - (pos + 1) - 1);
     if (this->readFromJsonFile(*m_itFile, data)) {
-      m_pWdgShow->setPlanningData(data);
+      m_pWdgShow[0]->setPlanningData(data);
+      m_pWdgShow[1]->setPlanningData(data);
       m_pWdgParam->setPlanningData(data);
       QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
       QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-      //QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
+      QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
     }
     else {
       name += "-------- FAILED !!!!!!!!!!!!!!!!1";
@@ -251,9 +262,9 @@ void QPlanningWidget::setShowType(int type)
   }
 }
 
-void QPlanningWidget::setCostValue(double value[])
+void QPlanningWidget::onCostValueChanged()
 {
-  memcpy(m_dCostValue, value, sizeof(double) * QPlanningCostWidget::Count);
+  //memcpy(m_dCostValue, value, sizeof(double) * QPlanningCostWidget::Count);
   if (m_nShowType == RePlay) {
     this->onSetFrameIndexReplay(0);
   }
@@ -328,11 +339,12 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
   this->saveDataToJsonFile(data);
   if (m_nShowType == LivePlay) {
     this->calcCostValue(data);
-    m_pWdgShow->setPlanningData(data);
+    m_pWdgShow[0]->setPlanningData(data);
+    m_pWdgShow[1]->setPlanningData(data);
     m_pWdgParam->setPlanningData(data);
     QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
     QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
-    //QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
+    QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
   }
 }
 

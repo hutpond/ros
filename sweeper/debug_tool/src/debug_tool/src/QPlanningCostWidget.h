@@ -34,6 +34,7 @@ signals:
 public slots:
 
 private:
+  QPlotWidget *m_pWdgCostNew;
   QPlotWidget *m_pWdgCost[Count];
 };
 

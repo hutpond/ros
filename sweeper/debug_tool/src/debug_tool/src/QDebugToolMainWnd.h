@@ -59,7 +59,6 @@ protected slots:
   void onActionReplaySpeed();
 
   void onActionShowTargets();
-  void onActionSetCost();
   void onActionHelpAbout();
 
 private:

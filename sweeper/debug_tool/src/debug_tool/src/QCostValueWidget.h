@@ -1,5 +1,5 @@
-#ifndef QCOSTVALUEDIALOG_H
-#define QCOSTVALUEDIALOG_H
+#ifndef QCOSTVALUEQWIDGET_H
+#define QCOSTVALUEQWIDGET_H
 
 #include <QDialog>
 #include "QPlanningCostWidget.h"
@@ -8,27 +8,19 @@ class QSlider;
 class QPushButton;
 class QLabel;
 
-class QCostValueDialog : public QDialog
+class QCostValueWidget : public QWidget
 {
   Q_OBJECT
 
 public:
-  explicit QCostValueDialog(QWidget * = Q_NULLPTR);
-
-protected:
-
-protected:
-  void setCostValue(double []);
-  void calcPerccent(double []);
-
-protected:
-  void showEvent(QShowEvent *);
+  explicit QCostValueWidget(QWidget * = Q_NULLPTR);
+  static void getCostValue(double []);
 
 protected slots:
   void onValueChanged(int);
 
 signals:
-  void costValue(double []);
+  void costValueChanged();
 
 private:
   QSlider *m_pSlider[QPlanningCostWidget::Count];
@@ -36,4 +28,4 @@ private:
   static int s_nValue[QPlanningCostWidget::Count];
 };
 
-#endif // QCOSTVALUEDIALOG_H
+#endif // QCOSTVALUEQWIDGET_H

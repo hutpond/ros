@@ -97,8 +97,7 @@ void QBaseShowWidget::drawMapBorder(QPainter &painter)
   painter.save();
   QPen pen;
   pen.setWidth(4);
-  pen.setColor(Qt::red);
-  pen.setBrush(m_bFlagSelected ? Qt::green : Qt::gray);
+  pen.setBrush(Qt::gray);
   painter.setPen(pen);
   QRectF border(
         m_rectfMap.topLeft(),

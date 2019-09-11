@@ -16,6 +16,8 @@ class QPlanningShowWidget : public QBaseShowWidget
 {
   Q_OBJECT
 
+public:
+
   enum {
     SENSOR_UNKNOW = 0,
     SENSOR_ULTRASONIC,
@@ -26,6 +28,11 @@ class QPlanningShowWidget : public QBaseShowWidget
     SENSOR_CAMERA
   };
 
+  enum {
+    NEW_COST,
+    OLD_COST
+  };
+
 public:
   QPlanningShowWidget(QWidget *parent);
   ~QPlanningShowWidget();
@@ -34,6 +41,7 @@ public:
   void setFunPosition(boost::function<void(float, float, float, float)>);
   void setViewResolution(int);
   void setShowAllTargets(bool);
+  void setCostType(int);
 
 protected:
   virtual void mousePressEvent(QMouseEvent *);
@@ -75,6 +83,7 @@ private:
   debug_tool::ads_PlanningData4Debug  m_planningData;
   int m_nShowPlanningPath;  // 规划路线显示, 0: 全显示, 1：只显示当前帧, 2：只显示前一帧
   bool m_bFlagShowAllTargets;
+  int m_nCostType;
 };
 
 #endif // Q_PLANNING_SHOW_WIDGET_H

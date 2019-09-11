@@ -17,6 +17,7 @@ class QGroupBox;
 class QPushButton;
 class QSlider;
 class QTextBrowser;
+class QCostValueWidget;
 
 class QPlanningParamWidget : public QWidget
 {
@@ -42,8 +43,8 @@ protected:
 
 signals:
   void replayState(bool);
-signals:
   void replayFrameOffset(int);
+  void costValueChanged();
 
 private slots:
   void onBtnClicked();
@@ -62,6 +63,7 @@ private:
   QPushButton *m_pBtnNext;
   QSlider *m_pSliderPlay;
 
+  QCostValueWidget *m_pWdgCostValue;
   QTextBrowser *m_pTextBrowser;
 
   int m_nSliderValue;

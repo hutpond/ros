@@ -13,11 +13,13 @@
 #include <QtMath>
 #include "QPlanningShowWidget.h"
 #include "GlobalDefine.h"
+#include "QCostValueWidget.h"
 
 QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
   , m_nShowPlanningPath(0)
   , m_bFlagShowAllTargets(false)
+  , m_nCostType(OLD_COST)
 {
 }
 
@@ -142,6 +144,11 @@ void QPlanningShowWidget::setShowAllTargets(bool show)
   this->update();
 }
 
+void QPlanningShowWidget::setCostType(int type)
+{
+  m_nCostType = type;
+}
+
 /*******************************************************
  * @brief 根据数据将图像画在QImage上
 
@@ -152,6 +159,7 @@ void QPlanningShowWidget::drawImage()
   m_image = QImage(m_rectPicture.width(), m_rectPicture.height(), QImage::Format_RGB888);
   QPainter painter(&m_image);
   painter.fillRect(m_image.rect(), QColor(230, 230, 230));
+  this->drawMapBorder(painter);
   this->drawAxis(painter);
   if (m_planningData.num_reference_splines == 0) {
     return;
@@ -745,9 +753,21 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
   painter.setFont(QFont("Times", 12));
   painter.setPen(pen);
 
-  int planning_id = m_planningData.planning_trajectory.id;
-  auto &candidates = m_planningData.planning_trajectory_candidates;
+  auto candidates = m_planningData.planning_trajectory_candidates;
   int size_candidates = candidates.size();
+  double value[QPlanningCostWidget::Count];
+  QCostValueWidget::getCostValue(value);
+  if (m_nCostType == NEW_COST) {
+    for (int i = 0; i < size_candidates; ++ i) {
+      candidates[i].cost = value[QPlanningCostWidget::Safety] * candidates[i].safety_cost
+          + value[QPlanningCostWidget::Lateral] * candidates[i].lateral_cost
+          + value[QPlanningCostWidget::Smoothness] * candidates[i].smoothness_cost
+          + value[QPlanningCostWidget::Consistency] * candidates[i].consistency_cost
+          + value[QPlanningCostWidget::Garbage] * candidates[i].garbage_cost;
+    }
+  }
+
+  int planning_id = m_planningData.planning_trajectory.id;
   if (size_candidates > 10) {
     using type_candidates = decltype(candidates[0]);
     std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,
@@ -755,23 +775,24 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
       return val.cost < val2.cost;
     });
   }
+  int decision = static_cast<int>(m_planningData.decision);
   size_candidates = qBound<int>(0, size_candidates, 10);
-  for (int i = 0; i < size_candidates; ++ i) {
-    int candidate_id = m_planningData.planning_trajectory_candidates[i].id;
-    int decision = static_cast<int>(m_planningData.decision);
-    if (planning_id == candidate_id && (decision >= 0 && decision < 4)) {
-      continue;
-    }
+  if (decision >= 0 && decision < 4) {
+    for (int i = 0; i < size_candidates; ++ i) {
+      int candidate_id = candidates[i].id;
+      if (planning_id == candidate_id) {
+        continue;
+      }
 
-    const auto &val_candidate_splines =
-        m_planningData.planning_trajectory_candidates[i].splines;
-    const int SIZE = static_cast<int>(val_candidate_splines.size());
-    this->drawBezierLine(painter, val_candidate_splines);
+      const auto &val_candidate_splines = candidates[i].splines;
+      const int SIZE = static_cast<int>(val_candidate_splines.size());
+      this->drawBezierLine(painter, val_candidate_splines);
 
-    if (SIZE > 2) {
-      int offset = (i % 2) == 0 ? 2 : 3;
-      QPointF ptf(val_candidate_splines[SIZE - offset].xb.w, val_candidate_splines[SIZE - offset].yb.w);
-      painter.drawText(m_transform.map(ptf), QString::number(candidate_id));
+      if (SIZE > 2) {
+        int offset = (i % 2) == 0 ? 2 : 3;
+        QPointF ptf(val_candidate_splines[SIZE - offset].xb.w, val_candidate_splines[SIZE - offset].yb.w);
+        painter.drawText(m_transform.map(ptf), QString::number(candidate_id));
+      }
     }
   }
 }
