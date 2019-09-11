@@ -14,12 +14,10 @@
 #include <QDockWidget>
 #include "QDebugToolMainWnd.h"
 #include "QPlanningWidget.h"
-#include "QDataDisplayDialog.h"
+#include "QDataDisplayWidget.h"
 #include "QPlanningCostWidget.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
-static const char *LOCATION_TOOL_BAR = "LOCATION";
-static const char *PERCEPTION_TOOL_BAR = "PERCEPTION";
 static const char *PLANNING_TOOL_BAR = "PLANNING";
 static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
@@ -27,7 +25,7 @@ static const char *HELP_TOOL_BAR = "HELP";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
-QDataDisplayDialog * QDebugToolMainWnd::s_pDataDisplay = Q_NULLPTR;
+QDataDisplayWidget * QDebugToolMainWnd::s_pDataDisplay = Q_NULLPTR;
 QPlanningCostWidget * QDebugToolMainWnd::s_pWdgPlanningCost = Q_NULLPTR;
 
 QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
@@ -42,7 +40,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->createViewToolBar();
   this->createSettingToolBar();
 
-  this->setWindowTitle("Debug Tool V3.1.2");
+  this->setWindowTitle("Debug Tool V3.2");
 
   QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
@@ -54,7 +52,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   s_pTextBrowser = new QTextBrowser(this);
   QTabWidget *pTabWidget = new QTabWidget(this);
   pTabWidget->addTab(s_pTextBrowser, tr("Output"));
-  s_pDataDisplay = new QDataDisplayDialog(this);
+  s_pDataDisplay = new QDataDisplayWidget(this);
   pTabWidget->addTab(s_pDataDisplay, tr("Data"));
 
   // plannig cost
@@ -99,20 +97,7 @@ void QDebugToolMainWnd::showEvent(QShowEvent *)
 ********************************************************/
 void QDebugToolMainWnd::createMenu()
 {
-  QMenu *menu = menuBar()->addMenu(tr("融合定位"));
-  menu->addAction(tr("定位模块"), this, SLOT(onActionLocation()));
-  menu->addAction(tr("信息方差"), this, SLOT(onActionVariance()));
-  menu->addAction(tr("算法比较"), this, SLOT(onActionAlgorithm()));
-  menu->addAction(tr("位置轨迹"), this, SLOT(onActionLocus()));
-  menu->addAction(tr("姿态角"), this, SLOT(onActionEulerAngle()));
-  menu->addAction(tr("Error"), this, SLOT(onActionErrorFigure()));
-
-  menu = menuBar()->addMenu(tr("Perception"));
-  menu->addAction(tr("2D"), this, SLOT(onActionPerception2D()));
-  menu->addAction(tr("3D"), this, SLOT(onActionPerception3D()));
-  menu->addAction(tr("Replay"), this, SLOT(onActionPerceptionReplay()));
-
-  menu = menuBar()->addMenu(tr("Planning"));
+  QMenu *menu = menuBar()->addMenu(tr("Planning"));
   menu->addAction(tr("Live Display"), this,
                   SLOT(onActionPlanningLiveDisplay()));
   menu->addAction(tr("Replay"), this, SLOT(onActionPlanningReplay()));
@@ -121,12 +106,6 @@ void QDebugToolMainWnd::createMenu()
   menu->addAction(tr("Zoom In +"), this, SLOT(onActionViewZoomIn()));
   menu->addAction(tr("Zoom Out -"), this, SLOT(onActionViewZoomOut()));
   menu->addAction(tr("Reset R"), this, SLOT(onActionViewReset()));
-
-//  menu = menuBar()->addMenu(tr("Setting"));
-//  m_pActionMenuSaveJson = menu->addAction(tr("Save Json"),
-//                                          this, SLOT(onActionSettingSaveJson));
-//  m_pActionMenuSaveJson->setCheckable(true);
-//  m_pActionMenuSaveJson->setChecked(false);
 
   menu = menuBar()->addMenu(tr("Help"));
   menu->addAction(tr("About Debug Tool"), this,
@@ -147,211 +126,6 @@ void QDebugToolMainWnd::processPreShow(QWidget *w)
     }
     m_pWdgCurrent = w;
   }
-}
-
-/*******************************************************
- * @brief 创建融合定位对应的ToolBar
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::createLocationToolBar()
-{
-  QToolBar *pToolBar = this->addToolBar(LOCATION_TOOL_BAR);
-
-  QAction *newAct = new QAction(tr("定位\n模块"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionLocation()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  QWidget *pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-
-  newAct = new QAction(tr("信息\n方差"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionVariance()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-  pToolBar->insertSeparator(newAct);
-
-  newAct = new QAction(tr("算法\n比较"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionAlgorithm()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-  pToolBar->insertSeparator(newAct);
-
-  newAct = new QAction(tr("位置\n轨迹"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionLocus()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-  pToolBar->insertSeparator(newAct);
-
-  newAct = new QAction(tr("姿态角"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionEulerAngle()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-  pToolBar->insertSeparator(newAct);
-
-  newAct = new QAction(tr("Error"), this);
-  connect(newAct, SIGNAL(triggered()), this, SLOT(onActionErrorFigure()));
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(220, 250, 255);");
-  pToolBar->insertSeparator(newAct);
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示融合定位模块
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionLocation()
-{
-//  this->processPreShow(m_pWdgLocation);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示融合数据信息方差
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionVariance()
-{
-//  this->processPreShow(m_pWdgVariance);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示算法比较画面
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionAlgorithm()
-{
-//  this->processPreShow(m_pWdgAlgorithm);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示2D/3D位置轨迹
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionLocus()
-{
-//  this->processPreShow(m_pWdgLocus);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示姿态角画面
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionEulerAngle()
-{
-//  this->processPreShow(m_pWdgEulerAngle);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 菜单响应函数，显示误差图
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionErrorFigure()
-{
-//  this->processPreShow(m_pWdgErrorFigure);
-  m_pWdgCurrent->show();
-}
-
-/*******************************************************
- * @brief 创建Perception模块对应的ToolBar
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::createPerceptionToolBar()
-{
-  QToolBar *pToolBar = this->addToolBar(PERCEPTION_TOOL_BAR);
-
-  QAction *newAct = new QAction(tr("2D"), this);
-  connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPerception2D);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  QWidget *pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(250, 220, 255);");
-
-  newAct = new QAction(tr("3D"), this);
-  connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPerception3D);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(250, 220, 255);");
-  pToolBar->insertSeparator(newAct);
-
-  newAct = new QAction(tr("REPLAY"), this);
-  connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPerceptionReplay);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(newAct);
-  pWdgAction = pToolBar->widgetForAction(newAct);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(250, 220, 255);");
-  pToolBar->insertSeparator(newAct);
-}
-
-/*******************************************************
- * @brief 以2D的方式实时显示当前数据、状态
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionPerception2D()
-{
-}
-
-/*******************************************************
- * @brief 以3D的方式实时显示当前数据、状态
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionPerception3D()
-{
-}
-
-/*******************************************************
- * @brief 回放perception数据
- * @param
-
- * @return
-********************************************************/
-void QDebugToolMainWnd::onActionPerceptionReplay()
-{
-  //this->processPreShow(m_pWdgPerception);
-  //m_pWdgPerception->showType(QPerceptionWidget::Replay);
 }
 
 /*******************************************************

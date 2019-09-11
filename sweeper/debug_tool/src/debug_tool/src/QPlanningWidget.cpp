@@ -18,7 +18,7 @@
 #include "QPlanningShowWidget.h"
 #include "QPlanningParamWidget.h"
 #include "GlobalDefine.h"
-#include "QDataDisplayDialog.h"
+#include "QDataDisplayWidget.h"
 #include "QDebugToolMainWnd.h"
 #include "QPlanningCostWidget.h"
 

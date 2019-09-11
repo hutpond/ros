@@ -1,22 +1,22 @@
 /*******************************************************
  * Copyright(C) 2019 Deepblue
- * FileName: QDataDisplayDialog.cpp
+ * FileName: QDataDisplayQWidget.cpp
  * Author: liuzheng
  * Date: 2019/7/12
  * Description: 显示详细数据
 ********************************************************/
 #include <QTreeWidget>
 #include <QHeaderView>
-#include "QDataDisplayDialog.h"
+#include "QDataDisplayWidget.h"
 
-QDataDisplayDialog::QDataDisplayDialog(QWidget *parent)
+QDataDisplayWidget::QDataDisplayWidget(QWidget *parent)
   : QWidget(parent)
 {
   m_pTreeWidget = new QTreeWidget(this);
   m_pTreeWidget->header()->hide();
 }
 
-void QDataDisplayDialog::resizeEvent(QResizeEvent *)
+void QDataDisplayWidget::resizeEvent(QResizeEvent *)
 {
   m_pTreeWidget->setGeometry(this->rect());
 }
@@ -27,7 +27,7 @@ void QDataDisplayDialog::resizeEvent(QResizeEvent *)
 
  * @return
 ********************************************************/
-void QDataDisplayDialog::setPlanningData(
+void QDataDisplayWidget::setPlanningData(
     const debug_tool::ads_PlanningData4Debug &planningData)
 {
   m_pTreeWidget->clear();

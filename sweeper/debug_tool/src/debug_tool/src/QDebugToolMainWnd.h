@@ -12,7 +12,7 @@
 
 class QPlanningWidget;
 class QTextBrowser;
-class QDataDisplayDialog;
+class QDataDisplayWidget;
 class QPlanningCostWidget;
 
 class QDebugToolMainWnd : public QMainWindow
@@ -25,8 +25,6 @@ public:
 
 protected:
   void createMenu();
-  void createLocationToolBar();
-  void createPerceptionToolBar();
   void createPlanningToolBar();
   void createViewToolBar();
   void createSettingToolBar();
@@ -39,17 +37,6 @@ protected:
   virtual void showEvent(QShowEvent *);
 
 protected slots:
-  void onActionLocation();
-  void onActionVariance();
-  void onActionAlgorithm();
-  void onActionLocus();
-  void onActionEulerAngle();
-  void onActionErrorFigure();
-
-  void onActionPerception2D();
-  void onActionPerception3D();
-  void onActionPerceptionReplay();
-
   void onActionPlanningLiveDisplay();
   void onActionPlanningReplay();
 
@@ -74,7 +61,7 @@ private:
 public:
   static QStatusBar *s_pStatusBar;
   static QTextBrowser *s_pTextBrowser;
-  static QDataDisplayDialog *s_pDataDisplay;
+  static QDataDisplayWidget *s_pDataDisplay;
   static QPlanningCostWidget *s_pWdgPlanningCost;
 };
 

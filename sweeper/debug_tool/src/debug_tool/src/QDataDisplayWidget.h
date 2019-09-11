@@ -1,6 +1,6 @@
 /*******************************************************
  * Copyright(C) 2019 Deepblue
- * FileName: QDataDisplayDialog.h
+ * FileName: QDataDisplayQWidget.h
  * Author: liuzheng
  * Date: 2019/7/12
  * Description: 显示planning详细数据
@@ -12,11 +12,11 @@
 #include "debug_tool/ads_PlanningData4Debug.h"
 
 class QTreeWidget;
-class QDataDisplayDialog : public QWidget
+class QDataDisplayWidget : public QWidget
 {
   Q_OBJECT
 public:
-  explicit QDataDisplayDialog(QWidget *parent = NULL);
+  explicit QDataDisplayWidget(QWidget *parent = NULL);
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
