@@ -13,7 +13,8 @@
 
 QBaseShowWidget::QBaseShowWidget(QWidget *parent)
   : QWidget(parent)
-  , m_fDisplayRatio(MAP_TO_ROAD_COEF)
+  , m_fOriginRatio(1.0)
+  , m_fDisplayRatio(1.0)
 {
 }
 
@@ -30,6 +31,9 @@ void QBaseShowWidget::resizeEvent(QResizeEvent *)
 
 void QBaseShowWidget::mouseMoveEvent(QMouseEvent *e)
 {
+  if ((Qt::LeftButton & e->buttons()) == Qt::NoButton) {
+    return;
+  }
   QPointF ptf = e->localPos();
   QLineF linef(m_ptfMouseMove, ptf);
   m_ptfMouseMove = ptf;
@@ -59,6 +63,17 @@ void QBaseShowWidget::paintEvent(QPaintEvent *)
 }
 
 /*******************************************************
+ * @brief 设置显示鼠标点处物理坐标的回调函数
+ * @param fun: 回调函数
+
+ * @return
+********************************************************/
+void QBaseShowWidget::setFunPosition(boost::function<void(float, float, float, float)> fun)
+{
+  m_funPosition = fun;
+}
+
+/*******************************************************
  * @brief 缩放图像显示
  * @param index: -1， 缩小, 0, 复原, 1, 放大
 
@@ -72,7 +87,7 @@ void QBaseShowWidget::setViewResolution(int index)
       m_fDisplayRatio *= RATIO_COEF;
       break;
     case 0:
-      m_fDisplayRatio = MAP_TO_ROAD_COEF;
+      m_fDisplayRatio = m_fOriginRatio;
       m_ptfTranslate = QPointF(0, 0);
       break;
     case 1:

@@ -15,9 +15,11 @@ class QCostValueWidget : public QWidget
 public:
   explicit QCostValueWidget(QWidget * = Q_NULLPTR);
   static void getCostValue(double []);
+  static void setOriginCostValue(double []);
 
 protected slots:
   void onValueChanged(int);
+  void onBtnReset();
 
 signals:
   void costValueChanged();
@@ -25,7 +27,10 @@ signals:
 private:
   QSlider *m_pSlider[QPlanningCostWidget::Count];
   QLabel *m_pLblValue[QPlanningCostWidget::Count];
+  QPushButton *m_pBtnReset;
+  QLabel *m_pLblSum;
   static int s_nValue[QPlanningCostWidget::Count];
+  static int s_nOriginValue[QPlanningCostWidget::Count];
 };
 
 #endif // QCOSTVALUEQWIDGET_H

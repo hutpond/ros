@@ -9,6 +9,7 @@
 #define Q_BASE_SHOW_WIDGET_H
 
 #include <QWidget>
+#include <boost/function.hpp>
 
 class QBaseShowWidget : public QWidget
 {
@@ -19,6 +20,7 @@ public:
   ~QBaseShowWidget();
 
   void setViewResolution(int);
+  void setFunPosition(boost::function<void(float, float, float, float)>);
 
 protected:
   virtual void drawImage() = 0;
@@ -42,6 +44,9 @@ protected:
   QPointF m_ptfMouseMove;   // 鼠标移动位置记录
   QPointF m_ptfTranslate;   // 移动距离
   float m_fDisplayRatio;    // 缩放比例
+  float m_fOriginRatio;     // 原始缩放比例
+
+  boost::function<void(float, float, float, float)> m_funPosition;
 };
 
 #endif // Q_BASE_SHOW_WIDGET_H

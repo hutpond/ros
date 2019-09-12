@@ -1,15 +1,11 @@
 #include <QtWidgets/QApplication>
 #include <QDesktopWidget>
-#ifndef WIN64
-# include "ros/ros.h"
-#endif
+#include "ros/ros.h"
 #include "QDebugToolMainWnd.h"
 
 int main(int argc, char *argv[])
 {
-#ifndef WIN64
   ros::init(argc, argv, "sweeper_debug_tool_node");
-#endif
   QApplication a(argc, argv);
 
   QDebugToolMainWnd w;

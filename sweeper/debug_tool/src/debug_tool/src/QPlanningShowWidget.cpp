@@ -21,6 +21,8 @@ QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   , m_bFlagShowAllTargets(false)
   , m_nCostType(OLD_COST)
 {
+  m_fOriginRatio = 4.0;
+  m_fDisplayRatio = m_fOriginRatio;
 }
 
 QPlanningShowWidget::~QPlanningShowWidget()
@@ -70,6 +72,7 @@ void QPlanningShowWidget::calcMapRect()
   // 计算显示区域物理范围，车体坐标系，X正向：上，Y正向：左，坐标原点：车中心
   // 显示范围，height（Y向）：路宽MAP_TO_ROAD_COEF倍，
   // width（X向）：根据显示区域比例计算，起点：车身后START_X_TO_CAR_TAIL米
+  const float VEH_HEAD = m_planningData.head_distance;
   const float roadLeftWidth = m_planningData.left_half_road_width;
   const float roadRightWidth = m_planningData.right_half_road_width;
   const float roadWidth = roadLeftWidth + roadRightWidth;
@@ -89,45 +92,6 @@ void QPlanningShowWidget::calcMapRect()
                     m_rectPicture.width() / m_rectfMap.height());
   m_transform.translate(-(m_rectfMap.x() + m_rectfMap.width()),
                         -(m_rectfMap.y() + m_rectfMap.height()));
-}
-
-/*******************************************************
- * @brief 设置显示鼠标点处物理坐标的回调函数
- * @param fun: 回调函数
-
- * @return
-********************************************************/
-void QPlanningShowWidget::setFunPosition(boost::function<void(float, float, float, float)> fun)
-{
-  m_funPosition = fun;
-}
-
-/*******************************************************
- * @brief 缩放图像显示
- * @param index: -1， 缩小, 0, 复原, 1, 放大
-
- * @return
-********************************************************/
-void QPlanningShowWidget::setViewResolution(int index)
-{
-  const float RATIO_COEF = 1.2;
-  switch (index) {
-    case -1:
-      m_fDisplayRatio *= RATIO_COEF;
-      break;
-    case 0:
-      m_fDisplayRatio = MAP_TO_ROAD_COEF;
-      m_ptfTranslate = QPointF(0, 0);
-      break;
-    case 1:
-      m_fDisplayRatio /= RATIO_COEF;
-      break;
-    default:
-      break;
-  }
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
 }
 
 /*******************************************************
@@ -189,6 +153,8 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
   // vehicle
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
+
   QRectF rectfSweeper = QRectF(-VEH_L + VEH_HEAD, -VEH_W / 2, VEH_L, VEH_W);
   QPolygonF pgfSweeper = m_transform.map(rectfSweeper);
   pen.setColor(Qt::red);
@@ -231,6 +197,7 @@ void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
 
   QPen pen;
   const int US_W = 13;
@@ -331,6 +298,7 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
 
   QPen pen;
   const int US_W = 11;
@@ -875,6 +843,7 @@ void QPlanningShowWidget::drawUltrasonicTarget(QPainter &painter)
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
 
   const double STOP_DIS = 0.5;
   const double PASS_DIS = 1.1;
@@ -943,6 +912,7 @@ void QPlanningShowWidget::drawRadar28Target(QPainter &painter)
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
 
   const double STOP_DIS = 0.5;
   const double PASS_DIS = 1.1;
@@ -1003,6 +973,7 @@ void QPlanningShowWidget::drawRadar73Target(QPainter &painter)
 
   const double VEH_W = m_planningData.vehicle_width;
   const double VEH_L = m_planningData.vehicle_length;
+  const double VEH_HEAD = m_planningData.head_distance;
 
   const double STOP_DIS = 0.5;
   const double PASS_DIS = 1.1;

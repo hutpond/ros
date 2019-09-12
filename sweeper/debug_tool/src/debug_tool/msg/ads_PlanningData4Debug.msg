@@ -16,6 +16,11 @@ ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
 ads_littersensor_data garbage_detection_results
 
+float64 safety_cost_weight
+float64 lateral_cost_weight
+float64 smoothness_cost_weight
+float64 consistency_cost_weight
+float64 garbage_cost_weight
 ads_planning_trajectory[] planning_trajectory_candidates
 ads_planning_trajectory planning_trajectory
 ads_planning_output planning_output

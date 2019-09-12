@@ -13,16 +13,12 @@
 #include <jsoncpp/json/json.h>
 #include "QBaseWidget.h"
 #include "QPlanningShowWidget.h"
-#ifdef WIN64
-# include "ReadDataManager.h"
-#else
-# include "QReadDataManagerRos.h"
-#endif
+#include "QReadDataManagerRos.h"
 #include "QPlanningCostWidget.h"
 
 class QPlanningShowWidget;
 class QPlanningParamWidget;
-struct PlanningData;
+class QFullViewWidget;
 
 class QPlanningWidget : public QBaseWidget
 {
@@ -32,6 +28,11 @@ public:
   enum {
     LivePlay,
     RePlay
+  };
+
+  enum {
+    LocalView,
+    FullView
   };
 
 public:
@@ -45,6 +46,7 @@ public:
   void setReplaySpeedIndex(int);
   int replaySpeedIndex();
   void setShowType(int);
+  void changeShowView();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -56,8 +58,7 @@ protected:
   void sortTrackTargets(debug_tool::ads_PlanningData4Debug &);
   void saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &);
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
-
-  void calcCostValue(debug_tool::ads_PlanningData4Debug &);
+  void setPlanningData(debug_tool::ads_PlanningData4Debug &, const QString &);
 
 protected slots:
   void onSetFrameIndexReplay(int);
@@ -67,8 +68,10 @@ protected slots:
 private:
   QPlanningShowWidget *m_pWdgShow[2];
   QPlanningParamWidget *m_pWdgParam;
+  QFullViewWidget *m_pWdgFullView;
 
   int m_nShowType;
+  int m_nShowView;
   boost::filesystem::path m_fsPath;
 
   int m_nReplaySpeedIndex;

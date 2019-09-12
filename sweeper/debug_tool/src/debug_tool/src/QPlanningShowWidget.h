@@ -8,7 +8,6 @@
 #ifndef Q_PLANNING_SHOW_WIDGET_H
 #define Q_PLANNING_SHOW_WIDGET_H
 
-#include <boost/function.hpp>
 #include "QBaseShowWidget.h"
 #include "debug_tool/ads_PlanningData4Debug.h"
 
@@ -38,8 +37,6 @@ public:
   ~QPlanningShowWidget();
 
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
-  void setFunPosition(boost::function<void(float, float, float, float)>);
-  void setViewResolution(int);
   void setShowAllTargets(bool);
   void setCostType(int);
 
@@ -76,7 +73,6 @@ protected:
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
 
 private:
-  boost::function<void(float, float, float, float)> m_funPosition;
   boost::array<QPointF, 100> m_ptfsLeftRoadSide;
   boost::array<QPointF, 100> m_ptfsRightRoadSide;
 

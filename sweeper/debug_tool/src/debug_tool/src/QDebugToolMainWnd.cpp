@@ -40,7 +40,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->createViewToolBar();
   this->createSettingToolBar();
 
-  this->setWindowTitle("Debug Tool V3.2");
+  this->setWindowTitle("Debug Tool V3.3");
 
   QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
@@ -290,16 +290,31 @@ void QDebugToolMainWnd::createSettingToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
 
+  QAction *action = new QAction(tr("=>>"), this);
+  connect(action, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionChangeView);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(action);
+  QWidget *pWdgAction = pToolBar->widgetForAction(action);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(action);
+
   m_bFlagShowAllTargets = false;
   m_pActionShowTargets = new QAction(tr("T"), this);
   connect(m_pActionShowTargets, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionShowTargets);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(m_pActionShowTargets);
-  QWidget *pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
+  pWdgAction = pToolBar->widgetForAction(m_pActionShowTargets);
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   pToolBar->insertSeparator(m_pActionShowTargets);
+}
+
+void QDebugToolMainWnd::onActionChangeView()
+{
+  m_pWdgPlanning->changeShowView();
 }
 
 /*******************************************************

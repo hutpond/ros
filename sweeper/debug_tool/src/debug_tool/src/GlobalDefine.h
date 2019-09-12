@@ -17,8 +17,6 @@ extern const QFont G_TEXT_FONT;
 extern const QFont G_TEXT_SMALL_FONT;
 
 extern QRectF g_rectfSweeper;    // 扫地车位置
-extern const double MAP_TO_ROAD_COEF;
-extern const double VEH_HEAD;
 
 extern const double PI;
 
