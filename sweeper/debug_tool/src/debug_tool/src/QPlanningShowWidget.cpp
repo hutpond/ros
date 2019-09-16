@@ -133,9 +133,11 @@ void QPlanningShowWidget::drawImage()
   this->drawAreaLine(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
-  this->drawPlanningCandidatesSplines(painter);
+  //this->drawPlanningCandidatesSplines(painter);
   this->drawPlanningSplines(painter);
-  this->drawPlanningPoint(painter);
+  if (m_nCostType == OLD_COST) {
+    this->drawPlanningPoint(painter);
+  }
   this->drawGarbageResults(painter);
 }
 
@@ -702,8 +704,36 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
   painter.save();
   painter.setPen(pen);
 
-  const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
-  this->drawBezierLine(painter, val_planning_splines);
+  if (m_nCostType == OLD_COST) {
+    const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
+    this->drawBezierLine(painter, val_planning_splines);
+  }
+  else {
+    auto candidates = m_planningData.planning_trajectory_candidates;
+    int size_candidates = candidates.size();
+    double value[QPlanningCostWidget::Count];
+    QCostValueWidget::getCostValue(value);
+    for (int i = 0; i < size_candidates; ++ i) {
+      candidates[i].cost = value[QPlanningCostWidget::Safety] * candidates[i].safety_cost
+          + value[QPlanningCostWidget::Lateral] * candidates[i].lateral_cost
+          + value[QPlanningCostWidget::Smoothness] * candidates[i].smoothness_cost
+          + value[QPlanningCostWidget::Consistency] * candidates[i].consistency_cost
+          + value[QPlanningCostWidget::Garbage] * candidates[i].garbage_cost;
+    }
+
+    if (size_candidates > 1) {
+      using type_candidates = decltype(candidates[0]);
+      std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,
+                const type_candidates &val2){
+        return val.cost < val2.cost;
+      });
+    }
+
+    if (size_candidates > 0) {
+      const auto &val_planning_splines = candidates[0].splines;
+      this->drawBezierLine(painter, val_planning_splines);
+    }
+  }
   painter.restore();
 }
 
