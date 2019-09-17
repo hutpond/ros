@@ -40,7 +40,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->createViewToolBar();
   this->createSettingToolBar();
 
-  this->setWindowTitle("Debug Tool V3.3");
+  this->setWindowTitle("Debug Tool V3.4");
 
   QDockWidget *pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
