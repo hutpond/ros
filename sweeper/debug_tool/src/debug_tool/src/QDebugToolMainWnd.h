@@ -8,12 +8,14 @@
 #ifndef Q_DEBUG_TOOL_MAIN_WND_H
 #define Q_DEBUG_TOOL_MAIN_WND_H
 
-#include <QtWidgets/QMainWindow>
+#include <QMainWindow>
 
-class QPlanningWidget;
+class QStatusBar;
 class QTextBrowser;
+class QPlanningWidget;
 class QDataDisplayWidget;
 class QPlanningCostWidget;
+class QEditToolsWidget;
 
 class QDebugToolMainWnd : public QMainWindow
 {
@@ -31,6 +33,7 @@ protected:
   void createHelpToolBar();
 
   void processPreShow(QWidget *);
+  void setWndTitle();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -51,6 +54,7 @@ protected slots:
 
 private:
   QPlanningWidget *m_pWdgPlanning;
+  QEditToolsWidget *m_pWdgEditTool;
 
   QWidget *m_pWdgCurrent;
 

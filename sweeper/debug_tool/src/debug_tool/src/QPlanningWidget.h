@@ -46,7 +46,12 @@ public:
   void setReplaySpeedIndex(int);
   int replaySpeedIndex();
   void setShowType(int);
+  int showType();
   void changeShowView();
+  int showView();
+
+public slots:
+  void onSelectTool(int);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

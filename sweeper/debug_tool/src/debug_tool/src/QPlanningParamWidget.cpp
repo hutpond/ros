@@ -79,7 +79,6 @@ void QPlanningParamWidget::setShowType(int type)
     m_pBtnBack->setEnabled(false);
     m_pBtnNext->setEnabled(false);
     m_pSliderPlay->setEnabled(false);
-    m_nSliderValue = 0;
   }
 }
 

@@ -14,6 +14,7 @@
 #include "QPlanningShowWidget.h"
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
+#include "QEditToolsWidget.h"
 
 QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
@@ -34,12 +35,33 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
   if (m_planningData.num_reference_splines == 0) {
     return;
   }
-  m_ptfMouseMove = e->localPos();
-  QTransform inverted = m_transform.inverted();
-  QPointF ptf = inverted.map(m_ptfMouseMove);
-  double s, l;
-  this->xyToSl(ptf, s, l);
-  m_funPosition(ptf.x(), ptf.y(), s, l);
+
+  bool bLeftPress = (e->buttons() & Qt::LeftButton);
+
+  QPointF ptf = e->localPos();
+  if (bLeftPress) {
+    QPointF ptfMap = this->pixelToMap(ptf);
+    double s, l;
+    this->xyToSl(ptfMap, s, l);
+    m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
+  }
+
+  if (m_nToolIndex == QEditToolsWidget::Target) {
+    if (bLeftPress) {
+      if (m_pgfTarget.size() < 2) {
+        m_pgfTarget << ptf;
+      }
+      else if (m_pgfTarget.size() == 2){
+
+      }
+    }
+    else {
+      m_pgfTarget.clear();
+    }
+  }
+  else {
+    m_ptfMouseMove = ptf;
+  }
 }
 
 /*******************************************************
@@ -111,6 +133,11 @@ void QPlanningShowWidget::setShowAllTargets(bool show)
 void QPlanningShowWidget::setCostType(int type)
 {
   m_nCostType = type;
+}
+
+void QPlanningShowWidget::setToolIndex(int index)
+{
+  m_nToolIndex = index;
 }
 
 /*******************************************************
@@ -1594,4 +1621,11 @@ QPolygonF QPlanningShowWidget::createSlPgf(const QPointF &center, double width, 
   pgf << linef2.p2();
 
   return pgf;
+}
+
+QPointF QPlanningShowWidget::pixelToMap(const QPointF &ptfPixel)
+{
+  QTransform inverted = m_transform.inverted();
+  QPointF ptfMap = inverted.map(ptfPixel);
+  return ptfMap;
 }

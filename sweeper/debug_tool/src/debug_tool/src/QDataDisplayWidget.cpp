@@ -236,6 +236,20 @@ void QDataDisplayWidget::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("position.y: %1").arg(planningData.planning_output.pose.position.y));
 
+  // planning cost weight
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "COST WEIGHT");
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("safety: %1").arg(planningData.safety_cost_weight));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("lateral: %1").arg(planningData.lateral_cost_weight));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("smoothness: %1").arg(planningData.smoothness_cost_weight));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("consistency: %1").arg(planningData.consistency_cost_weight));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("garbage: %1").arg(planningData.garbage_cost_weight));
+
   auto &val_candidates = planningData.planning_trajectory_candidates;
   const int size_candidates = val_candidates.size();
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);

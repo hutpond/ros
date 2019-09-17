@@ -186,12 +186,7 @@ void QPlanningWidget::startReplay(const QString &path)
   m_pWdgParam->setFrameCount(m_listPlanningFiles.size());
 
   m_itFile = m_listPlanningFiles.begin();
-  if (m_nTimerId != 0) {
-    killTimer(m_nTimerId);
-    m_nTimerId = 0;
-  }
   m_bFlagPauseReplay = false;
-  m_nTimerId = startTimer(REPLAY_MSEC[m_nReplaySpeedIndex]);
 }
 
 /*******************************************************
@@ -231,19 +226,23 @@ void QPlanningWidget::onSetFrameIndexReplay(int frame)
       ++m_itFile;
     }
   }
+  debug_tool::ads_PlanningData4Debug data;
+  std::string full_name;
   if (m_itFile != m_listPlanningFiles.end()) {
-    debug_tool::ads_PlanningData4Debug data;
-    std::string name = *m_itFile;
-    std::size_t pos = name.find_last_of('/');
-    name = name.substr(pos + 1, name.length() - (pos + 1) - 1);
-    if (this->readFromJsonFile(*m_itFile, data)) {
-      this->setPlanningData(data, QString::fromStdString(name));
-    }
-    else {
-      name += "-------- FAILED !!!!!!!!!!!!!!!!1";
-    }
-    QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(name));
+    full_name = *m_itFile;
   }
+  else {
+    full_name = m_listPlanningFiles.back();
+  }
+  std::size_t pos = full_name.find_last_of('/');
+  std::string file_name = full_name.substr(pos + 1, full_name.length() - (pos + 1) - 1);
+  if (this->readFromJsonFile(full_name, data)) {
+    this->setPlanningData(data, QString::fromStdString(file_name));
+  }
+  else {
+    file_name += "-------- FAILED !!!!!!!!!!!!!!!!1";
+  }
+  QDebugToolMainWnd::s_pStatusBar->showMessage(QString::fromStdString(file_name));
 }
 
 void QPlanningWidget::setReplaySpeedIndex(int index)
@@ -261,14 +260,28 @@ int QPlanningWidget::replaySpeedIndex()
   return m_nReplaySpeedIndex;
 }
 
+int QPlanningWidget::showType()
+{
+  return m_nShowType;
+}
+
 void QPlanningWidget::setShowType(int type)
 {
   m_nShowType = type;
   m_pWdgParam->setShowType(type);
-  if (type == LivePlay && m_nTimerId != 0) {
+
+  if (m_nTimerId != 0) {
     killTimer(m_nTimerId);
     m_nTimerId = 0;
   }
+  if (type == RePlay) {
+    m_nTimerId = startTimer(REPLAY_MSEC[m_nReplaySpeedIndex]);
+  }
+}
+
+int QPlanningWidget::showView()
+{
+  return m_nShowView;
 }
 
 void QPlanningWidget::changeShowView()
@@ -497,13 +510,22 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   // planning
   Json::Value trajectory;
   Json::Value planning_output;
-  //planning_output["HEADER"] = planningData.planning_output.header
   planning_output["DECISION"] = planningData.planning_output.decision;
   planning_output["VELOCITY"] = planningData.planning_output.velocity;
   planning_output["POSE_POSITION_X"] = planningData.planning_output.pose.position.x;
   planning_output["POSE_POSITION_Y"] = planningData.planning_output.pose.position.y;
   trajectory["PLANNING_OUTPUT"] = planning_output;
 
+  // planning cost weight
+  Json::Value planning_cost_weight;
+  planning_cost_weight["SAFETY_COST_WEIGHT"] = planningData.safety_cost_weight;
+  planning_cost_weight["LATERAL_COST_WEIGHT"] = planningData.lateral_cost_weight;
+  planning_cost_weight["SMOOTHNESS_COST_WEIGHT"] = planningData.smoothness_cost_weight;
+  planning_cost_weight["CONSISTENCY_COST_WEIGHT"] = planningData.consistency_cost_weight;
+  planning_cost_weight["GARBAGE_COST_WEIGHT"] = planningData.garbage_cost_weight;
+  trajectory["PLANNING_COST_WEIGHT"] = planning_cost_weight;
+
+  // planning candidate
   Json::Value json_candidates;
   const auto &val_candidates = planningData.planning_trajectory_candidates;
   const int size_candidates = val_candidates.size();
@@ -538,6 +560,7 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   }
   trajectory["TRAJECTORY_CANDIDATES"] = json_candidates;
 
+  // planning trajectory
   Json::Value json_trajectory, json_trajectory_splines;
   const auto &val_trajectory = planningData.planning_trajectory;
   json_trajectory["ID"] = static_cast<int>(val_trajectory.id);
@@ -881,6 +904,15 @@ void QPlanningWidget::parseDataFromJson(
   planningData.planning_output.pose.position.x = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_X"].asDouble();
   planningData.planning_output.pose.position.y = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_Y"].asDouble();
 
+  // planning cost weight
+  Json::Value planning_cost_weight = trajectory["PLANNING_COST_WEIGHT"];
+  planningData.safety_cost_weight = planning_cost_weight["SAFETY_COST_WEIGHT"].asDouble();
+  planningData.lateral_cost_weight = planning_cost_weight["LATERAL_COST_WEIGHT"].asDouble();
+  planningData.smoothness_cost_weight = planning_cost_weight["SMOOTHNESS_COST_WEIGHT"].asDouble();
+  planningData.consistency_cost_weight = planning_cost_weight["CONSISTENCY_COST_WEIGHT"].asDouble();
+  planningData.garbage_cost_weight = planning_cost_weight["GARBAGE_COST_WEIGHT"].asDouble();
+
+  // planning candidate
   auto &val_candidates = planningData.planning_trajectory_candidates;
   val_candidates.clear();
   const int size_candidates = trajectory["TRAJECTORY_CANDIDATES"].size();
@@ -915,6 +947,7 @@ void QPlanningWidget::parseDataFromJson(
     val_candidates.push_back(candidates);
   }
 
+  // planning trajectory
   auto &val_trajectory = planningData.planning_trajectory;
   Json::Value json_trajectory = trajectory["PLANNING_TRAJECTORY"];
   val_trajectory.id = static_cast<uint8_t>(json_trajectory["ID"].asInt());
@@ -1084,4 +1117,10 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   cost_value[QPlanningCostWidget::Consistency] = data.consistency_cost_weight;
   cost_value[QPlanningCostWidget::Garbage] = data.garbage_cost_weight;
   QCostValueWidget::setOriginCostValue(cost_value);
+}
+
+void QPlanningWidget::onSelectTool(int index)
+{
+  m_pWdgShow[LivePlay]->setToolIndex(index);
+  m_pWdgShow[RePlay]->setToolIndex(index);
 }

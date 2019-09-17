@@ -24,7 +24,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #set(Qt5_DIR /opt/Qt5.9.5/5.9.5/gcc_64/lib/cmake/Qt5)
-set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
+set(Qt5_DIR /opt/Qt5.12.5/5.12.5/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
 add_message_files (
@@ -73,6 +73,7 @@ target_sources(debug_tool PRIVATE src/QPlanningCostWidget.cpp)
 target_sources(debug_tool PRIVATE src/QPlotWidget.cpp)
 target_sources(debug_tool PRIVATE src/QCostValueWidget.cpp)
 target_sources(debug_tool PRIVATE src/QFullViewWidget.cpp)
+target_sources(debug_tool PRIVATE src/QEditToolsWidget)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)

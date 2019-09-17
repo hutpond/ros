@@ -16,12 +16,15 @@
 #include "QPlanningWidget.h"
 #include "QDataDisplayWidget.h"
 #include "QPlanningCostWidget.h"
+#include "QEditToolsWidget.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
 static const char *PLANNING_TOOL_BAR = "PLANNING";
 static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
+
+static const char *WND_TITLE = "Debug Tool V3.4.3";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
@@ -35,14 +38,24 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   this->setCentralWidget(new QWidget);
   m_pWdgPlanning = new QPlanningWidget(this->centralWidget());
 
+  m_pWdgEditTool = new QEditToolsWidget(this);
+  QDockWidget *pDockWdg = new QDockWidget("", this);
+  pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  this->addDockWidget(Qt::LeftDockWidgetArea, pDockWdg);
+  pDockWdg->setWidget(m_pWdgEditTool);
+
+  connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
+          m_pWdgPlanning, &QPlanningWidget::onSelectTool);
+  m_pWdgPlanning->onSelectTool(QEditToolsWidget::Move);
+
   this->createMenu();
   this->createPlanningToolBar();
   this->createViewToolBar();
   this->createSettingToolBar();
 
-  this->setWindowTitle("Debug Tool V3.4");
+  this->setWndTitle();
 
-  QDockWidget *pDockWdg = new QDockWidget("", this);
+  pDockWdg = new QDockWidget("", this);
   pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
   QWidget *pDockTitle = new QWidget;
   pDockTitle->setStyleSheet("background-color: rgb(114, 159, 207);");
@@ -138,7 +151,8 @@ void QDebugToolMainWnd::createPlanningToolBar()
 {
   QToolBar *pToolBar = this->addToolBar(PLANNING_TOOL_BAR);
 
-  QAction *newAct = new QAction(tr("LIVE"), this);
+  QAction *newAct = new QAction(tr("SWITCH"), this);
+  newAct->setToolTip("switch live and replay");
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningLiveDisplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -147,6 +161,7 @@ void QDebugToolMainWnd::createPlanningToolBar()
   pWdgAction->setStyleSheet("background-color: rgb(255, 250, 220);");
 
   newAct = new QAction(tr("REPLAY"), this);
+  newAct->setToolTip("open replay path");
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionPlanningReplay);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -164,7 +179,11 @@ void QDebugToolMainWnd::createPlanningToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionPlanningLiveDisplay()
 {
-  m_pWdgPlanning->setShowType(QPlanningWidget::LivePlay);
+  int type = m_pWdgPlanning->showType();
+  type = (type == QPlanningWidget::LivePlay ?
+            QPlanningWidget::RePlay : QPlanningWidget::LivePlay);
+  m_pWdgPlanning->setShowType(type);
+  this->setWndTitle();
 }
 
 /*******************************************************
@@ -189,8 +208,9 @@ void QDebugToolMainWnd::onActionPlanningReplay()
   if (!strPath.isEmpty()) {
     int index = strPath.lastIndexOf('/');
     strOpenPath = strPath.mid(0, index);
-    m_pWdgPlanning->setShowType(QPlanningWidget::RePlay);
     m_pWdgPlanning->startReplay(strPath);
+    m_pWdgPlanning->setShowType(QPlanningWidget::RePlay);
+    this->setWndTitle();
   }
 }
 
@@ -315,6 +335,7 @@ void QDebugToolMainWnd::createSettingToolBar()
 void QDebugToolMainWnd::onActionChangeView()
 {
   m_pWdgPlanning->changeShowView();
+  this->setWndTitle();
 }
 
 /*******************************************************
@@ -380,4 +401,16 @@ void QDebugToolMainWnd::createHelpToolBar()
 void QDebugToolMainWnd::onActionHelpAbout()
 {
 
+}
+
+void QDebugToolMainWnd::setWndTitle()
+{
+  int type = m_pWdgPlanning->showType();
+  int view = m_pWdgPlanning->showView();
+  QString title = WND_TITLE;
+  title.append(" - ");
+  title.append(type == QPlanningWidget::LivePlay ? "LIVE" : "REPLAY");
+  title.append(" - ");
+  title.append(view == QPlanningWidget::LocalView ? "LOCAL" : "FULL");
+  this->setWindowTitle(title);
 }
