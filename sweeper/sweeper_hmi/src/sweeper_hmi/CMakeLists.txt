@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_C_COMPILER gcc-7)
 #set(CMAKE_CXX_COMPILER g++-7)
 
-set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
+set(Qt5_DIR /opt/Qt5.12.5/5.12.5/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Qml Quick REQUIRED)
 
 # ros

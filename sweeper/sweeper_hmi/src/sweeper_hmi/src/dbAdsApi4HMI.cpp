@@ -21,6 +21,13 @@
 #include "ads_msgs/ads_control_sweep.h"
 #include "ads_msgs/ads_control_systemmode.h"
 
+#include "sweep_msgs/ThrottleReport.h"
+#include "sweep_msgs/BrakeReport.h"
+#include "sweep_msgs/SteeringReport.h"
+#include "sweep_msgs/SystemMode.h"
+#include "sweep_msgs/Light.h"
+#include "sweep_msgs/FuelLevelReport.h"
+
 #include <xls.h>
 using namespace xls;
 using namespace dbAds;
@@ -41,9 +48,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 1)
+                for(m_progress = 0; m_progress < 100; m_progress += 10)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if(m_bStop) break;
                 }
 
@@ -93,9 +100,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 1)
+                for(m_progress = 0; m_progress < 100; m_progress += 10)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if(m_bStop) break;
                 }
 
@@ -145,9 +152,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 1)
+                for(m_progress = 0; m_progress < 100; m_progress += 10)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if(m_bStop) break;
                 }
 
@@ -197,9 +204,9 @@ namespace{
             m_bStop = false;
 
             m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 1)
+                for(m_progress = 0; m_progress < 100; m_progress += 10)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if(m_bStop) break;
                 }
 
@@ -267,71 +274,88 @@ namespace{
         ads_msgs::ads_control_fuel_level_report m_msg_ads_control_fuel_level_report;
         ads_msgs::ads_control_steering_report m_msg_ads_control_steering_report;
         ads_msgs::ads_control_throttle_report m_msg_ads_control_throttle_report;
-        ads_msgs::ads_ad_report m_msg_ads_ad_report;
-
         ads_msgs::ads_control_light m_msg_ads_control_light;
         ads_msgs::ads_control_sweep m_msg_ads_control_sweep;
         ads_msgs::ads_control_systemmode m_msg_ads_control_systemmode;
 
+        sweep_msgs::ThrottleReport m_ThrottleReport;
+        sweep_msgs::BrakeReport m_BrakeReport;
+        sweep_msgs::SteeringReport m_SteeringReport;
+        sweep_msgs::SystemMode m_SystemMode;
+        sweep_msgs::Light m_Light;
+        sweep_msgs::FuelLevelReport m_FuelLevelReport;
+
+        ads_msgs::ads_ad_report m_msg_ads_ad_report;
+
         std::map<int , std::chrono::system_clock::time_point> m_module_beat;
-        std::map<std::string, ads_msgs::ads_module_report> m_module_reprots;
+        std::map<std::string, ads_msgs::ads_module_report_item> m_module_reprots;
 
     private:
-        void OnMsg_ads_module_report(const ads_msgs::ads_module_report& msg)
+        void OnMsg_ads_module_report(const ads_msgs::ads_module_report& msgs)
         {
-            std::string szKey;
+            std::string szCritical, szWarning;
             {
                 std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-                m_module_beat[msg.moduleID] = std::chrono::system_clock::now();
-
-                szKey = std::to_string(msg.moduleID)
-                    + "-" + std::to_string(msg.moduleStatus)
-                    + "-" + std::to_string(msg.moduleSubtype);
-
-                if (msg.deviceID > 0)
+                for(auto& msg : msgs.reports)
                 {
-                    szKey = szKey + "-" + std::to_string(msg.deviceID);
-                }
-
-                switch (msg.moduleStatus)
-                {
-                case ads_msgs::ads_module_report::moduleStatus_Info_Online:
-                default:
-                    return;
-
-                case ads_msgs::ads_module_report::moduleStatus_OK:
+                    std::string szKey;
                     {
-                        for (auto it = m_module_reprots.begin(); it != m_module_reprots.end(); it++)
+                        m_module_beat[msg.moduleID] = std::chrono::system_clock::now();
+
+                        szKey = std::to_string(msg.moduleID)
+                            + "-" + std::to_string(msg.moduleStatus)
+                            + "-" + std::to_string(msg.moduleSubtype);
+
+                        if (msg.deviceID > 0)
                         {
-                            if (msg.moduleID == it->second.moduleID)
+                            szKey = szKey + "-" + std::to_string(msg.deviceID);
+                        }
+
+                        switch (msg.moduleStatus)
+                        {
+                        case ads_msgs::ads_module_report_item::moduleStatus_Info_Online:
+                        default:
+                            continue;
+
+                        case ads_msgs::ads_module_report_item::moduleStatus_OK:
                             {
-                                if (msg.moduleSubtype == 0)
+                                for (auto it = m_module_reprots.begin(); it != m_module_reprots.end(); it++)
                                 {
-                                     m_module_reprots.erase(it);
-                                }
-                                else if (msg.moduleSubtype == it->second.moduleSubtype)
-                                {
-                                    if (msg.deviceID == 0)
+                                    if (msg.moduleID == it->second.moduleID)
                                     {
-                                        m_module_reprots.erase(it);
-                                    }
-                                    else if (msg.deviceID == it->second.deviceID)
-                                    {
-                                        m_module_reprots.erase(it);
+                                        if (msg.moduleSubtype == 0)
+                                        {
+                                            m_module_reprots.erase(it);
+                                        }
+                                        else if (msg.moduleSubtype == it->second.moduleSubtype)
+                                        {
+                                            if (msg.deviceID == 0)
+                                            {
+                                                m_module_reprots.erase(it);
+                                            }
+                                            else if (msg.deviceID == it->second.deviceID)
+                                            {
+                                                m_module_reprots.erase(it);
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            break;
+
+                        case ads_msgs::ads_module_report_item::moduleStatus_Critical:
+                            szCritical = szKey;
+                            m_module_reprots[szKey] = msg;
+                            break;
+
+                        case ads_msgs::ads_module_report_item::moduleStatus_Warning:
+                            szWarning = szKey;
+                            m_module_reprots[szKey] = msg;
+                            break;
                         }
                     }
-                    break;
-
-                case ads_msgs::ads_module_report::moduleStatus_Warning:
-                case ads_msgs::ads_module_report::moduleStatus_Critical:
-                    {
-                         m_module_reprots[szKey] = msg;
-                    }
-                    break;
                 }
+
                 if(m_bDebug)
                 {
                     std::cout << "m_module_reprots" << std::endl;
@@ -342,18 +366,27 @@ namespace{
                 }
             }
 
-            if (msg.moduleStatus == ads_msgs::ads_module_report::moduleStatus_Critical)
+            CEventReport report;
+            report.m_ItemName = Item_module_state;
+
+            if (!szCritical.empty())
             {
+                report.m_value = szCritical;
+
                 ads_msgs::ads_ad_command msg_cmd;
                 msg_cmd.action = ads_msgs::ads_ad_command::action_Stop;
                 m_Pubs["/ads_ad_command"].publish(msg_cmd);
                 ros::spinOnce();
             }
+            else if (!szWarning.empty())
+            {
+                report.m_value = szWarning;
+            }
 
-            CEventReport report;
-            report.m_ItemName = Item_module_state;
-            report.m_value = szKey;
-            m_eventSignal(report);
+            if(!report.m_value.empty())
+            {
+                m_eventSignal(report);
+            }
         }
 
         void OnMsg_ads_control_WheelPositionReport(const ads_msgs::ads_control_WheelPositionReport& msg)
@@ -410,6 +443,38 @@ namespace{
         {
             std::lock_guard<std:: recursive_mutex> lock(m_mutex);
             m_msg_ads_control_systemmode = msg;
+        }
+
+        void OnMsg_report_ThrottleInfo(const sweep_msgs::ThrottleReport & msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::ThrottleReport m_ThrottleReport = msg;
+        }
+
+        void OnMsg_report_BrakeInfo(const sweep_msgs::BrakeReport& msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::BrakeReport m_BrakeReport = msg;
+        }
+        void OnMsg_report_SteerInfo(const sweep_msgs::SteeringReport& msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::SteeringReport m_SteeringReport = msg;
+        }
+        void OnMsg_report_ModeInfo(const sweep_msgs::SystemMode& msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::SystemMode m_SystemMode = msg;
+        }
+        void OnMsg_report_LightInfo(const sweep_msgs::Light& msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::Light m_Light = msg;
+        }
+        void OnMsg_report_BmsInfo(const sweep_msgs::FuelLevelReport& msg)
+        {
+            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
+            sweep_msgs::FuelLevelReport m_FuelLevelReport = msg;
         }
 
         xlsRow* getFaultRow(std::string szKey)
@@ -494,6 +559,25 @@ namespace{
             topic = "/ads_control_systemmode";
             m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_systemmode, this);
 
+            topic = "/report/ThrottleInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_ThrottleInfo, this);
+
+            topic = "/report/BrakeInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_BrakeInfo, this);
+
+            topic = "/report/SteerInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_SteerInfo, this);
+
+            topic = "/report/ModeInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_ModeInfo, this);
+
+            topic = "/report/LightInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_LightInfo, this);
+
+            topic = "/report/BmsInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_BmsInfo, this);
+ 
+
             return true;
         }
 
@@ -573,7 +657,7 @@ namespace{
             std::lock_guard<std:: recursive_mutex> lock(m_mutex);
             for (auto it = this->m_module_reprots.begin(); it != this->m_module_reprots.end(); it++)
             {
-                if (it->second.moduleStatus != ads_msgs::ads_module_report::moduleStatus_OK)
+                if (it->second.moduleStatus != ads_msgs::ads_module_report_item::moduleStatus_OK)
                 {
                     CFault fault;
 
@@ -875,7 +959,7 @@ void Api4HMI_TestCase(ros::NodeHandle* lpnode)
                 ads_msgs::ads_module_report msg;
                 msg.deviceID = 0;
                 msg.moduleID = ads_msgs::ads_module_report::moduleID_Planning;
-                msg.moduleStatus = ads_msgs::ads_module_report::moduleStatus_Critical;
+                msg.moduleStatus = ads_msgs::ads_module_report_item::moduleStatus_Critical;
                 msg.moduleSubtype = 1;
 
                 std::string topic = "/ads_module_report";
