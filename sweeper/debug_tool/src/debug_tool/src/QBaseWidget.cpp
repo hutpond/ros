@@ -7,6 +7,11 @@
 ********************************************************/
 #include <sstream>
 #include "QBaseWidget.h"
+#include "QPlanningParamWidget.h"
+#include "QFullViewWidget.h"
+#include "QReadDataManagerRos.h"
+
+static constexpr int REPLAY_MSEC[3] = {50, 200, 400};
 
 QBaseWidget::QBaseWidget(QWidget *parent)
   : QWidget(parent)
@@ -27,7 +32,7 @@ QBaseWidget::~QBaseWidget()
 ********************************************************/
 void QBaseWidget::replay()
 {
-  std::string path = m_fspath.string();
+  std::string path = m_fsPath.string();
 
   m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
@@ -84,17 +89,6 @@ void QBaseWidget::fileList(const std::string &path, std::vector<std::string> &fi
 }
 
 /*******************************************************
- * @brief 设置replay帧间隔时间
- * @param ms: 帧间隔时间，毫秒
-
- * @return
-********************************************************/
-void QBaseWidget::setReplayInterval(int ms)
-{
-  //m_nIntervalMillSecs = ms;
-}
-
-/*******************************************************
  * @brief replay暂停状态
  * @param pause: 暂停状态, true: 停, false: 恢复
 
@@ -104,3 +98,128 @@ void QBaseWidget::onReplayState(bool pause)
 {
   m_bFlagPauseReplay = pause;
 }
+
+
+int QBaseWidget::showType()
+{
+  return m_nShowType;
+}
+
+void QBaseWidget::setShowType(int type)
+{
+  m_nShowType = type;
+  m_pWdgParam->setShowType(type);
+
+  if (m_nTimerId != 0) {
+    killTimer(m_nTimerId);
+    m_nTimerId = 0;
+  }
+  if (type == RePlay) {
+    m_nTimerId = startTimer(REPLAY_MSEC[m_nReplaySpeedIndex]);
+  }
+}
+
+int QBaseWidget::showView()
+{
+  return m_nShowView;
+}
+
+void QBaseWidget::changeShowView()
+{
+  m_nShowView = m_nShowView == LocalView ? FullView : LocalView;
+  if (m_nShowView == LocalView) {
+    m_pWdgShow[0]->show();
+    m_pWdgShow[1]->show();
+    m_pWdgFullView->hide();
+  }
+  else {
+    m_pWdgShow[0]->hide();
+    m_pWdgShow[1]->hide();
+    m_pWdgFullView->show();
+  }
+}
+
+void QBaseWidget::setReplaySpeedIndex(int index)
+{
+  m_nReplaySpeedIndex = index;
+  if (m_nTimerId == 0) {
+    return;
+  }
+  killTimer(m_nTimerId);
+  m_nTimerId = startTimer(REPLAY_MSEC[index]);
+}
+
+int QBaseWidget::replaySpeedIndex()
+{
+  return m_nReplaySpeedIndex;
+}
+
+/*******************************************************
+ * @brief 缩放图像显示
+ * @param index: -1， 缩小, 0, 复原, 1, 放大
+
+ * @return
+********************************************************/
+void QBaseWidget::setViewResolution(int index)
+{
+  if (m_nShowView == LocalView) {
+    m_pWdgShow[0]->setViewResolution(index);
+    m_pWdgShow[1]->setViewResolution(index);
+  }
+  else {
+    m_pWdgFullView->setViewResolution(index);
+  }
+}
+
+/*******************************************************
+ * @brief 开始重放
+ * @param index: 重放序号
+ * @param path: 重放文件路径
+
+ * @return
+********************************************************/
+void QBaseWidget::startReplay(const QString &path)
+{
+  m_pWdgFullView->clearMapDatas();
+  m_bFlagPauseReplay = false;
+  m_listPlanningFiles.clear();
+  this->fileList(path.toStdString(), m_listPlanningFiles);
+  m_pWdgParam->setFrameCount(m_listPlanningFiles.size());
+
+  m_itFile = m_listPlanningFiles.begin();
+  m_bFlagPauseReplay = false;
+}
+
+/*******************************************************
+ * @brief 停止显示线程
+ * @param
+
+ * @return
+********************************************************/
+void QBaseWidget::stopDisplay()
+{
+  QReadDataManagerRos::instance()->stop_subscirbe();
+  if (m_nTimerId != 0) {
+    killTimer(m_nTimerId);
+    m_nTimerId = 0;
+  }
+}
+
+/*******************************************************
+ * @brief 是否显示所有target
+ * @param show: true, 显示所有
+
+ * @return
+********************************************************/
+void QBaseWidget::setShowAllTargets(bool show)
+{
+  m_pWdgShow[0]->setShowAllTargets(show);
+  m_pWdgShow[1]->setShowAllTargets(show);
+}
+
+void QBaseWidget::onSelectTool(int index, bool checkable)
+{
+  m_pWdgShow[LivePlay]->setToolIndex(index, checkable);
+  m_pWdgShow[RePlay]->setToolIndex(index, checkable);
+}
+

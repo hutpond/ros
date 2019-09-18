@@ -13,8 +13,9 @@
 
 QBaseShowWidget::QBaseShowWidget(QWidget *parent)
   : QWidget(parent)
-  , m_fOriginRatio(1.0)
   , m_fDisplayRatio(1.0)
+  , m_fOriginRatio(1.0)
+  , m_nCostType(OLD_COST)
 {
 }
 
@@ -163,4 +164,9 @@ void QBaseShowWidget::drawAxis(QPainter &painter)
         "Y"
         );
   painter.restore();
+}
+
+void QBaseShowWidget::setCostType(int type)
+{
+  m_nCostType = type;
 }

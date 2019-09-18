@@ -20,10 +20,10 @@
 QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   : QWidget(parent)
 {
-  m_pLblMousePosName = new QLabel(tr("鼠标坐标"), this);
+  m_pLblMousePosName = new QLabel(tr("坐标"), this);
   m_pLblMousePosValue = new QLabel(this);
 
-  m_pLblDecisionName = new QLabel(tr("Decision"), this);
+  m_pLblDecisionName = new QLabel(tr("决策"), this);
   m_pLblDecisionValue = new QLabel(this);
 
   m_pBtnPause = new QPushButton(tr("暂停"), this);
@@ -108,7 +108,7 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
   int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
   int nIndexTrack = static_cast<int>(data.track_target_decision);
   m_pLblDecisionValue->setFont(G_TEXT_FONT);
-  QString strText = QString("%1 [us: %2 r28: %3 r73: %4 track: %5]").
+  QString strText = QString("%1 [us: %2 r28: %3\nr73: %4 track: %5]").
       arg(this->getDecisionText(nIndex)).
       arg(this->getDecisionText(nIndexUs)).
       arg(this->getDecisionText(nIndexRadar)).
@@ -241,7 +241,7 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   const float F_SPACE_X_P = 0.01f;
   const float F_SPACE_Y_P = 0.02f;
   const float F_ITEM_H_P = 0.037f;
-  const float F_ITEM_NAME_W_P = 0.2f;
+  const float F_ITEM_NAME_W_P = 0.15f;
 
   const int WIDTH = this->width();
   const int HEIGHT = this->height();
@@ -265,8 +265,8 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 
   m_pLblDecisionName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
   xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblDecisionValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-  yPos += ITEM_H + SPACE_Y;
+  m_pLblDecisionValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H * 2);
+  yPos += ITEM_H * 2 + SPACE_Y;
 
   xPos = SPACE_X;
   m_pBtnPause->setGeometry(xPos, yPos, BTN_W, ITEM_H);

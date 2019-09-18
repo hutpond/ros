@@ -13,7 +13,6 @@
 #include <jsoncpp/json/json.h>
 #include "QBaseWidget.h"
 #include "QPlanningShowWidget.h"
-#include "QReadDataManagerRos.h"
 #include "QPlanningCostWidget.h"
 
 class QPlanningShowWidget;
@@ -25,33 +24,10 @@ class QPlanningWidget : public QBaseWidget
   Q_OBJECT
 
 public:
-  enum {
-    LivePlay,
-    RePlay
-  };
-
-  enum {
-    LocalView,
-    FullView
-  };
-
-public:
   QPlanningWidget(QWidget *parent);
   ~QPlanningWidget();
 
-  void setViewResolution(int);
-  void startReplay(const QString &);
-  void stopDisplay();
-  void setShowAllTargets(bool);
-  void setReplaySpeedIndex(int);
-  int replaySpeedIndex();
-  void setShowType(int);
-  int showType();
-  void changeShowView();
-  int showView();
-
 public slots:
-  void onSelectTool(int, bool);
   void onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
@@ -72,16 +48,6 @@ protected slots:
   void onCostValueChanged();
 
 private:
-  QPlanningShowWidget *m_pWdgShow[2];
-  QPlanningParamWidget *m_pWdgParam;
-  QFullViewWidget *m_pWdgFullView;
-
-  int m_nShowType;
-  int m_nShowView;
-  boost::filesystem::path m_fsPath;
-  std::string m_strJsonFile;
-
-  int m_nReplaySpeedIndex;
 
   double m_dCostValue[QPlanningCostWidget::Count];
 };

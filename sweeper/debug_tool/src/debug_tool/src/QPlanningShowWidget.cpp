@@ -20,7 +20,6 @@ QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
   , m_nShowPlanningPath(0)
   , m_bFlagShowAllTargets(false)
-  , m_nCostType(OLD_COST)
   , m_nNewTargetCount(0)
 {
   m_fOriginRatio = 4.0;
@@ -154,11 +153,6 @@ void QPlanningShowWidget::setShowAllTargets(bool show)
   this->calcMapRect();
   this->drawImage();
   this->update();
-}
-
-void QPlanningShowWidget::setCostType(int type)
-{
-  m_nCostType = type;
 }
 
 void QPlanningShowWidget::setToolIndex(int index, bool checkable)

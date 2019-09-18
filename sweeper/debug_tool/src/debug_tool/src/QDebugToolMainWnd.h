@@ -12,7 +12,7 @@
 
 class QStatusBar;
 class QTextBrowser;
-class QPlanningWidget;
+class QBaseWidget;
 class QDataDisplayWidget;
 class QPlanningCostWidget;
 class QEditToolsWidget;
@@ -20,6 +20,13 @@ class QEditToolsWidget;
 class QDebugToolMainWnd : public QMainWindow
 {
   Q_OBJECT
+
+  enum
+  {
+    Planning,
+    NewPlanning,
+    PlanningCount
+  };
 
 public:
   QDebugToolMainWnd(QWidget *parent = Q_NULLPTR);
@@ -32,12 +39,10 @@ protected:
   void createSettingToolBar();
   void createHelpToolBar();
 
-  void processPreShow(QWidget *);
   void setWndTitle();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
-  virtual void showEvent(QShowEvent *);
 
 protected slots:
   void onActionPlanningLiveDisplay();
@@ -53,10 +58,10 @@ protected slots:
   void onActionHelpAbout();
 
 private:
-  QPlanningWidget *m_pWdgPlanning;
+  QBaseWidget *m_pWdgPlanning[PlanningCount];
   QEditToolsWidget *m_pWdgEditTool;
 
-  QWidget *m_pWdgCurrent;
+  QBaseWidget *m_pWdgCurrent;
 
   QAction *m_pActionReplaySpeed;
 

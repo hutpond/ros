@@ -7,6 +7,7 @@
 #include "debug_tool/ads_PlanningData4Debug.h"
 #include "debug_tool/ads_TargetPoint.h"
 #include "debug_tool/ads_ReferencePoint.h"
+#include "debug_ads_msgs/ads_msgs_planning_debug_frame.h"
 
 class QReadDataManagerRos : public QObject
 {
@@ -16,16 +17,18 @@ public:
   void start_subscribe();
   void stop_subscirbe();
 
-  void send_planning_data(const debug_tool::ads_PlanningData4Debug &);
-
 protected:
   void timerEvent(QTimerEvent *);
+
+  void on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &);
+  void on_planning_subscirbe_new(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
 
 private:
   explicit QReadDataManagerRos(QObject *parent = NULL);
 
 signals:
   void planningData(const debug_tool::ads_PlanningData4Debug &);
+  void planningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
 
 public slots:
 
@@ -33,6 +36,8 @@ protected:
   int m_nTimerId;
   boost::shared_ptr<ros::NodeHandle> m_pNodeHandle;
   ros::Subscriber m_subPlanning;
+
+  ros::Subscriber m_subPlanningNew;
 
   static QReadDataManagerRos s_instance;
 };

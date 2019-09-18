@@ -14,31 +14,69 @@
 #include <boost/atomic.hpp>
 #include "jsoncpp/json/json.h"
 
-class QDataDisplayDialog;
+class QBaseShowWidget;
+class QPlanningParamWidget;
+class QFullViewWidget;
+
 class QBaseWidget : public QWidget
 {
   Q_OBJECT
 
 public:
+  enum {
+    LivePlay,
+    RePlay
+  };
+
+  enum {
+    LocalView,
+    FullView
+  };
+
+public:
   QBaseWidget(QWidget *parent);
   ~QBaseWidget();
+
+  void setReplaySpeedIndex(int);
+  int replaySpeedIndex();
+
+  void setShowType(int);
+  int showType();
+  void changeShowView();
+  int showView();
+
+  void setViewResolution(int);
+  void startReplay(const QString &);
+  void stopDisplay();
+  void setShowAllTargets(bool);
 
 protected:
   void replay();
   std::list<std::string> pathList(const std::string &);
   void fileList(const std::string &, std::vector<std::string> &);
 
+public slots:
+  void onSelectTool(int, bool);
+
 protected slots:
-  void setReplayInterval(int);
   void onReplayState(bool);
 
 protected:
-  boost::filesystem::path m_fspath;
-//  boost::atomic_int m_nIntervalMillSecs; // replay interval mill seconds
-  boost::atomic_bool m_bFlagPauseReplay; // replay pause state;
+  QBaseShowWidget *m_pWdgShow[2];
+  QPlanningParamWidget *m_pWdgParam;
+  QFullViewWidget *m_pWdgFullView;
+
+  int m_bFlagPauseReplay; // replay pause state;
   std::vector<std::string> m_listPlanningFiles;
   std::vector<std::string>::iterator m_itFile;  // 文件名链表迭代器
   int m_nTimerId;         // replay定时器id
+
+  int m_nShowType;
+  int m_nShowView;
+  boost::filesystem::path m_fsPath;
+  std::string m_strJsonFile;
+
+  int m_nReplaySpeedIndex;
 };
 
 #endif // Q_BASE_WIDGET_H

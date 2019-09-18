@@ -14,7 +14,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp std_msgs message_generation geometry_msgs debug_ads_msgs)
 include_directories( ${catkin_INCLUDE_DIRS} )
 
 # find dependencies
@@ -53,10 +54,7 @@ generate_messages(
   std_msgs
   geometry_msgs
   )
-
-catkin_package(
-  CATKIN_DEPENDS
-  message_runtime)
+catkin_package()
 
 add_executable(debug_tool src/main.cpp)
 
@@ -74,6 +72,7 @@ target_sources(debug_tool PRIVATE src/QPlotWidget.cpp)
 target_sources(debug_tool PRIVATE src/QCostValueWidget.cpp)
 target_sources(debug_tool PRIVATE src/QFullViewWidget.cpp)
 target_sources(debug_tool PRIVATE src/QEditToolsWidget)
+target_sources(debug_tool PRIVATE src/QNewPlanningWidget)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)
@@ -81,6 +80,8 @@ target_link_libraries(debug_tool boost_filesystem)
 
 target_include_directories(debug_tool PUBLIC
   $<INSTALL_INTERFACE:include>)
+
+add_dependencies(${PROJECT_NAME} debug_ads_msgs_gencpp)
 
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
 

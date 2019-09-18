@@ -1,8 +1,6 @@
 #include "QReadDataManagerRos.h"
 #include "GlobalDefine.h"
 
-void on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &);
-
 QReadDataManagerRos QReadDataManagerRos::s_instance;
 
 QReadDataManagerRos * QReadDataManagerRos::instance()
@@ -26,7 +24,11 @@ void QReadDataManagerRos::start_subscribe()
   m_pNodeHandle.reset(new ros::NodeHandle);
   m_subPlanning = m_pNodeHandle->subscribe(
         "planning_debug_data", 10,
-        on_planning_subscirbe);
+        &QReadDataManagerRos::on_planning_subscirbe, this);
+
+  m_subPlanningNew = m_pNodeHandle->subscribe(
+        "planning_debug_data_new", 10,
+        &QReadDataManagerRos::on_planning_subscirbe_new, this);
 
   m_nTimerId = startTimer(100);
 }
@@ -50,24 +52,17 @@ void QReadDataManagerRos::timerEvent(QTimerEvent *)
 }
 
 /**
- * @brief 发送planning数据
- * @param data: json字符串
-
- * @return
- */
-void QReadDataManagerRos::send_planning_data(const debug_tool::ads_PlanningData4Debug &data)
-{
-  emit planningData(data);
-}
-
-/**
  * @brief planning数据的ros订阅回调函数
  * @param msg: ros msg
 
  * @return
  */
-void on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &data)
+void QReadDataManagerRos::on_planning_subscirbe(const debug_tool::ads_PlanningData4Debug &data)
 {
-  QReadDataManagerRos::instance()->send_planning_data(data);
+  emit planningData(data);
 }
 
+void QReadDataManagerRos::on_planning_subscirbe_new(const debug_ads_msgs::ads_msgs_planning_debug_frame &data)
+{
+  emit planningData(data);
+}

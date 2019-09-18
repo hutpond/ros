@@ -9,7 +9,6 @@
 #define Q_PLANNING_SHOW_WIDGET_H
 
 #include "QBaseShowWidget.h"
-#include "debug_tool/ads_PlanningData4Debug.h"
 
 class QPlanningShowWidget : public QBaseShowWidget
 {
@@ -27,18 +26,12 @@ public:
     SENSOR_CAMERA
   };
 
-  enum {
-    NEW_COST,
-    OLD_COST
-  };
-
 public:
   QPlanningShowWidget(QWidget *parent);
   ~QPlanningShowWidget();
 
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void setShowAllTargets(bool);
-  void setCostType(int);
   void setToolIndex(int, bool);
 
 protected:
@@ -47,7 +40,6 @@ protected:
   void mouseMoveEvent(QMouseEvent *) final;
 
 signals:
-  void saveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
   void drawImage();
@@ -91,7 +83,6 @@ private:
   debug_tool::ads_PlanningData4Debug  m_planningData;
   int m_nShowPlanningPath;  // 规划路线显示, 0: 全显示, 1：只显示当前帧, 2：只显示前一帧
   bool m_bFlagShowAllTargets;
-  int m_nCostType;
   int m_nToolIndex;
 
   QVector<QPointF> m_ptfTargets;

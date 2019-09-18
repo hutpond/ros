@@ -10,17 +10,30 @@
 
 #include <QWidget>
 #include <boost/function.hpp>
+#include "debug_tool/ads_PlanningData4Debug.h"
 
 class QBaseShowWidget : public QWidget
 {
   Q_OBJECT
 
 public:
+  enum {
+    NEW_COST,
+    OLD_COST
+  };
+
+public:
   QBaseShowWidget(QWidget *parent);
   ~QBaseShowWidget();
 
+  void setCostType(int);
   void setViewResolution(int);
   void setFunPosition(boost::function<void(float, float, float, float)>);
+
+  virtual void setShowAllTargets(bool) {}
+  virtual void setToolIndex(int, bool) {}
+
+  virtual void setPlanningData(const debug_tool::ads_PlanningData4Debug &) {}
 
 protected:
   virtual void drawImage() = 0;
@@ -35,6 +48,9 @@ protected:
   virtual void mouseMoveEvent(QMouseEvent *);
   virtual void wheelEvent(QWheelEvent *);
 
+signals:
+  void saveDataToFile(const debug_tool::ads_PlanningData4Debug &);
+
 protected:
   QImage m_image;
   QRectF m_rectfMap;              // 显示区域的物理范围，单位：米，车体坐标系
@@ -47,6 +63,7 @@ protected:
   float m_fOriginRatio;     // 原始缩放比例
 
   boost::function<void(float, float, float, float)> m_funPosition;
+  int m_nCostType;
 };
 
 #endif // Q_BASE_SHOW_WIDGET_H
