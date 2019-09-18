@@ -24,7 +24,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V3.4.3";
+static const char *WND_TITLE = "Debug Tool V3.4.4";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
@@ -46,7 +46,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
 
   connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
           m_pWdgPlanning, &QPlanningWidget::onSelectTool);
-  m_pWdgPlanning->onSelectTool(QEditToolsWidget::Move);
+  m_pWdgPlanning->onSelectTool(QEditToolsWidget::Move, true);
 
   this->createMenu();
   this->createPlanningToolBar();

@@ -7,8 +7,11 @@ add_message_files(
   DIRECTORY msg
 
   FILES
-  ads_ins_data.msg
+   ads_Vec4f.msg
+   ads_Spline.msg
+   ads_ins_data.msg
 
+  ads_module_report_item.msg
   ads_module_report.msg
 
   ads_ad_command.msg
@@ -17,8 +20,7 @@ add_message_files(
   ads_planning_output.msg
   ads_ReferencePoint.msg
   ads_TargetPoint.msg
-  ads_PlanningData4Debug.msg
-
+  ads_planning_trajectory.msg
   ads_planningv1_status.msg
   ads_planningv1_trajectory.msg
   ads_planningv2_pathpoint.msg
@@ -43,6 +45,8 @@ add_message_files(
   ads_msfl_output.msg
 
   ads_boxInfo.msg
+  ads_CameraTarget.msg
+  ads_CameraTargetAll.msg
   ads_CameraCIPX.msg
   ads_CameraCurb.msg
   ads_CameraCurbsLanes.msg
@@ -61,13 +65,14 @@ add_message_files(
   ads_UltraSonicTarget.msg
   ads_UltraSonicTargetColl.msg
   ads_VehicleLocation.msg
-
   ads_lidar_front.msg
+  ads_PlanningData4Debug.msg
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
   sensor_msgs
   jsk_recognition_msgs
 )

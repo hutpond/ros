@@ -11,12 +11,16 @@ QEditToolsWidget::QEditToolsWidget(QWidget *parent)
     m_pBtnTool[i] = new QPushButton(this);
     m_pBtnTool[i]->setFocusPolicy(Qt::NoFocus);
     connect(m_pBtnTool[i], &QPushButton::clicked, this, &QEditToolsWidget::onBtnClicked);
+    m_bFlagCheckable[i] = true;
   }
   m_pBtnTool[Move]->setText("M");
   m_pBtnTool[Move]->setToolTip("Move");
   m_pBtnTool[Move]->setStyleSheet(SELECT_BKG);
   m_pBtnTool[Target]->setText("T");
   m_pBtnTool[Target]->setToolTip("Create Target");
+  m_pBtnTool[Save]->setText("S");
+  m_pBtnTool[Save]->setToolTip("Save Change to File");
+  m_bFlagCheckable[Save] = false;
 }
 
 void QEditToolsWidget::resizeEvent(QResizeEvent *)
@@ -32,6 +36,10 @@ void QEditToolsWidget::resizeEvent(QResizeEvent *)
   for (int i = 0; i < Count; i += 2) {
     pos_x = SPACE;
     m_pBtnTool[i]->setGeometry(pos_x, pos_y, ITEM_W, ITEM_H);
+
+    if (i + 1 == Count) {
+      break;
+    }
     pos_x += ITEM_W + SPACE;
     m_pBtnTool[i + 1]->setGeometry(pos_x, pos_y, ITEM_W, ITEM_H);
 
@@ -50,9 +58,11 @@ void QEditToolsWidget::onBtnClicked()
     }
   }
   if (index != -1 && index != m_nBtnIndex) {
-    m_pBtnTool[m_nBtnIndex]->setStyleSheet("background-color: lightGray;");
-    m_nBtnIndex = index;
-    m_pBtnTool[m_nBtnIndex]->setStyleSheet(SELECT_BKG);
-    emit selectTool(index);
+    if (m_bFlagCheckable[index]) {
+      m_pBtnTool[m_nBtnIndex]->setStyleSheet("background-color: lightGray;");
+      m_nBtnIndex = index;
+      m_pBtnTool[m_nBtnIndex]->setStyleSheet(SELECT_BKG);
+    }
+    emit selectTool(index, m_bFlagCheckable[index]);
   }
 }

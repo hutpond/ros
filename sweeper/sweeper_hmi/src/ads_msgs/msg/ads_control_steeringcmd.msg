@@ -1,6 +1,6 @@
 Header  header  
-float32 steering_wheel_angle_cmd        #µ¥Î»degree
-int16   steering_wheel_angle_velocity   #µ¥Î»rad/s, range 0 to 8.7, 0 = maximum
-uint8    enable                          #Enable
-int8    mode                            #0£º»úĞµÄ£Ê½£»0x10£ºÖúÁ¦Ä£Ê½£»0x20£º½Ç¶È¿ØÖÆÄ£Ê½£»0x22£º½Ç¶È¿ØÖÆÄ£Ê½£¨½â³ıÊÖ¶¯¸ÉÉæºóµÄ½Ç¶ÈÄ£Ê½½ûÖ¹£©
+float32 steering_wheel_angle_cmd        #å•ä½degree
+int16   steering_wheel_angle_velocity   #å•ä½rad/s, range 0 to 8.7, 0 = maximum
+uint8   enable                          #Enable
+int8    mode                            #0ï¼šæœºæ¢°æ¨¡å¼ï¼›0x10ï¼šåŠ©åŠ›æ¨¡å¼ï¼›0x20ï¼šè§’åº¦æ§åˆ¶æ¨¡å¼ï¼›0x22ï¼šè§’åº¦æ§åˆ¶æ¨¡å¼ï¼ˆè§£é™¤æ‰‹åŠ¨å¹²æ¶‰åçš„è§’åº¦æ¨¡å¼ç¦æ­¢ï¼‰
 int8    middle                          #angular zero

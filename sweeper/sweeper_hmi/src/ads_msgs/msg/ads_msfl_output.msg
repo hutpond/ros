@@ -17,5 +17,24 @@ float64  gyroX      ### degree/s
 float64  gyroY      ### degree/s
 float64  gyroZ      ### degree/s
 
+uint64  unix_ms
+float32 pose00
+float32 pose01
+float32 pose02
+float32 pose03
+float32 pose10
+float32 pose11
+float32 pose12
+float32 pose13
+float32 pose20
+float32 pose21
+float32 pose22
+float32 pose23
+float32 pose30
+float32 pose31
+float32 pose32
+float32 pose33
+
+
 int8  navState      ### 组合导航状态
 int8  gpsState      ###GPS状态

@@ -1,8 +1,8 @@
 Header  header  
-float32 steering_wheel_angle        #µ¥Î»rad
-float32 steering_wheel_angle_cmd    #µ¥Î»rad
-float32 steering_wheel_torque       #µ¥Î»Nm
+float32 steering_wheel_angle        #å•ä½rad
+float32 steering_wheel_angle_cmd    #å•ä½rad
+float32 steering_wheel_torque       #å•ä½Nm
 int8    middle_status               #Enabled
-int8    error_code1                 #¹ÊÕÏÂë1
-int8    error_code2                 #¹ÊÕÏÂë2
-int8    mode                        #¹¤×÷Ä£Ê½
+int8    error_code1                 #æ•…éšœç 1
+int8    error_code2                 #æ•…éšœç 2
+int8    mode                        #å·¥ä½œæ¨¡å¼

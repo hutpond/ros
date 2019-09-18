@@ -18,5 +18,3 @@ Header    header
 uint8     carState
 float64   carSpeed
 float64   carMileage
-
-

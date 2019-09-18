@@ -13,6 +13,7 @@ public:
   enum {
     Move,
     Target,
+    Save,
     Count
   };
 
@@ -23,13 +24,14 @@ protected:
   void resizeEvent(QResizeEvent *) final;
 
 signals:
-  void selectTool(int);
+  void selectTool(int, bool);
 
 public slots:
   void onBtnClicked();
 
 private:
   QPushButton *m_pBtnTool[Count];
+  bool m_bFlagCheckable[Count];
   int m_nBtnIndex;
 };
 

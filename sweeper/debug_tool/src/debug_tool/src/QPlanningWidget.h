@@ -51,7 +51,8 @@ public:
   int showView();
 
 public slots:
-  void onSelectTool(int);
+  void onSelectTool(int, bool);
+  void onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -61,7 +62,7 @@ protected:
   bool readFromJsonFile(const std::string &, debug_tool::ads_PlanningData4Debug &);
 
   void sortTrackTargets(debug_tool::ads_PlanningData4Debug &);
-  void saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &);
+  void saveDataToJsonFile(const std::string &, const debug_tool::ads_PlanningData4Debug &);
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
   void setPlanningData(debug_tool::ads_PlanningData4Debug &, const QString &);
 
@@ -78,6 +79,7 @@ private:
   int m_nShowType;
   int m_nShowView;
   boost::filesystem::path m_fsPath;
+  std::string m_strJsonFile;
 
   int m_nReplaySpeedIndex;
 

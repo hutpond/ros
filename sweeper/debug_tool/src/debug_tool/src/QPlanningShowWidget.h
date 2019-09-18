@@ -39,10 +39,15 @@ public:
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
   void setShowAllTargets(bool);
   void setCostType(int);
-  void setToolIndex(int);
+  void setToolIndex(int, bool);
 
 protected:
-  virtual void mousePressEvent(QMouseEvent *);
+  void mousePressEvent(QMouseEvent *) final;
+  void mouseReleaseEvent(QMouseEvent *) final;
+  void mouseMoveEvent(QMouseEvent *) final;
+
+signals:
+  void saveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
   void drawImage();
@@ -65,6 +70,7 @@ protected:
   void drawPlanningCandidatesSplines(QPainter &);
   void drawGarbageResults(QPainter &);
   void drawBezierLine(QPainter &, const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &);
+  void drawNewTarget(QPainter &);
 
   void calcMapRect();
 
@@ -73,6 +79,10 @@ protected:
   void slToXy(const double s, const double l, QPointF &);
   QPointF pixelToMap(const QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
+  QPolygonF createTargetPgf(const QVector<QPointF> &, const QPointF &);
+
+  void addTargetMouseMove(QMouseEvent *);
+  void addTargetToData();
 
 private:
   boost::array<QPointF, 100> m_ptfsLeftRoadSide;
@@ -83,7 +93,10 @@ private:
   bool m_bFlagShowAllTargets;
   int m_nCostType;
   int m_nToolIndex;
-  QPolygonF m_pgfTarget;
+
+  QVector<QPointF> m_ptfTargets;
+  QPointF m_ptfTargetMove;
+  int m_nNewTargetCount;
 };
 
 #endif // Q_PLANNING_SHOW_WIDGET_H

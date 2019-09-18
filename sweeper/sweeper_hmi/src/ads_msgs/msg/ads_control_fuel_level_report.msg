@@ -1,10 +1,10 @@
 Header  header  
-float32 capacity        #×ÜµçÁ¿
-float32 soc             #Ê£ÓàµçÁ¿
-float32 rsoc            #Ê£ÓàµçÁ¿°Ù·Ö±È
-float32 current         #³äµçÎªÕı£¬·ÅµçÎª¸º
-float32 voltage         #×ÜµçÑ¹
-uint8[] status          #±£»¤×´Ì¬
-int8    temp            #ÎÂ¶È
-int8    cell_n          #µçĞ¾¸öÊı
-int8    error_code      #¹ÊÕÏÂë
+float32 capacity        #æ€»ç”µé‡
+float32 soc             #å‰©ä½™ç”µé‡
+float32 rsoc            #å‰©ä½™ç”µé‡ç™¾åˆ†æ¯”
+float32 current         #å……ç”µä¸ºæ­£ï¼Œæ”¾ç”µä¸ºè´Ÿ
+float32 voltage         #æ€»ç”µå‹
+uint8[] status          #ä¿æŠ¤çŠ¶æ€
+int8    temp            #æ¸©åº¦
+int8    cell_n          #ç”µèŠ¯ä¸ªæ•°
+int8    error_code      #æ•…éšœç 

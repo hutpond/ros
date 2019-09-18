@@ -7,4 +7,3 @@ ads_CameraPedTarget[16] pedrider
 int32               vehicle_count
 ads_CameraVehTarget[16] vehicle
 ads_CameraCIPX          cipx
-

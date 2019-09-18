@@ -1,12 +1,12 @@
 Header  header  
 int8    received        #Enabled
-int8    braking         #µç»ú±§Õ¢
-int8    mode            #¿ØÖÆÄ£Ê½
-int8    motor_gear      #µç»úµµÎ»
-int8    real_gear       #Êµ¼ÊµµÎ»
-int8    pedal_pos       #µ±Ç°ÓÍÃÅÖµ
+int8    braking         #ç”µæœºæŠ±é—¸
+int8    mode            #æ§åˆ¶æ¨¡å¼
+int8    motor_gear      #ç”µæœºæ¡£ä½
+int8    real_gear       #å®é™…æ¡£ä½
+int8    pedal_pos       #å½“å‰æ²¹é—¨å€¼
 int16   motor_speed 
 float32 motor_current   
 int16   motor_error 
 float32 motor_temp  
-float32 controller_temp 
+float32 controller_temp

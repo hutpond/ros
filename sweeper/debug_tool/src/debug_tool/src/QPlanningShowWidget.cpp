@@ -21,9 +21,11 @@ QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   , m_nShowPlanningPath(0)
   , m_bFlagShowAllTargets(false)
   , m_nCostType(OLD_COST)
+  , m_nNewTargetCount(0)
 {
   m_fOriginRatio = 4.0;
   m_fDisplayRatio = m_fOriginRatio;
+  this->setMouseTracking(true);
 }
 
 QPlanningShowWidget::~QPlanningShowWidget()
@@ -48,19 +50,40 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 
   if (m_nToolIndex == QEditToolsWidget::Target) {
     if (bLeftPress) {
-      if (m_pgfTarget.size() < 2) {
-        m_pgfTarget << ptf;
+      if (m_ptfTargets.size() < 2) {
+        m_ptfTargets << ptf;
       }
-      else if (m_pgfTarget.size() == 2){
-
+      else if (m_ptfTargets.size() == 2){
+        this->addTargetToData();
+        this->calcMapRect();
+        this->drawImage();
+        this->update();
       }
     }
     else {
-      m_pgfTarget.clear();
+      m_ptfTargets.clear();
+      this->calcMapRect();
+      this->drawImage();
+      this->update();
     }
   }
   else {
     m_ptfMouseMove = ptf;
+  }
+}
+
+void QPlanningShowWidget::mouseReleaseEvent(QMouseEvent *)
+{
+
+}
+
+void QPlanningShowWidget::mouseMoveEvent(QMouseEvent *e)
+{
+  if (m_nToolIndex == QEditToolsWidget::Move) {
+    QBaseShowWidget::mouseMoveEvent(e);
+  }
+  else if (m_nToolIndex == QEditToolsWidget::Target) {
+    this->addTargetMouseMove(e);
   }
 }
 
@@ -72,6 +95,9 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 ********************************************************/
 void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
+  m_nNewTargetCount = 0;
+  m_ptfTargets.clear();
+
   m_planningData = data;
   this->calcMapRect();
   this->drawImage();
@@ -135,9 +161,20 @@ void QPlanningShowWidget::setCostType(int type)
   m_nCostType = type;
 }
 
-void QPlanningShowWidget::setToolIndex(int index)
+void QPlanningShowWidget::setToolIndex(int index, bool checkable)
 {
-  m_nToolIndex = index;
+  if (checkable) {
+    m_nToolIndex = index;
+  }
+  if (index == QEditToolsWidget::Save && m_nNewTargetCount > 0) {
+    m_planningData.fusion_results.object_count += m_nNewTargetCount;
+    m_nNewTargetCount = 0;
+    emit saveDataToFile(m_planningData);
+
+    this->calcMapRect();
+    this->drawImage();
+    this->update();
+  }
 }
 
 /*******************************************************
@@ -160,6 +197,7 @@ void QPlanningShowWidget::drawImage()
   this->drawAreaLine(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
+  this->drawNewTarget(painter);
   //this->drawPlanningCandidatesSplines(painter);
   this->drawPlanningSplines(painter);
   if (m_nCostType == OLD_COST) {
@@ -1218,6 +1256,20 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
     }
   }
 
+  // new targets
+  pen.setStyle(Qt::DotLine);
+  painter.setPen(pen);
+  for (int i = SIZE; i < SIZE + m_nNewTargetCount; ++i) {
+    QPolygonF pgf;
+    pgf << QPointF(TRACKS[i].P1_X, TRACKS[i].P1_Y) <<
+           QPointF(TRACKS[i].P2_X, TRACKS[i].P2_Y) <<
+           QPointF(TRACKS[i].P3_X, TRACKS[i].P3_Y) <<
+           QPointF(TRACKS[i].P4_X, TRACKS[i].P4_Y);
+    pgf = m_transform.map(pgf);
+    painter.drawPolygon(pgf);
+    painter.drawText(pgf.boundingRect(), Qt::AlignCenter, QString::number(i));
+  }
+
   painter.restore();
 }
 
@@ -1394,6 +1446,28 @@ void QPlanningShowWidget::drawBezierLine(
     path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
     painter.drawPath(path);
   }
+}
+
+void QPlanningShowWidget::drawNewTarget(QPainter &painter)
+{
+  painter.save();
+  QPen pen;
+  pen.setColor(Qt::darkMagenta);
+  pen.setStyle(Qt::DotLine);
+  painter.setFont(QFont("Times", 10));
+  painter.setPen(pen);
+
+  const auto size = m_ptfTargets.size();
+  if (size == 1) {
+    QLineF linef(m_ptfTargets[0], m_ptfTargetMove);
+    painter.drawLine(linef);
+  }
+  else if (size == 2) {
+    QPolygonF pgf = this->createTargetPgf(m_ptfTargets, m_ptfTargetMove);
+    painter.drawPolyline(pgf);
+  }
+
+  painter.restore();
 }
 
 /**
@@ -1628,4 +1702,78 @@ QPointF QPlanningShowWidget::pixelToMap(const QPointF &ptfPixel)
   QTransform inverted = m_transform.inverted();
   QPointF ptfMap = inverted.map(ptfPixel);
   return ptfMap;
+}
+
+void QPlanningShowWidget::addTargetMouseMove(QMouseEvent *e)
+{
+  m_ptfTargetMove = e->localPos();
+  const auto size = m_ptfTargets.size();
+  if (size == 1 || size == 2) {
+    this->calcMapRect();
+    this->drawImage();
+    this->update();
+  }
+}
+
+QPolygonF QPlanningShowWidget::createTargetPgf(const QVector<QPointF> &ptfs, const QPointF &ptfMove)
+{
+  QPolygonF pgf;
+  if (ptfs.size() != 2) {
+    return pgf;
+  }
+  QLineF linef(ptfs[0], ptfs[1]);
+  QLineF linef2;
+  linef2.setP1(ptfMove);
+  linef2.setAngle(linef.angle());
+
+  QLineF linefNormal;
+
+  linefNormal.setP1(ptfs[0]);
+  linefNormal.setAngle(linef.normalVector().angle());
+  QPointF ptfIntersect;
+  linefNormal.intersect(linef2, &ptfIntersect);
+  pgf << ptfs[0] << ptfIntersect;
+
+  linefNormal.setP1(ptfs[1]);
+  linefNormal.setAngle(linef.normalVector().angle());
+  linefNormal.intersect(linef2, &ptfIntersect);
+  pgf << ptfIntersect << ptfs[1] << ptfs[0];
+
+  return pgf;
+}
+
+void QPlanningShowWidget::addTargetToData()
+{
+  auto &tracks = m_planningData.fusion_results.track_objects;
+  const int size = static_cast<int>(m_planningData.fusion_results.object_count);
+
+  QPolygonF pgf = this->createTargetPgf(m_ptfTargets, m_ptfTargetMove);
+  QPolygon pg = pgf.toPolygon();
+
+  int trackId = size == 0 ? 0 : tracks[size - 1].TRACK_ID;
+  auto &track = tracks[size + m_nNewTargetCount];
+  track.TRACK_ID = trackId + 1;
+
+  QPointF ptf(pg.point(0).x(), pg.point(0).y());
+  ptf = this->pixelToMap(ptf);
+  track.P1_X = ptf.x();
+  track.P1_Y = ptf.y();
+
+  ptf = QPointF(pg.point(1).x(), pg.point(1).y());
+  ptf = this->pixelToMap(ptf);
+  track.P2_X = ptf.x();
+  track.P2_Y = ptf.y();
+
+  ptf = QPointF(pg.point(2).x(), pg.point(2).y());
+  ptf = this->pixelToMap(ptf);
+  track.P3_X = ptf.x();
+  track.P3_Y = ptf.y();
+
+  ptf = QPointF(pg.point(3).x(), pg.point(3).y());
+  ptf = this->pixelToMap(ptf);
+  track.P4_X = ptf.x();
+  track.P4_Y = ptf.y();
+
+  ++ m_nNewTargetCount;
+  m_ptfTargets.clear();
 }

@@ -44,6 +44,8 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   for (int i = 0; i < 2; ++i) {
     m_pWdgShow[i] = new QPlanningShowWidget(this);
     m_pWdgShow[i]->setFunPosition(fun);
+    connect(m_pWdgShow[i], &QPlanningShowWidget::saveDataToFile,
+        this, &QPlanningWidget::onSaveDataToFile);
   }
   m_pWdgShow[1]->setCostType(QPlanningShowWidget::NEW_COST);
   m_nShowType = LivePlay;
@@ -309,6 +311,7 @@ void QPlanningWidget::onCostValueChanged()
 bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_PlanningData4Debug &planningData)
 {
   const std::string fileName = name.substr(1, name.length() - 2);
+  m_strJsonFile = fileName;
 
   FILE *pf = fopen(fileName.c_str(), "r");
   if (pf == NULL) {
@@ -340,15 +343,37 @@ bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_
 
 void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Debug &planningData)
 {
+  char time_str[64] = {0};
+  time_t times = time(NULL);
+  struct tm *utcTime = localtime(&times);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",
+          utcTime->tm_year + 1900,
+          utcTime->tm_mon + 1,
+          utcTime->tm_mday,
+          utcTime->tm_hour,
+          utcTime->tm_min,
+          utcTime->tm_sec,
+          static_cast<int>((tv.tv_usec / 1000) % 1000)
+          );
+
+  fs::path path = m_fsPath;
+  std::string strFileName = time_str;
+  strFileName += ".txt";
+  path /= strFileName;
+  strFileName = path.string();
+
   debug_tool::ads_PlanningData4Debug &data = const_cast<debug_tool::ads_PlanningData4Debug &>(planningData);
   this->sortTrackTargets(data);
-  this->saveDataToJsonFile(data);
+  this->saveDataToJsonFile(strFileName, data);
   if (m_nShowType == LivePlay) {
     this->setPlanningData(data, "");
   }
 }
 
-void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debug &planningData)
+void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
+                                         const debug_tool::ads_PlanningData4Debug &planningData)
 {
   // car
   Json::Value carStatus;
@@ -706,27 +731,6 @@ void QPlanningWidget::saveDataToJsonFile(const debug_tool::ads_PlanningData4Debu
   data["ROAD_INFO"] = roadInfo;
   data["REFERENCE_LINE"] = referenceLine;
   data["DEBUG_INFO"] = planningData.debug_info;
-
-  char time_str[64] = {0};
-  time_t times = time(NULL);
-  struct tm *utcTime = localtime(&times);
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",
-          utcTime->tm_year + 1900,
-          utcTime->tm_mon + 1,
-          utcTime->tm_mday,
-          utcTime->tm_hour,
-          utcTime->tm_min,
-          utcTime->tm_sec,
-          static_cast<int>((tv.tv_usec / 1000) % 1000)
-          );
-
-  fs::path path = m_fsPath;
-  std::string strFileName = time_str;
-  strFileName += ".txt";
-  path /= strFileName;
-  strFileName = path.string();
 
   std::ofstream out(strFileName.c_str());
   Json::StreamWriterBuilder builder;
@@ -1119,8 +1123,18 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   QCostValueWidget::setOriginCostValue(cost_value);
 }
 
-void QPlanningWidget::onSelectTool(int index)
+void QPlanningWidget::onSelectTool(int index, bool checkable)
 {
-  m_pWdgShow[LivePlay]->setToolIndex(index);
-  m_pWdgShow[RePlay]->setToolIndex(index);
+  m_pWdgShow[LivePlay]->setToolIndex(index, checkable);
+  m_pWdgShow[RePlay]->setToolIndex(index, checkable);
+}
+
+void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &data)
+{
+  this->saveDataToJsonFile(m_strJsonFile, data);
+  std::size_t pos = m_strJsonFile.find_last_of('/');
+  std::string file_name = m_strJsonFile.substr(pos + 1, m_strJsonFile.length() - (pos + 1) - 1);
+
+  debug_tool::ads_PlanningData4Debug dataNew = data;
+  this->setPlanningData(dataNew, QString::fromStdString(file_name));
 }

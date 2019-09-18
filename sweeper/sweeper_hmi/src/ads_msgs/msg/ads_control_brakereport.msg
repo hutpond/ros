@@ -1,14 +1,14 @@
 Header  header  
 float32 pedal_input         #Brake pedal Unitless, range 0.15 to 0.50
 float32 pedal_cmd   
-int16   pedal_output        #0-2500£º0-100%£¨ÍêÈ«ÖÆ¶¯-ÍêÈ«ÊÍ·Å£©£¬Ã¿500Ò»¸öµµÎ»
-float32 torque_input        #Braking torque£¬µ¥Î»Nm
+int16   pedal_output        #0-2500ï¼š0-100%ï¼ˆå®Œå…¨åˆ¶åŠ¨-å®Œå…¨é‡Šæ”¾ï¼‰ï¼Œæ¯500ä¸€ä¸ªæ¡£ä½
+float32 torque_input        #Braking torqueï¼Œå•ä½Nm
 float32 torque_cmd  
 float32 torque_output   
-uint8    emergency_status    #¼±Í£°´Å¥×´Ì¬
-uint8    boo_cmd 
-uint8    boo_output  
-uint8    enabled             #Enabled
-uint8    override            #Driver override
-uint8    driver              #Driver activity
-uint8    timeout             #Command timeout
+uint8   emergency_status    #æ€¥åœæŒ‰é’®çŠ¶æ€
+uint8   boo_cmd 
+uint8   boo_output  
+uint8   enabled             #Enabled
+uint8   override            #Driver override
+uint8   driver              #Driver activity
+uint8   timeout             #Command timeout

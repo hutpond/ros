@@ -14,32 +14,24 @@ ads_Radar28fTargetColl radar28f_results
 ads_Radar73fTargetColl radar73f_results
 ads_UltraSonicTargetColl ultrasonic_results
 ads_TrackTargetColl fusion_results
+ads_littersensor_data garbage_detection_results
 
-float64 trajectory_a0
-float64 trajectory_a1
-float64 trajectory_a2
-float64 trajectory_a3
-float64 trajectory_b0
-float64 trajectory_b1
-float64 trajectory_b2
-float64 trajectory_b3
-float64 trajectory_b4
-float64 trajectory_start_s
-float64 trajectory_start_l
-float64 trajectory_start_x
-float64 trajectory_start_y
-float64 trajectory_end_s
-float64 trajectory_end_l
-float64 trajectory_end_x
-float64 trajectory_end_y
+ads_planning_trajectory[10] planning_trajectory_candidates
+ads_planning_trajectory planning_trajectory
+ads_planning_output planning_output
 
 float64 safe_dis1
 float64 safe_dis2
 float64 max_planning_distance
+ads_pubcurb curb
 bool left_road_boundary_available
 bool right_road_boundary_available
 float64[5] left_road_boundary
 float64[5] right_road_boundary
+uint8 num_left_road_boundary_splines
+ads_Spline[100] left_road_boundary_splines
+uint8 num_right_road_boundary_splines
+ads_Spline[100] right_road_boundary_splines
 float64 left_road_boundary_start_s
 float64 left_road_boundary_end_s
 float64 right_road_boundary_start_s
@@ -47,13 +39,16 @@ float64 right_road_boundary_end_s
 float64 left_half_road_width
 float64 right_half_road_width
 
-int8 num_reference_points
+uint8 num_reference_points
 ads_ReferencePoint[100] reference_points
+uint8 num_reference_splines
+ads_Spline[100] reference_splines
 
-int8 decision
-int8 ultrasonic_decision
-int8 radar28f_decision
-int8 radar73f_decision
-ads_TargetPoint[6] decision_targets
+uint8 decision
+uint8 ultrasonic_decision
+uint8 radar28f_decision
+uint8 radar73f_decision
+uint8 track_target_decision
+ads_TargetPoint[4] decision_targets
 
 string debug_info
