@@ -23,6 +23,34 @@ QBaseWidget::~QBaseWidget()
 {
 }
 
+void QBaseWidget::resizeEvent(QResizeEvent *)
+{
+  const int W_PERCENT = 70;
+  const int WIDTH = this->width();
+  const int HEIGHT = this->height();
+
+  const int WDG_SHWO_W = WIDTH * W_PERCENT / 200;
+  for (int i = 0; i < 2; ++i) {
+    m_pWdgShow[i]->setGeometry(
+          i * WDG_SHWO_W,
+          0,
+          WDG_SHWO_W,
+          HEIGHT
+          );
+  }
+  m_pWdgFullView->setGeometry(
+        0,
+        0,
+        WIDTH * W_PERCENT / 100,
+        HEIGHT
+        );
+  m_pWdgParam->setGeometry(
+        WIDTH * W_PERCENT / 100,
+        0,
+        WIDTH * (100 - W_PERCENT) / 100,
+        HEIGHT
+        );
+}
 
 /*******************************************************
  * @brief 重放数据文件
@@ -223,3 +251,24 @@ void QBaseWidget::onSelectTool(int index, bool checkable)
   m_pWdgShow[RePlay]->setToolIndex(index, checkable);
 }
 
+std::string QBaseWidget::dataFileName()
+{
+  char time_str[64] = {0};
+  time_t times = time(NULL);
+  struct tm *utcTime = localtime(&times);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",
+          utcTime->tm_year + 1900,
+          utcTime->tm_mon + 1,
+          utcTime->tm_mday,
+          utcTime->tm_hour,
+          utcTime->tm_min,
+          utcTime->tm_sec,
+          static_cast<int>((tv.tv_usec / 1000) % 1000)
+          );
+
+  std::string strFileName = time_str;
+  strFileName += ".txt";
+  return strFileName;
+}

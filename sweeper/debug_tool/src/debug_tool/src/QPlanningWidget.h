@@ -12,7 +12,7 @@
 #include <boost/filesystem.hpp>
 #include <jsoncpp/json/json.h>
 #include "QBaseWidget.h"
-#include "QPlanningShowWidget.h"
+#include "debug_tool/ads_PlanningData4Debug.h"
 #include "QPlanningCostWidget.h"
 
 class QPlanningShowWidget;
@@ -31,7 +31,6 @@ public slots:
   void onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
-  virtual void resizeEvent(QResizeEvent *);
   virtual void timerEvent(QTimerEvent *);
 
 protected:

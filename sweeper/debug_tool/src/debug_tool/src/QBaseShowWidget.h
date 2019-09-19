@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <boost/function.hpp>
 #include "debug_tool/ads_PlanningData4Debug.h"
+#include "debug_ads_msgs/ads_msgs_planning_debug_frame.h"
 
 class QBaseShowWidget : public QWidget
 {
@@ -34,6 +35,7 @@ public:
   virtual void setToolIndex(int, bool) {}
 
   virtual void setPlanningData(const debug_tool::ads_PlanningData4Debug &) {}
+  virtual void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &) {}
 
 protected:
   virtual void drawImage() = 0;

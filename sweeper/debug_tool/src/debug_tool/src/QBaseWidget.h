@@ -51,9 +51,14 @@ public:
   void setShowAllTargets(bool);
 
 protected:
+  virtual void resizeEvent(QResizeEvent *);
+
+protected:
   void replay();
   std::list<std::string> pathList(const std::string &);
   void fileList(const std::string &, std::vector<std::string> &);
+
+  std::string dataFileName();
 
 public slots:
   void onSelectTool(int, bool);

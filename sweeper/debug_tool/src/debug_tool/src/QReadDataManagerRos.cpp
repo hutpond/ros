@@ -64,5 +64,5 @@ void QReadDataManagerRos::on_planning_subscirbe(const debug_tool::ads_PlanningDa
 
 void QReadDataManagerRos::on_planning_subscirbe_new(const debug_ads_msgs::ads_msgs_planning_debug_frame &data)
 {
-  emit planningData(data);
+  emit planningDataNew(data);
 }

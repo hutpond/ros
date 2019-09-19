@@ -25,7 +25,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V3.4.6";
+static const char *WND_TITLE = "Debug Tool V3.4.7";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
@@ -44,11 +44,12 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
 
   this->setCentralWidget(new QWidget);
 
-  m_pWdgPlanning[Planning] = new QPlanningWidget(this->centralWidget());
+  m_pWdgPlanning[OldPlanning] = new QPlanningWidget(this->centralWidget());
   connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
-          m_pWdgPlanning[Planning], &QPlanningWidget::onSelectTool);
-  m_pWdgPlanning[Planning]->onSelectTool(QEditToolsWidget::Move, true);
-  m_pWdgCurrent = m_pWdgPlanning[Planning];
+          m_pWdgPlanning[OldPlanning], &QPlanningWidget::onSelectTool);
+  m_pWdgPlanning[OldPlanning]->onSelectTool(QEditToolsWidget::Move, true);
+  m_pWdgCurrent = m_pWdgPlanning[OldPlanning];
+  m_nCurrentIndex = OldPlanning;
 
   m_pWdgPlanning[NewPlanning] = new QNewPlanningWidget(this->centralWidget());
   connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
@@ -94,14 +95,14 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
 ********************************************************/
 void QDebugToolMainWnd::stopProcess()
 {
-  m_pWdgPlanning[Planning]->stopDisplay();
+  m_pWdgPlanning[OldPlanning]->stopDisplay();
   m_pWdgPlanning[NewPlanning]->stopDisplay();
 }
 
 void QDebugToolMainWnd::resizeEvent(QResizeEvent *)
 {
   QRect rect = this->centralWidget()->rect();
-  m_pWdgPlanning[Planning]->setGeometry(rect);
+  m_pWdgPlanning[OldPlanning]->setGeometry(rect);
   m_pWdgPlanning[NewPlanning]->setGeometry(rect);
 }
 
@@ -114,9 +115,15 @@ void QDebugToolMainWnd::resizeEvent(QResizeEvent *)
 void QDebugToolMainWnd::createMenu()
 {
   QMenu *menu = menuBar()->addMenu(tr("Planning"));
-  menu->addAction(tr("Live Display"), this,
-                  SLOT(onActionPlanningLiveDisplay()));
-  menu->addAction(tr("Replay"), this, SLOT(onActionPlanningReplay()));
+  m_pActionOldPlanning = menu->addAction(tr("Old Planning"), this,
+                  SLOT(onActionOldPlanning()));
+  m_pActionNewPlanning = menu->addAction(tr("New Planning"), this, SLOT(onActionNewPlanning()));
+  QActionGroup *pActionGroup = new QActionGroup(this);
+  pActionGroup->addAction(m_pActionOldPlanning);
+  pActionGroup->addAction(m_pActionNewPlanning);
+  m_pActionOldPlanning->setCheckable(true);
+  m_pActionNewPlanning->setCheckable(true);
+  m_pActionOldPlanning->setChecked(true);
 
   menu = menuBar()->addMenu(tr("View"));
   menu->addAction(tr("Zoom In +"), this, SLOT(onActionViewZoomIn()));
@@ -158,6 +165,28 @@ void QDebugToolMainWnd::createPlanningToolBar()
   pToolBar->insertSeparator(newAct);
 }
 
+void QDebugToolMainWnd::onActionOldPlanning()
+{
+  if (m_nCurrentIndex != OldPlanning) {
+    m_pWdgCurrent->hide();
+    m_pWdgCurrent = m_pWdgPlanning[OldPlanning];
+    m_nCurrentIndex = OldPlanning;
+    m_pWdgCurrent->show();
+    this->setWndTitle();
+  }
+}
+
+void QDebugToolMainWnd::onActionNewPlanning()
+{
+  if (m_nCurrentIndex != NewPlanning) {
+    m_pWdgCurrent->hide();
+    m_pWdgCurrent = m_pWdgPlanning[NewPlanning];
+    m_nCurrentIndex = NewPlanning;
+    m_pWdgCurrent->show();
+    this->setWndTitle();
+  }
+}
+
 /*******************************************************
  * @brief 实时显示路径规划相关的当前数据、状态
  * @param
@@ -166,10 +195,10 @@ void QDebugToolMainWnd::createPlanningToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionPlanningLiveDisplay()
 {
-  int type = m_pWdgPlanning[Planning]->showType();
+  int type = m_pWdgPlanning[OldPlanning]->showType();
   type = (type == QPlanningWidget::LivePlay ?
             QPlanningWidget::RePlay : QPlanningWidget::LivePlay);
-  m_pWdgPlanning[Planning]->setShowType(type);
+  m_pWdgPlanning[OldPlanning]->setShowType(type);
   m_pWdgPlanning[NewPlanning]->setShowType(type);
   this->setWndTitle();
 }
@@ -197,7 +226,7 @@ void QDebugToolMainWnd::onActionPlanningReplay()
     int index = strPath.lastIndexOf('/');
     strOpenPath = strPath.mid(0, index);
     m_pWdgCurrent->startReplay(strPath);
-    m_pWdgPlanning[Planning]->setShowType(QPlanningWidget::RePlay);
+    m_pWdgPlanning[OldPlanning]->setShowType(QPlanningWidget::RePlay);
     m_pWdgPlanning[NewPlanning]->setShowType(QPlanningWidget::RePlay);
     this->setWndTitle();
   }
@@ -317,7 +346,7 @@ void QDebugToolMainWnd::createSettingToolBar()
 
 void QDebugToolMainWnd::onActionChangeView()
 {
-  m_pWdgPlanning[Planning]->changeShowView();
+  m_pWdgPlanning[OldPlanning]->changeShowView();
   m_pWdgPlanning[NewPlanning]->changeShowView();
   this->setWndTitle();
 }
@@ -338,15 +367,15 @@ void QDebugToolMainWnd::onActionShowTargets()
     m_pActionShowTargets->setText(tr("T"));
   }
   m_pActionShowTargets->setChecked(m_bFlagShowAllTargets);
-  m_pWdgPlanning[Planning]->setShowAllTargets(m_bFlagShowAllTargets);
+  m_pWdgPlanning[OldPlanning]->setShowAllTargets(m_bFlagShowAllTargets);
   m_pWdgPlanning[NewPlanning]->setShowAllTargets(m_bFlagShowAllTargets);
 }
 
 void QDebugToolMainWnd::onActionReplaySpeed()
 {
-  int index = m_pWdgPlanning[Planning]->replaySpeedIndex();
+  int index = m_pWdgPlanning[OldPlanning]->replaySpeedIndex();
   ++ index %= 3;
-  m_pWdgPlanning[Planning]->setReplaySpeedIndex(index);
+  m_pWdgPlanning[OldPlanning]->setReplaySpeedIndex(index);
   m_pWdgPlanning[NewPlanning]->setReplaySpeedIndex(index);
   if (index == 0) {
     m_pActionReplaySpeed->setText(tr("H"));
@@ -391,9 +420,11 @@ void QDebugToolMainWnd::onActionHelpAbout()
 
 void QDebugToolMainWnd::setWndTitle()
 {
-  int type = m_pWdgPlanning[Planning]->showType();
-  int view = m_pWdgPlanning[Planning]->showView();
+  int type = m_pWdgPlanning[OldPlanning]->showType();
+  int view = m_pWdgPlanning[OldPlanning]->showView();
   QString title = WND_TITLE;
+  title.append(" - ");
+  title.append(m_nCurrentIndex == NewPlanning ? "NEW" : "OLD");
   title.append(" - ");
   title.append(type == QPlanningWidget::LivePlay ? "LIVE" : "REPLAY");
   title.append(" - ");

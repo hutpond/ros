@@ -5,8 +5,6 @@
 #include <QObject>
 #include "ros/ros.h"
 #include "debug_tool/ads_PlanningData4Debug.h"
-#include "debug_tool/ads_TargetPoint.h"
-#include "debug_tool/ads_ReferencePoint.h"
 #include "debug_ads_msgs/ads_msgs_planning_debug_frame.h"
 
 class QReadDataManagerRos : public QObject
@@ -28,7 +26,7 @@ private:
 
 signals:
   void planningData(const debug_tool::ads_PlanningData4Debug &);
-  void planningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
+  void planningDataNew(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
 
 public slots:
 

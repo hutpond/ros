@@ -23,7 +23,7 @@ class QDebugToolMainWnd : public QMainWindow
 
   enum
   {
-    Planning,
+    OldPlanning,
     NewPlanning,
     PlanningCount
   };
@@ -45,6 +45,9 @@ protected:
   virtual void resizeEvent(QResizeEvent *);
 
 protected slots:
+  void onActionOldPlanning();
+  void onActionNewPlanning();
+
   void onActionPlanningLiveDisplay();
   void onActionPlanningReplay();
 
@@ -61,7 +64,11 @@ private:
   QBaseWidget *m_pWdgPlanning[PlanningCount];
   QEditToolsWidget *m_pWdgEditTool;
 
+  int m_nCurrentIndex;
   QBaseWidget *m_pWdgCurrent;
+
+  QAction *m_pActionOldPlanning;
+  QAction *m_pActionNewPlanning;
 
   QAction *m_pActionReplaySpeed;
 
