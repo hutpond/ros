@@ -42,9 +42,7 @@ void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &
 
   if (update) {
     m_planningData = data;
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
+    this->doUpdate(true);
   }
 }
 

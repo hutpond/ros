@@ -31,12 +31,10 @@ public:
   ~QPlanningShowWidget();
 
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
-  void setShowAllTargets(bool);
   void setToolIndex(int, bool);
 
 protected:
   void mousePressEvent(QMouseEvent *) final;
-  void mouseReleaseEvent(QMouseEvent *) final;
   void mouseMoveEvent(QMouseEvent *) final;
 
 signals:
@@ -69,11 +67,8 @@ protected:
   int findReferenceIndex(const double s);
   void xyToSl(const QPointF &, double &s, double &l);
   void slToXy(const double s, const double l, QPointF &);
-  QPointF pixelToMap(const QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
-  QPolygonF createTargetPgf(const QVector<QPointF> &, const QPointF &);
 
-  void addTargetMouseMove(QMouseEvent *);
   void addTracksToData();
   void addGarbageToData();
 
@@ -82,12 +77,7 @@ private:
   boost::array<QPointF, 100> m_ptfsRightRoadSide;
 
   debug_tool::ads_PlanningData4Debug  m_planningData;
-  int m_nShowPlanningPath;  // 规划路线显示, 0: 全显示, 1：只显示当前帧, 2：只显示前一帧
-  bool m_bFlagShowAllTargets;
-  int m_nToolIndex;
 
-  QVector<QPointF> m_ptfTargets;
-  QPointF m_ptfTargetMove;
   int m_nNewTracksCount;
   int m_nNewGarbageCount;
 };

@@ -16,6 +16,7 @@ QBaseShowWidget::QBaseShowWidget(QWidget *parent)
   , m_fDisplayRatio(1.0)
   , m_fOriginRatio(1.0)
   , m_nCostType(OLD_COST)
+  , m_bFlagShowAllTargets(false)
 {
 }
 
@@ -26,8 +27,7 @@ QBaseShowWidget::~QBaseShowWidget()
 void QBaseShowWidget::resizeEvent(QResizeEvent *)
 {
   m_rectPicture = this->rect();
-  this->calcMapRect();
-  this->drawImage();
+  this->doUpdate(false);
 }
 
 void QBaseShowWidget::mouseMoveEvent(QMouseEvent *e)
@@ -42,9 +42,7 @@ void QBaseShowWidget::mouseMoveEvent(QMouseEvent *e)
   linef = inverted.map(linef);
   m_ptfTranslate += (linef.p2() - linef.p1());
 
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate(true);
 }
 
 void QBaseShowWidget::wheelEvent(QWheelEvent *e)
@@ -52,9 +50,7 @@ void QBaseShowWidget::wheelEvent(QWheelEvent *e)
   const float RATIO_COEF = 1.05f;
   int delta = e->delta() / 120;
   m_fDisplayRatio /= std::pow(RATIO_COEF, delta);
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate(true);
 }
 
 void QBaseShowWidget::paintEvent(QPaintEvent *)
@@ -97,9 +93,18 @@ void QBaseShowWidget::setViewResolution(int index)
     default:
       break;
   }
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate(true);
+}
+
+void QBaseShowWidget::doUpdate(bool update)
+{
+  if (this->isVisible()) {
+    this->calcMapRect();
+    this->drawImage();
+    if (update) {
+      this->update();
+    }
+  }
 }
 
 /*******************************************************
@@ -170,3 +175,60 @@ void QBaseShowWidget::setCostType(int type)
 {
   m_nCostType = type;
 }
+
+/*******************************************************
+ * @brief 是否显示所有target
+ * @param show: true, 显示所有
+
+ * @return
+********************************************************/
+void QBaseShowWidget::setShowAllTargets(bool show)
+{
+  m_bFlagShowAllTargets = show;
+  this->doUpdate(true);
+}
+
+
+QPointF QBaseShowWidget::pixelToMap(const QPointF &ptfPixel)
+{
+  QTransform inverted = m_transform.inverted();
+  QPointF ptfMap = inverted.map(ptfPixel);
+  return ptfMap;
+}
+
+void QBaseShowWidget::addTargetMouseMove(QMouseEvent *e)
+{
+  m_ptfTargetMove = e->localPos();
+  const auto size = m_ptfTargets.size();
+  if (size == 1 || size == 2) {
+    this->doUpdate(true);
+  }
+}
+
+QPolygonF QBaseShowWidget::createTargetPgf(const QVector<QPointF> &ptfs, const QPointF &ptfMove)
+{
+  QPolygonF pgf;
+  if (ptfs.size() != 2) {
+    return pgf;
+  }
+  QLineF linef(ptfs[0], ptfs[1]);
+  QLineF linef2;
+  linef2.setP1(ptfMove);
+  linef2.setAngle(linef.angle());
+
+  QLineF linefNormal;
+
+  linefNormal.setP1(ptfs[0]);
+  linefNormal.setAngle(linef.normalVector().angle());
+  QPointF ptfIntersect;
+  linefNormal.intersect(linef2, &ptfIntersect);
+  pgf << ptfs[0] << ptfIntersect;
+
+  linefNormal.setP1(ptfs[1]);
+  linefNormal.setAngle(linef.normalVector().angle());
+  linefNormal.intersect(linef2, &ptfIntersect);
+  pgf << ptfIntersect << ptfs[1] << ptfs[0];
+
+  return pgf;
+}
+

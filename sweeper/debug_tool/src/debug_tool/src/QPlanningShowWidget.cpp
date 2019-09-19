@@ -18,8 +18,6 @@
 
 QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
-  , m_nShowPlanningPath(0)
-  , m_bFlagShowAllTargets(false)
   , m_nNewTracksCount(0)
   , m_nNewGarbageCount(0)
 {
@@ -61,26 +59,17 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
         else if (m_nToolIndex == QEditToolsWidget::Garbage) {
           this->addGarbageToData();
         }
-        this->calcMapRect();
-        this->drawImage();
-        this->update();
+        this->doUpdate(true);
       }
     }
     else {
       m_ptfTargets.clear();
-      this->calcMapRect();
-      this->drawImage();
-      this->update();
+      this->doUpdate(true);
     }
   }
   else {
     m_ptfMouseMove = ptf;
   }
-}
-
-void QPlanningShowWidget::mouseReleaseEvent(QMouseEvent *)
-{
-
 }
 
 void QPlanningShowWidget::mouseMoveEvent(QMouseEvent *e)
@@ -107,9 +96,7 @@ void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Deb
   m_ptfTargets.clear();
 
   m_planningData = data;
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate(true);
 }
 
 /*******************************************************
@@ -150,20 +137,6 @@ void QPlanningShowWidget::calcMapRect()
                         -(m_rectfMap.y() + m_rectfMap.height()));
 }
 
-/*******************************************************
- * @brief 是否显示所有target
- * @param show: true, 显示所有
-
- * @return
-********************************************************/
-void QPlanningShowWidget::setShowAllTargets(bool show)
-{
-  m_bFlagShowAllTargets = show;
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
-}
-
 void QPlanningShowWidget::setToolIndex(int index, bool checkable)
 {
   if (checkable) {
@@ -176,9 +149,7 @@ void QPlanningShowWidget::setToolIndex(int index, bool checkable)
     m_nNewGarbageCount = 0;
     emit saveDataToFile(m_planningData);
 
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
+    this->doUpdate(true);
   }
 }
 
@@ -1703,51 +1674,6 @@ QPolygonF QPlanningShowWidget::createSlPgf(const QPointF &center, double width, 
   pgf << linef2.p2();
   linef2.setAngle(linef.angle());
   pgf << linef2.p2();
-
-  return pgf;
-}
-
-QPointF QPlanningShowWidget::pixelToMap(const QPointF &ptfPixel)
-{
-  QTransform inverted = m_transform.inverted();
-  QPointF ptfMap = inverted.map(ptfPixel);
-  return ptfMap;
-}
-
-void QPlanningShowWidget::addTargetMouseMove(QMouseEvent *e)
-{
-  m_ptfTargetMove = e->localPos();
-  const auto size = m_ptfTargets.size();
-  if (size == 1 || size == 2) {
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
-  }
-}
-
-QPolygonF QPlanningShowWidget::createTargetPgf(const QVector<QPointF> &ptfs, const QPointF &ptfMove)
-{
-  QPolygonF pgf;
-  if (ptfs.size() != 2) {
-    return pgf;
-  }
-  QLineF linef(ptfs[0], ptfs[1]);
-  QLineF linef2;
-  linef2.setP1(ptfMove);
-  linef2.setAngle(linef.angle());
-
-  QLineF linefNormal;
-
-  linefNormal.setP1(ptfs[0]);
-  linefNormal.setAngle(linef.normalVector().angle());
-  QPointF ptfIntersect;
-  linefNormal.intersect(linef2, &ptfIntersect);
-  pgf << ptfs[0] << ptfIntersect;
-
-  linefNormal.setP1(ptfs[1]);
-  linefNormal.setAngle(linef.normalVector().angle());
-  linefNormal.intersect(linef2, &ptfIntersect);
-  pgf << ptfIntersect << ptfs[1] << ptfs[0];
 
   return pgf;
 }

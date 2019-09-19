@@ -8,6 +8,7 @@
 #include "QReadDataManagerRos.h"
 #include "QPlanningCostWidget.h"
 #include "QDebugToolMainWnd.h"
+#include "QNewPlanningShowWidget.h"
 
 QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
   : QBaseWidget(parent)
@@ -25,7 +26,7 @@ QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
   for (int i = 0; i < 2; ++i) {
-    m_pWdgShow[i] = new QPlanningShowWidget(this);
+    m_pWdgShow[i] = new QNewPlanningShowWidget(this);
     m_pWdgShow[i]->setFunPosition(fun);
 //    connect(m_pWdgShow[i], &QBaseShowWidget::saveDataToFile,
 //        this, &QPlanningWidget::onSaveDataToFile);
@@ -56,9 +57,6 @@ QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
           );
 
   m_fsPath /= time_str;
-  if (!fs::exists(m_fsPath)) {
-    fs::create_directories(m_fsPath);
-  }
 
   connect(QReadDataManagerRos::instance(), &QReadDataManagerRos::planningDataNew,
           this, &QNewPlanningWidget::onParsePlanningData);
@@ -98,6 +96,10 @@ void QNewPlanningWidget::timerEvent(QTimerEvent *e)
 void QNewPlanningWidget::onParsePlanningData(
     const debug_ads_msgs::ads_msgs_planning_debug_frame &data)
 {
+  if (!fs::exists(m_fsPath)) {
+    fs::create_directories(m_fsPath);
+  }
+
   fs::path path = m_fsPath;
   std::string strFileName = QBaseWidget::dataFileName();
   path /= strFileName;

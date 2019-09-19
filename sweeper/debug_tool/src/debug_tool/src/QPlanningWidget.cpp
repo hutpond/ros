@@ -72,9 +72,6 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
           );
 
   m_fsPath /= time_str;
-  if (!fs::exists(m_fsPath)) {
-    fs::create_directories(m_fsPath);
-  }
 
   connect(QReadDataManagerRos::instance(), SIGNAL(planningData(const debug_tool::ads_PlanningData4Debug &)),
           this, SLOT(onParsePlanningData(const debug_tool::ads_PlanningData4Debug &)));
@@ -196,6 +193,10 @@ bool QPlanningWidget::readFromJsonFile(const std::string &name, debug_tool::ads_
 
 void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Debug &planningData)
 {
+  if (!fs::exists(m_fsPath)) {
+    fs::create_directories(m_fsPath);
+  }
+
   fs::path path = m_fsPath;
   std::string strFileName = QBaseWidget::dataFileName();
   path /= strFileName;

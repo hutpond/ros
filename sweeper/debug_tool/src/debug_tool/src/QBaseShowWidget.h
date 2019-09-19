@@ -31,18 +31,23 @@ public:
   void setViewResolution(int);
   void setFunPosition(boost::function<void(float, float, float, float)>);
 
-  virtual void setShowAllTargets(bool) {}
+  virtual void setShowAllTargets(bool);
   virtual void setToolIndex(int, bool) {}
 
   virtual void setPlanningData(const debug_tool::ads_PlanningData4Debug &) {}
   virtual void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &) {}
 
 protected:
+  void doUpdate(bool);
   virtual void drawImage() = 0;
   void drawMapBorder(QPainter &);
   void drawAxis(QPainter &);
 
   virtual void calcMapRect() = 0;
+
+  QPointF pixelToMap(const QPointF &);
+  QPolygonF createTargetPgf(const QVector<QPointF> &, const QPointF &);
+  void addTargetMouseMove(QMouseEvent *);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -66,6 +71,11 @@ protected:
 
   boost::function<void(float, float, float, float)> m_funPosition;
   int m_nCostType;
+  bool m_bFlagShowAllTargets;
+  int m_nToolIndex;
+
+  QVector<QPointF> m_ptfTargets;
+  QPointF m_ptfTargetMove;
 };
 
 #endif // Q_BASE_SHOW_WIDGET_H
