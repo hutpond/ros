@@ -13,6 +13,7 @@ public:
   enum {
     Move,
     Target,
+    Garbage,
     Save,
     Count
   };

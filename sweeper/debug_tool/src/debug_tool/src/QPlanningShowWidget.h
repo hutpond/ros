@@ -74,7 +74,8 @@ protected:
   QPolygonF createTargetPgf(const QVector<QPointF> &, const QPointF &);
 
   void addTargetMouseMove(QMouseEvent *);
-  void addTargetToData();
+  void addTracksToData();
+  void addGarbageToData();
 
 private:
   boost::array<QPointF, 100> m_ptfsLeftRoadSide;
@@ -87,7 +88,8 @@ private:
 
   QVector<QPointF> m_ptfTargets;
   QPointF m_ptfTargetMove;
-  int m_nNewTargetCount;
+  int m_nNewTracksCount;
+  int m_nNewGarbageCount;
 };
 
 #endif // Q_PLANNING_SHOW_WIDGET_H

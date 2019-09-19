@@ -18,6 +18,8 @@ QEditToolsWidget::QEditToolsWidget(QWidget *parent)
   m_pBtnTool[Move]->setStyleSheet(SELECT_BKG);
   m_pBtnTool[Target]->setText("T");
   m_pBtnTool[Target]->setToolTip("Create Target");
+  m_pBtnTool[Garbage]->setText("G");
+  m_pBtnTool[Garbage]->setToolTip("Create Garbage");
   m_pBtnTool[Save]->setText("S");
   m_pBtnTool[Save]->setToolTip("Save Change to File");
   m_bFlagCheckable[Save] = false;

@@ -20,7 +20,8 @@ QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
   , m_nShowPlanningPath(0)
   , m_bFlagShowAllTargets(false)
-  , m_nNewTargetCount(0)
+  , m_nNewTracksCount(0)
+  , m_nNewGarbageCount(0)
 {
   m_fOriginRatio = 4.0;
   m_fDisplayRatio = m_fOriginRatio;
@@ -47,13 +48,19 @@ void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
     m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
   }
 
-  if (m_nToolIndex == QEditToolsWidget::Target) {
+  if ( m_nToolIndex == QEditToolsWidget::Target ||
+       m_nToolIndex == QEditToolsWidget::Garbage ) {
     if (bLeftPress) {
       if (m_ptfTargets.size() < 2) {
         m_ptfTargets << ptf;
       }
       else if (m_ptfTargets.size() == 2){
-        this->addTargetToData();
+        if (m_nToolIndex == QEditToolsWidget::Target) {
+          this->addTracksToData();
+        }
+        else if (m_nToolIndex == QEditToolsWidget::Garbage) {
+          this->addGarbageToData();
+        }
         this->calcMapRect();
         this->drawImage();
         this->update();
@@ -81,7 +88,8 @@ void QPlanningShowWidget::mouseMoveEvent(QMouseEvent *e)
   if (m_nToolIndex == QEditToolsWidget::Move) {
     QBaseShowWidget::mouseMoveEvent(e);
   }
-  else if (m_nToolIndex == QEditToolsWidget::Target) {
+  else if ( m_nToolIndex == QEditToolsWidget::Target ||
+            m_nToolIndex == QEditToolsWidget::Garbage ) {
     this->addTargetMouseMove(e);
   }
 }
@@ -94,7 +102,8 @@ void QPlanningShowWidget::mouseMoveEvent(QMouseEvent *e)
 ********************************************************/
 void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
 {
-  m_nNewTargetCount = 0;
+  m_nNewTracksCount = 0;
+  m_nNewGarbageCount = 0;
   m_ptfTargets.clear();
 
   m_planningData = data;
@@ -160,9 +169,11 @@ void QPlanningShowWidget::setToolIndex(int index, bool checkable)
   if (checkable) {
     m_nToolIndex = index;
   }
-  if (index == QEditToolsWidget::Save && m_nNewTargetCount > 0) {
-    m_planningData.fusion_results.object_count += m_nNewTargetCount;
-    m_nNewTargetCount = 0;
+  if ( index == QEditToolsWidget::Save &&
+       (m_nNewTracksCount > 0 || m_nNewGarbageCount > 0) ) {
+    m_planningData.fusion_results.object_count += m_nNewTracksCount;
+    m_nNewTracksCount = 0;
+    m_nNewGarbageCount = 0;
     emit saveDataToFile(m_planningData);
 
     this->calcMapRect();
@@ -870,11 +881,17 @@ void QPlanningShowWidget::drawGarbageResults(QPainter &painter)
   QPen pen;
   pen.setWidth(2);
   pen.setColor(Qt::darkGreen);
-  pen.setStyle(Qt::SolidLine);
-  painter.setPen(pen);
   painter.setFont(QFont("Times", 10));
 
   for (int i = 0; i < size; ++i) {
+    if (i < size - m_nNewGarbageCount) {
+      pen.setStyle(Qt::SolidLine);
+    }
+    else {
+      pen.setStyle(Qt::DotLine);
+    }
+    painter.setPen(pen);
+
     double width = qSqrt(garbage_results[i].size);
     QLineF linef(0, 0, 2, 0);
     linef.setAngle(-garbage_results[i].angle * 180.0 / PI);
@@ -1253,7 +1270,7 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
   // new targets
   pen.setStyle(Qt::DotLine);
   painter.setPen(pen);
-  for (int i = SIZE; i < SIZE + m_nNewTargetCount; ++i) {
+  for (int i = SIZE; i < SIZE + m_nNewTracksCount; ++i) {
     QPolygonF pgf;
     pgf << QPointF(TRACKS[i].P1_X, TRACKS[i].P1_Y) <<
            QPointF(TRACKS[i].P2_X, TRACKS[i].P2_Y) <<
@@ -1448,7 +1465,6 @@ void QPlanningShowWidget::drawNewTarget(QPainter &painter)
   QPen pen;
   pen.setColor(Qt::darkMagenta);
   pen.setStyle(Qt::DotLine);
-  painter.setFont(QFont("Times", 10));
   painter.setPen(pen);
 
   const auto size = m_ptfTargets.size();
@@ -1736,7 +1752,7 @@ QPolygonF QPlanningShowWidget::createTargetPgf(const QVector<QPointF> &ptfs, con
   return pgf;
 }
 
-void QPlanningShowWidget::addTargetToData()
+void QPlanningShowWidget::addTracksToData()
 {
   auto &tracks = m_planningData.fusion_results.track_objects;
   const int size = static_cast<int>(m_planningData.fusion_results.object_count);
@@ -1745,7 +1761,7 @@ void QPlanningShowWidget::addTargetToData()
   QPolygon pg = pgf.toPolygon();
 
   int trackId = size == 0 ? 0 : tracks[size - 1].TRACK_ID;
-  auto &track = tracks[size + m_nNewTargetCount];
+  auto &track = tracks[size + m_nNewTracksCount];
   track.TRACK_ID = trackId + 1;
 
   QPointF ptf(pg.point(0).x(), pg.point(0).y());
@@ -1768,6 +1784,38 @@ void QPlanningShowWidget::addTargetToData()
   track.P4_X = ptf.x();
   track.P4_Y = ptf.y();
 
-  ++ m_nNewTargetCount;
+  ++ m_nNewTracksCount;
+  m_ptfTargets.clear();
+}
+
+void QPlanningShowWidget::addGarbageToData()
+{
+  QPolygonF pgf = this->createTargetPgf(m_ptfTargets, m_ptfTargetMove);
+  QPolygon pg = pgf.toPolygon();
+  QPointF pt = this->pixelToMap(pg.point(0));
+  QPointF pt2 = this->pixelToMap(pg.point(1));
+  QPointF pt3 = this->pixelToMap(pg.point(2));
+  QPointF pt4 = this->pixelToMap(pg.point(3));
+  QLineF linef(pt, pt3);
+  QLineF linef2(pt2, pt4);
+  QPointF center = linef.center();
+  double length = qMax<double>(linef.length(), linef2.length());
+  linef = QLineF(0, 0, 1.0, 0);
+  linef2 = QLineF(0, 0, center.x(), center.y());
+
+  auto &garbage_results = m_planningData.garbage_detection_results.result;
+  const auto size = garbage_results.size();
+
+  typedef debug_tool::ads_garbage_detection_<std::allocator<void>> type_garbage;
+  type_garbage garbage;
+  garbage.id = size > 0 ? garbage_results[size - 1].id + 1 : 0;
+  garbage.size = length;
+  garbage.angle = - linef.angleTo(linef2) * PI / 180.0;
+  garbage.distance = qSqrt(center.x() * center.x() + center.y() * center.y());
+  garbage.height = 0;
+  garbage.width = 0;
+
+  garbage_results.push_back(garbage);
+  ++ m_nNewGarbageCount;
   m_ptfTargets.clear();
 }
