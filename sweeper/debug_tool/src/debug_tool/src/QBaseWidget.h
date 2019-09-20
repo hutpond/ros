@@ -49,6 +49,8 @@ public:
   void startReplay(const QString &);
   void stopDisplay();
   void setShowAllTargets(bool);
+  void changeShowCoord();
+  int showCoord();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

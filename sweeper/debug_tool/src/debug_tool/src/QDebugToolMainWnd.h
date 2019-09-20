@@ -57,6 +57,7 @@ protected slots:
   void onActionReplaySpeed();
 
   void onActionChangeView();
+  void onActionChangeCoord();
   void onActionShowTargets();
   void onActionHelpAbout();
 

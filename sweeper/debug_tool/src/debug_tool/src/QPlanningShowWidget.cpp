@@ -32,17 +32,15 @@ QPlanningShowWidget::~QPlanningShowWidget()
 
 void QPlanningShowWidget::mousePressEvent(QMouseEvent *e)
 {
-  if (m_planningData.num_reference_splines == 0) {
-    return;
-  }
-
   bool bLeftPress = (e->buttons() & Qt::LeftButton);
 
   QPointF ptf = e->localPos();
   if (bLeftPress) {
     QPointF ptfMap = this->pixelToMap(ptf);
-    double s, l;
-    this->xyToSl(ptfMap, s, l);
+    double s = 0, l = 0;
+    if (m_planningData.num_reference_splines > 0) {
+      this->xyToSl(ptfMap, s, l);
+    }
     m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
   }
 

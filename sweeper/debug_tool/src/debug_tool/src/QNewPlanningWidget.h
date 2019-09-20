@@ -14,6 +14,8 @@ protected:
 
 protected slots:
   void onParsePlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
+  void onSetFrameIndexReplay(int) {}
+  void onCostValueChanged() {}
 
 protected:
   void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &, const QString &);

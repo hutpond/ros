@@ -18,6 +18,7 @@
 #include "QPlanningCostWidget.h"
 #include "QEditToolsWidget.h"
 #include "QNewPlanningWidget.h"
+#include "QBaseShowWidget.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
 static const char *PLANNING_TOOL_BAR = "PLANNING";
@@ -243,6 +244,7 @@ void QDebugToolMainWnd::createViewToolBar()
   QToolBar *pToolBar = this->addToolBar(VIEW_TOOL_BAR);
 
   QAction *newAct = new QAction(tr("+"), this);
+  newAct->setToolTip("Zoom In");
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionViewZoomIn);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -251,6 +253,7 @@ void QDebugToolMainWnd::createViewToolBar()
   pWdgAction->setStyleSheet("background-color: rgb(255, 200, 200);");
 
   newAct = new QAction(tr("-"), this);
+  newAct->setToolTip("Zoom Out");
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionViewZoomOut);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -260,6 +263,7 @@ void QDebugToolMainWnd::createViewToolBar()
   pToolBar->insertSeparator(newAct);
 
   newAct = new QAction(tr("R"), this);
+  newAct->setToolTip("Zoom Reset");
   connect(newAct, &QAction::triggered, this, &QDebugToolMainWnd::onActionViewReset);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
   pToolBar->addAction(newAct);
@@ -269,6 +273,7 @@ void QDebugToolMainWnd::createViewToolBar()
   pToolBar->insertSeparator(newAct);
 
   m_pActionReplaySpeed = new QAction(tr("M"), this);
+  m_pActionReplaySpeed->setToolTip("Set Replay Speed");
   connect(m_pActionReplaySpeed, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionReplaySpeed);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
@@ -323,6 +328,7 @@ void QDebugToolMainWnd::createSettingToolBar()
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
 
   QAction *action = new QAction(tr("=>>"), this);
+  action->setToolTip("switch local view and full view");
   connect(action, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionChangeView);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
@@ -332,8 +338,20 @@ void QDebugToolMainWnd::createSettingToolBar()
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   pToolBar->insertSeparator(action);
 
+  action = new QAction(tr("<->"), this);
+  action->setToolTip("switch ENU and FRENET");
+  connect(action, &QAction::triggered,
+          this, &QDebugToolMainWnd::onActionChangeCoord);
+  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
+  pToolBar->addAction(action);
+  pWdgAction = pToolBar->widgetForAction(action);
+  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
+  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
+  pToolBar->insertSeparator(action);
+
   m_bFlagShowAllTargets = false;
   m_pActionShowTargets = new QAction(tr("T"), this);
+  m_pActionShowTargets->setToolTip("Set Show All Targets");
   connect(m_pActionShowTargets, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionShowTargets);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
@@ -349,6 +367,14 @@ void QDebugToolMainWnd::onActionChangeView()
   m_pWdgPlanning[OldPlanning]->changeShowView();
   m_pWdgPlanning[NewPlanning]->changeShowView();
   this->setWndTitle();
+}
+
+void QDebugToolMainWnd::onActionChangeCoord()
+{
+  if (m_nCurrentIndex == NewPlanning) {
+    m_pWdgPlanning[NewPlanning]->changeShowCoord();
+    this->setWndTitle();
+  }
 }
 
 /*******************************************************
@@ -429,5 +455,10 @@ void QDebugToolMainWnd::setWndTitle()
   title.append(type == QPlanningWidget::LivePlay ? "LIVE" : "REPLAY");
   title.append(" - ");
   title.append(view == QPlanningWidget::LocalView ? "LOCAL" : "FULL");
+  if (m_nCurrentIndex == NewPlanning) {
+    int coord = m_pWdgPlanning[NewPlanning]->showCoord();
+    title.append(" - ");
+    title.append(coord == QBaseShowWidget::EnuCoord ? "ENU" : "FRENET");
+  }
   this->setWindowTitle(title);
 }

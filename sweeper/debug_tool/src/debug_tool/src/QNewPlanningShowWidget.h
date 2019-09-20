@@ -8,15 +8,12 @@ class QNewPlanningShowWidget : public QBaseShowWidget
 {
   Q_OBJECT
 
-  enum {
-    EnuCoord,
-    FrenetCoord
-  };
-
 public:
   explicit QNewPlanningShowWidget(QWidget *parent = Q_NULLPTR);
 
   void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
+  virtual void changeShowCoord();
+  virtual int showCoord();
 
 protected:
   void mousePressEvent(QMouseEvent *);

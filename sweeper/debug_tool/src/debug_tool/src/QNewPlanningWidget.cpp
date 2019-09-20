@@ -16,12 +16,12 @@ QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
   this->setFont(G_TEXT_FONT);
   m_pWdgParam = new QPlanningParamWidget(this);
   m_pWdgParam->setShowType(LivePlay);
-//  connect(m_pWdgParam, &QPlanningParamWidget::replayState,
-//          this, &QBaseWidget::onReplayState);
-//  connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
-//          this, &QBaseWidget::onSetFrameIndexReplay);
-//  connect(m_pWdgParam, &QPlanningParamWidget::costValueChanged,
-//          this, &QBaseWidget::onCostValueChanged);
+  connect(m_pWdgParam, &QPlanningParamWidget::replayState,
+          this, &QNewPlanningWidget::onReplayState);
+  connect(m_pWdgParam, &QPlanningParamWidget::replayFrameOffset,
+          this, &QNewPlanningWidget::onSetFrameIndexReplay);
+  connect(m_pWdgParam, &QPlanningParamWidget::costValueChanged,
+          this, &QNewPlanningWidget::onCostValueChanged);
 
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);

@@ -24,6 +24,11 @@ QBaseShowWidget::~QBaseShowWidget()
 {
 }
 
+void QBaseShowWidget::showEvent(QShowEvent *)
+{
+  this->doUpdate(false);
+}
+
 void QBaseShowWidget::resizeEvent(QResizeEvent *)
 {
   m_rectPicture = this->rect();

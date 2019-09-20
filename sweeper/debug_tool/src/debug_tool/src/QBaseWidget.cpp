@@ -245,6 +245,17 @@ void QBaseWidget::setShowAllTargets(bool show)
   m_pWdgShow[1]->setShowAllTargets(show);
 }
 
+void QBaseWidget::changeShowCoord()
+{
+  m_pWdgShow[0]->changeShowCoord();
+  m_pWdgShow[1]->changeShowCoord();
+}
+
+int QBaseWidget::showCoord()
+{
+  return m_pWdgShow[0]->showCoord();
+}
+
 void QBaseWidget::onSelectTool(int index, bool checkable)
 {
   m_pWdgShow[LivePlay]->setToolIndex(index, checkable);

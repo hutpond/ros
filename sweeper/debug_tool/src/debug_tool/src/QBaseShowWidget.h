@@ -23,6 +23,12 @@ public:
     OLD_COST
   };
 
+  enum {
+    EnuCoord,
+    FrenetCoord
+  };
+
+
 public:
   QBaseShowWidget(QWidget *parent);
   ~QBaseShowWidget();
@@ -33,6 +39,8 @@ public:
 
   virtual void setShowAllTargets(bool);
   virtual void setToolIndex(int, bool) {}
+  virtual void changeShowCoord() {}
+  virtual int showCoord() {return 0;}
 
   virtual void setPlanningData(const debug_tool::ads_PlanningData4Debug &) {}
   virtual void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &) {}
@@ -50,6 +58,7 @@ protected:
   void addTargetMouseMove(QMouseEvent *);
 
 protected:
+  virtual void showEvent(QShowEvent *);
   virtual void resizeEvent(QResizeEvent *);
   virtual void paintEvent(QPaintEvent *);
   virtual void mouseMoveEvent(QMouseEvent *);

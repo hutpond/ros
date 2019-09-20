@@ -18,8 +18,12 @@ void QNewPlanningShowWidget::mousePressEvent(QMouseEvent *e)
   QPointF ptf = e->localPos();
   if (bLeftPress) {
     QPointF ptfMap = this->pixelToMap(ptf);
-    double s, l;
-    m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
+    if (m_nCoordType == EnuCoord) {
+      m_funPosition(ptfMap.x(), ptfMap.y(), 0, 0);
+    }
+    else {
+      m_funPosition(0, 0, ptfMap.x(), ptfMap.y());
+    }
   }
 
   if ( m_nToolIndex == QEditToolsWidget::Target ||
@@ -104,6 +108,17 @@ void QNewPlanningShowWidget::setPlanningData(const debug_ads_msgs::ads_msgs_plan
   this->doUpdate(true);
 }
 
+void QNewPlanningShowWidget::changeShowCoord()
+{
+  m_nCoordType = m_nCoordType == EnuCoord ? FrenetCoord : EnuCoord;
+  this->doUpdate(true);
+}
+
+int QNewPlanningShowWidget::showCoord()
+{
+  return m_nCoordType;
+}
+
 void QNewPlanningShowWidget::drawAxis(QPainter &painter)
 {
   painter.save();
@@ -122,7 +137,7 @@ void QNewPlanningShowWidget::drawAxis(QPainter &painter)
   painter.drawPolygon(polygonX);
   painter.drawText(
         lineX.p2() + QPoint(-19, 12),
-        m_nCoordType == EnuCoord ?"X" : "l"
+        m_nCoordType == EnuCoord ?"X" : "L"
         );
 
   // draw line arrow text
@@ -135,7 +150,7 @@ void QNewPlanningShowWidget::drawAxis(QPainter &painter)
   painter.drawPolygon(polygonY);
   painter.drawText(
         lineY.p2() + QPoint(8, 19),
-        m_nCoordType == EnuCoord ?"Y" : "s"
+        m_nCoordType == EnuCoord ?"Y" : "S"
         );
   painter.restore();
 }
