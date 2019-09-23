@@ -74,6 +74,7 @@ target_sources(debug_tool PRIVATE src/QFullViewWidget.cpp)
 target_sources(debug_tool PRIVATE src/QEditToolsWidget.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningWidget.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningShowWidget.cpp)
+target_sources(debug_tool PRIVATE src/splines.cpp)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)

@@ -23,6 +23,16 @@ class QPlanningParamWidget : public QWidget
 {
   Q_OBJECT
 
+  enum
+  {
+    DecisionAll,
+    DecisionUltraSonic,
+    DecisionRadar28,
+    DecisionRadar73,
+    DecisionTrack,
+    DecisionCount
+  };
+
 public:
   QPlanningParamWidget(QWidget *parent);
   ~QPlanningParamWidget();
@@ -55,7 +65,7 @@ private:
   QLabel *m_pLblMousePosValue;
 
   QLabel *m_pLblDecisionName;
-  QLabel *m_pLblDecisionValue;
+  QLabel *m_pLblDecisionValue[DecisionCount];
 
   QPushButton *m_pBtnPause;
   QPushButton *m_pBtnResume;

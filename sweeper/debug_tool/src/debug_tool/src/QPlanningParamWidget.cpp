@@ -24,9 +24,12 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pLblMousePosValue = new QLabel(this);
 
   m_pLblDecisionName = new QLabel(tr("决策"), this);
-  m_pLblDecisionValue = new QLabel(this);
-  m_pLblDecisionValue->setMargin(3);
-  m_pLblDecisionValue->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  for (int i = 0; i < DecisionCount; ++i) {
+    m_pLblDecisionValue[i] = new QLabel(this);
+    m_pLblDecisionValue[i]->setFont(G_TEXT_FONT);
+    m_pLblDecisionValue[i]->setMargin(3);
+    m_pLblDecisionValue[i]->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  }
 
   m_pBtnPause = new QPushButton(tr("暂停"), this);
   connect(m_pBtnPause, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
@@ -105,23 +108,42 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
 {
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
-  int nIndexUs = static_cast<int>(data.ultrasonic_decision);
-  int nIndexRadar = static_cast<int>(data.radar28f_decision);
-  int nIndexRadar73 = static_cast<int>(data.radar73f_decision);
-  int nIndexTrack = static_cast<int>(data.track_target_decision);
-  m_pLblDecisionValue->setFont(G_TEXT_FONT);
-  QString strText = QString("%1 \nus: %2 \nr28: %3\nr73: %4 \ntrack: %5]").
-      arg(this->getDecisionText(nIndex)).
-      arg(this->getDecisionText(nIndexUs)).
-      arg(this->getDecisionText(nIndexRadar)).
-      arg(this->getDecisionText(nIndexRadar73)).
-      arg(this->getDecisionText(nIndexTrack));
-  m_pLblDecisionValue->setText(strText);
+  m_pLblDecisionValue[DecisionAll]->setText(this->getDecisionText(nIndex));
+
+  nIndex = static_cast<int>(data.ultrasonic_decision);
   if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue->setStyleSheet("background-color: rgb(0, 0, 0, 0);");
+    m_pLblDecisionValue[DecisionUltraSonic]->hide();
   }
   else {
-    m_pLblDecisionValue->setStyleSheet("background-color: rgb(255, 0, 0);");
+    m_pLblDecisionValue[DecisionUltraSonic]->setText(tr("超声波"));
+    m_pLblDecisionValue[DecisionUltraSonic]->show();
+  }
+
+  nIndex = static_cast<int>(data.radar28f_decision);
+  if (nIndex >= 0 && nIndex < 4) {
+    m_pLblDecisionValue[DecisionRadar28]->hide();
+  }
+  else {
+    m_pLblDecisionValue[DecisionRadar28]->setText(tr("毫米波28"));
+    m_pLblDecisionValue[DecisionRadar28]->show();
+  }
+
+  nIndex = static_cast<int>(data.radar73f_decision);
+  if (nIndex >= 0 && nIndex < 4) {
+    m_pLblDecisionValue[DecisionRadar73]->hide();
+  }
+  else {
+    m_pLblDecisionValue[DecisionRadar73]->setText(tr("毫米波73"));
+    m_pLblDecisionValue[DecisionRadar73]->show();
+  }
+
+  nIndex = static_cast<int>(data.track_target_decision);
+  if (nIndex >= 0 && nIndex < 4) {
+    m_pLblDecisionValue[DecisionTrack]->hide();
+  }
+  else {
+    m_pLblDecisionValue[DecisionTrack]->setText(tr("激光雷达"));
+    m_pLblDecisionValue[DecisionTrack]->show();
   }
 
   // data
@@ -241,8 +263,8 @@ void QPlanningParamWidget::onSliderValueChanged(int value)
 void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 {
   const float F_SPACE_X_P = 0.01f;
-  const float F_SPACE_Y_P = 0.02f;
-  const float F_ITEM_H_P = 0.037f;
+  const float F_SPACE_Y_P = 0.01f;
+  const float F_ITEM_H_P = 0.048f;
   const float F_ITEM_NAME_W_P = 0.15f;
 
   const int WIDTH = this->width();
@@ -267,10 +289,14 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 
   m_pLblDecisionName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
   xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblDecisionValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H * 6);
-  yPos += ITEM_H * 6 + SPACE_Y;
+  m_pLblDecisionValue[DecisionAll]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  for (int i = 1; i < DecisionCount; ++i) {
+    yPos += ITEM_H + SPACE_Y;
+    m_pLblDecisionValue[i]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+  }
 
   xPos = SPACE_X;
+  yPos += ITEM_H + SPACE_Y;
   m_pBtnPause->setGeometry(xPos, yPos, BTN_W, ITEM_H);
   xPos += BTN_W + SPACE_X;
   m_pBtnResume->setGeometry(xPos, yPos, BTN_W, ITEM_H);
@@ -288,7 +314,7 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
 
   xPos = SPACE_X;
   yPos += ITEM_H * 8 + SPACE_Y;
-  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 7);
+  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 3);
 }
 
 void QPlanningParamWidget::showReplayControls(bool show)

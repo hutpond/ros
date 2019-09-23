@@ -939,6 +939,14 @@ void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
 void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
                                       const QString &name)
 {
+  double cost_value[QPlanningCostWidget::Count] = {0};
+  cost_value[QPlanningCostWidget::Safety] = data.safety_cost_weight;
+  cost_value[QPlanningCostWidget::Lateral] = data.lateral_cost_weight;
+  cost_value[QPlanningCostWidget::Smoothness] = data.smoothness_cost_weight;
+  cost_value[QPlanningCostWidget::Consistency] = data.consistency_cost_weight;
+  cost_value[QPlanningCostWidget::Garbage] = data.garbage_cost_weight;
+  QCostValueWidget::setOriginCostValue(cost_value);
+
   if (m_nShowView == LocalView) {
     m_pWdgShow[0]->setPlanningData(data);
     m_pWdgShow[1]->setPlanningData(data);
@@ -951,14 +959,6 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
   QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
-
-  double cost_value[QPlanningCostWidget::Count] = {0};
-  cost_value[QPlanningCostWidget::Safety] = data.safety_cost_weight;
-  cost_value[QPlanningCostWidget::Lateral] = data.lateral_cost_weight;
-  cost_value[QPlanningCostWidget::Smoothness] = data.smoothness_cost_weight;
-  cost_value[QPlanningCostWidget::Consistency] = data.consistency_cost_weight;
-  cost_value[QPlanningCostWidget::Garbage] = data.garbage_cost_weight;
-  QCostValueWidget::setOriginCostValue(cost_value);
 }
 
 void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &data)
