@@ -40,13 +40,7 @@ QEditorMainWindow::QEditorMainWindow(QWidget *parent)
   this->setStatusBar(pBar);
   pBar->showMessage("ready");
 
-  m_pObjReadData = new QReadDataObject(this);
-  this->readIniFile();
   m_pObjProject = new QProjectObject(this);
-
-  auto fun = std::bind(&QProjectObject::setImuData, m_pObjProject, std::placeholders::_1);
-  m_pObjReadData->setSetDataFun(fun);
-  this->setWindowTitle(WND_TITLE);
 
   m_pObjReadDataRos = new QReadDataRosObject(this);
   connect(m_pObjReadDataRos, SIGNAL(imuData(const path_editor::ads_ins_data::ConstPtr &)),
@@ -58,15 +52,6 @@ QEditorMainWindow::QEditorMainWindow(QWidget *parent)
 QEditorMainWindow::~QEditorMainWindow()
 {
   m_pObjReadDataRos->stopSubscribe();
-}
-
-void QEditorMainWindow::readIniFile()
-{
-  QSettings settings("config.ini", QSettings::IniFormat);
-  QString device = settings.value("serial/device", "/dev/ttyS0").toString();
-  int baud = settings.value("serial/baud", 9600).toInt();
-  bool select = settings.value("serial/select", false).toBool();
-  m_pObjReadData->openSerialPort(device, baud, select);
 }
 
 /*******************************************************
@@ -282,28 +267,5 @@ void QEditorMainWindow::onActionClose()
  */
 void QEditorMainWindow::onActionSetting()
 {
-  QSettingDialog dlg(this);
-  QRect rect = this->rect();
-  QPoint pt = rect.center();
-  rect.setSize(QSize(rect.width() * 0.5, rect.height() * 0.3));
-  rect.moveCenter(pt);
-  dlg.setGeometry(rect);
-  dlg.setWindowTitle(QStringLiteral("Setting"));
-  QString device;
-  qint32 baud;
-  bool select;
-  m_pObjReadData->getSerailParam(device, baud, select);
-  dlg.setSerialParam(device, baud, select);
-  if (dlg.exec() == QDialog::Accepted) {
-    dlg.getSerialParam(device, baud, select);
-
-    QSettings settings("config.ini", QSettings::IniFormat);
-    settings.setValue("serial/device", device);
-    settings.setValue("serial/baud", baud);
-    settings.setValue("serial/select", select);
-    settings.sync();
-
-    m_pObjReadData->openSerialPort(device, baud, select);
-  }
 }
 

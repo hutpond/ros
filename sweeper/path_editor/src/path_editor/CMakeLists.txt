@@ -5,13 +5,19 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   add_definitions("-DDEBUG")
 endif()
 
-SET(CMAKE_C_COMPILER gcc-5)
-SET(CMAKE_CXX_COMPILER g++-5)
 add_compile_options(-std=c++11)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+
+include_directories(/usr/local/protobuf/include)
+include_directories(/usr/local/glog/include)
+include_directories(/usr/include/eigen3)
+include_directories(/usr/local/gflags/include)
+
+include_directories(/usr/local/hdmap/include)
+link_directories(/usr/local/hdmap/lib)
 
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation)
 include_directories( ${catkin_INCLUDE_DIRS} )
@@ -23,7 +29,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
-find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
 add_message_files (
   DIRECTORY
@@ -50,7 +56,6 @@ set(HEADERS
   src/QSettingDialog.h
   src/QEditorMainWindow.h
   src/QPanelWidget.h
-  src/QReadDataObject.h
   src/QReadDataRosObject.h
   src/gps.h
   )
@@ -58,7 +63,6 @@ set(SOURCES
   src/main.cpp
   src/QEditorMainWindow.cpp
   src/QPanelWidget.cpp
-  src/QReadDataObject.cpp
   src/QReadDataRosObject.cpp
   src/QDrawPathWidget.cpp
   src/QOpenDriveObject.cpp
@@ -74,10 +78,9 @@ add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort)
-#target_link_libraries(debug_tool zmq)
-
+target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} hdmap)
 
 install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}

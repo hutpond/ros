@@ -24,6 +24,7 @@
 #include "QFullViewWidget.h"
 #include "QCostValueWidget.h"
 #include "QReadDataManagerRos.h"
+#include "splines.h"
 
 QPlanningWidget::QPlanningWidget(QWidget *parent)
   : QBaseWidget(parent)
@@ -947,18 +948,82 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   cost_value[QPlanningCostWidget::Garbage] = data.garbage_cost_weight;
   QCostValueWidget::setOriginCostValue(cost_value);
 
+  debug_tool::ads_PlanningData4Debug data_cost = this->calcPlanningPathWitCost(data);
   if (m_nShowView == LocalView) {
     m_pWdgShow[0]->setPlanningData(data);
-    m_pWdgShow[1]->setPlanningData(data);
+    m_pWdgShow[1]->setPlanningData(data_cost);
     m_pWdgFullView->setPlanningData(data, name, false);
   }
   else {
     m_pWdgFullView->setPlanningData(data, name, true);
   }
-  m_pWdgParam->setPlanningData(data);
+  m_pWdgParam->setPlanningData(data, data_cost);
   QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
   QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
+}
+
+bool QPlanningWidget::ObstacleCollisionCheck(
+    const debug_tool::ads_planning_trajectory &path,
+    const debug_tool::ads_TrackTarget &target,
+    double head_distance,
+    double vehicle_width,
+    double tolerance
+    )
+{
+  std::vector<SplineLib::Vec2f> points;
+  double x[4], y[4];
+
+  SplineLib::Vec2f point = { target.P1_X, target.P1_Y };
+  points.push_back(point);
+  point = { target.P2_X, target.P2_Y };
+  points.push_back(point);
+  point = { target.P3_X, target.P3_Y };
+  points.push_back(point);
+  point = { target.P4_X, target.P4_Y };
+  points.push_back(point);
+
+  for (int i = 0; i < 4; i++)
+  {
+    int segmentNum = ceil(sqrt(pow(x[(i + 1) % 4] - x[i], 2) + pow(y[(i + 1) % 4] - y[i], 2)) / vehicle_width / 2);
+    for (int j = 1; j < segmentNum; j++)
+    {
+      double lambda = (double) j / (segmentNum - j);
+      SplineLib::Vec2f point = { (x[i] + lambda * x[(i + 1) % 4]) / (1 + lambda), (y[i] + lambda * y[(i + 1) % 4]) / (1 + lambda) };
+      points.push_back(point);
+    }
+  }
+
+  int splines_num = path.splines.size();
+  SplineLib::cSpline2 *splines = new SplineLib::cSpline2[splines_num];
+  for (int i = 0; i < splines_num; ++i) {
+    splines[i].xb.x = path.splines[i].xb.x;
+    splines[i].xb.y = path.splines[i].xb.y;
+    splines[i].xb.z = path.splines[i].xb.z;
+    splines[i].xb.w = path.splines[i].xb.w;
+
+    splines[i].yb.x = path.splines[i].yb.x;
+    splines[i].yb.y = path.splines[i].yb.y;
+    splines[i].yb.z = path.splines[i].yb.z;
+    splines[i].yb.w = path.splines[i].yb.w;
+  }
+  bool ret = false;
+  for (int i = 0; i < points.size(); i++)
+  {
+    SplineLib::Vec2f qp = points.at(i);
+    int index;
+    double t = SplineLib::FindClosestPoint(qp, splines_num, splines, &index);
+    SplineLib::Vec2f cp = SplineLib::Position(splines[index], t);
+    double distance = sqrt(pow(cp.x - qp.x, 2) + pow(cp.y - qp.y, 2));
+    double threshold = qp.x > head_distance ? vehicle_width / 2 + tolerance : vehicle_width / 2;
+    if (distance < threshold) {
+      ret = true;
+      break;
+    }
+  }
+  delete []splines;
+
+  return ret;
 }
 
 void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &data)
@@ -970,3 +1035,127 @@ void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug 
   debug_tool::ads_PlanningData4Debug dataNew = data;
   this->setPlanningData(dataNew, QString::fromStdString(file_name));
 }
+
+bool QPlanningWidget::RoadBoundaryCheck(
+    const debug_tool::ads_planning_trajectory &path,
+    const boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> &references,
+    double left_road_width,
+    double right_road_width,
+    double vehicle_width,
+    double tolerance)
+{
+  std::vector<SplineLib::Vec2f> points;
+
+  for (int i = 0; i < 21; i++)
+  {
+    double x1 = references[i].x;
+    double y1 = references[i].y;
+    double x2 = references[i + 1].x;
+    double y2 = references[i + 1].y;
+    double l2_norm = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+    double leftX = x1 + left_road_width * (y1 - y2) / l2_norm;
+    double leftY = y1 + left_road_width * (x2 - x1) / l2_norm;
+    SplineLib::Vec2f leftPoint = { leftX, leftY };
+    points.push_back(leftPoint);
+    double rightX = x1 - right_road_width * (y1 - y2) / l2_norm;
+    double rightY = y1 - right_road_width * (x2 - x1) / l2_norm;
+    SplineLib::Vec2f rightPoint = { rightX, rightY };
+    points.push_back(rightPoint);
+  }
+
+  int splines_num = path.splines.size();
+  SplineLib::cSpline2 *splines = new SplineLib::cSpline2[splines_num];
+  for (int i = 0; i < splines_num; ++i) {
+    splines[i].xb.x = path.splines[i].xb.x;
+    splines[i].xb.y = path.splines[i].xb.y;
+    splines[i].xb.z = path.splines[i].xb.z;
+    splines[i].xb.w = path.splines[i].xb.w;
+
+    splines[i].yb.x = path.splines[i].yb.x;
+    splines[i].yb.y = path.splines[i].yb.y;
+    splines[i].yb.z = path.splines[i].yb.z;
+    splines[i].yb.w = path.splines[i].yb.w;
+  }
+  bool ret = false;
+  for (int i = 0; i < points.size(); i++)
+  {
+    SplineLib::Vec2f qp = points.at(i);
+    int index;
+    double t = SplineLib::FindClosestPoint(qp, splines_num, splines, &index);
+    SplineLib::Vec2f cp = SplineLib::Position(splines[index], t);
+    double distance = sqrt(pow(cp.x - qp.x, 2) + pow(cp.y - qp.y, 2));
+    if (distance < vehicle_width / 2 + tolerance) {
+      ret = true;
+      break;
+    }
+  }
+  delete []splines;
+
+  return ret;
+}
+
+debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
+    const debug_tool::ads_PlanningData4Debug &data)
+{
+  debug_tool::ads_PlanningData4Debug planningData = data;
+  auto &candidates = planningData.planning_trajectory_candidates;
+  int size_candidates = candidates.size();
+  double value[QPlanningCostWidget::Count];
+  QCostValueWidget::getCostValue(value);
+  for (int i = 0; i < size_candidates; ++ i) {
+    candidates[i].cost = value[QPlanningCostWidget::Safety] * candidates[i].safety_cost
+        + value[QPlanningCostWidget::Lateral] * candidates[i].lateral_cost
+        + value[QPlanningCostWidget::Smoothness] * candidates[i].smoothness_cost
+        + value[QPlanningCostWidget::Consistency] * candidates[i].consistency_cost
+        + value[QPlanningCostWidget::Garbage] * candidates[i].garbage_cost;
+  }
+  using type_candidates = decltype(planningData.planning_trajectory);
+  std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,
+            const type_candidates &val2){
+    return val.cost < val2.cost;
+  });
+
+  int index = -1;
+  int targets_count = planningData.fusion_results.object_count;
+  const auto &targets = planningData.fusion_results.track_objects;
+  for (int i = 0; i < size_candidates; ++ i) {
+    bool check = false;
+    for (int j = 0; j < targets_count; ++j) {
+      check = this->ObstacleCollisionCheck(
+            candidates[i], targets[j],
+            planningData.head_distance, planningData.vehicle_width, 0.75
+            );
+      if (check) break;
+    }
+    if (check) continue;
+    check = this->RoadBoundaryCheck(
+          candidates[i], planningData.reference_points,
+          planningData.left_half_road_width,
+          planningData.right_half_road_width,
+          planningData.vehicle_width,
+          0
+          );
+    if (!check) {
+      index = i;
+      break;
+    }
+  }
+
+  if (index != -1) {
+    planningData.planning_trajectory = candidates[index];
+  }
+  else {
+    planningData.planning_trajectory.id = 0;
+    planningData.planning_trajectory.cost = 0;
+    planningData.planning_trajectory.safety_cost = 0;
+    planningData.planning_trajectory.lateral_cost = 0;
+    planningData.planning_trajectory.smoothness_cost = 0;
+    planningData.planning_trajectory.consistency_cost = 0;
+    planningData.planning_trajectory.garbage_cost = 0;
+    planningData.planning_trajectory.splines.clear();
+  }
+
+  return planningData;
+}
+
+

@@ -41,6 +41,13 @@ protected:
   void parseDataFromJson(const Json::Value &, debug_tool::ads_PlanningData4Debug &);
   void setPlanningData(debug_tool::ads_PlanningData4Debug &, const QString &);
 
+  debug_tool::ads_PlanningData4Debug calcPlanningPathWitCost(const debug_tool::ads_PlanningData4Debug &);
+  bool ObstacleCollisionCheck(const debug_tool::ads_planning_trajectory &,
+      const debug_tool::ads_TrackTarget &, double, double, double = 0.0);
+  bool RoadBoundaryCheck(const debug_tool::ads_planning_trajectory &,
+      const boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> &,
+      double, double, double, double = 0.0);
+
 protected slots:
   void onSetFrameIndexReplay(int);
   void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);

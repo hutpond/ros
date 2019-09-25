@@ -12,6 +12,10 @@
 #include "QOpenDriveObject.h"
 #include "QProjectObject.h"
 #include "gps.h"
+#include "modules/map/hdmap/hdmap.h"
+#include "modules/map/hdmap/hdmap_common.h"
+#include "modules/map/hdmap/hdmap_impl.h"
+#include "modules/map/hdmap/hdmap_util.h"
 
 QOpenDriveObject::QOpenDriveObject(QObject *parent) : QObject(parent)
 {

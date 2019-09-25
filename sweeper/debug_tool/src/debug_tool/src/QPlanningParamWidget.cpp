@@ -104,7 +104,8 @@ void QPlanningParamWidget::setFrameCount(int count)
   m_nSliderValue = 0;
 }
 
-void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
+void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data,
+                                           const debug_tool::ads_PlanningData4Debug &data_cost)
 {
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
@@ -142,12 +143,12 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
     m_pLblDecisionValue[DecisionTrack]->hide();
   }
   else {
-    m_pLblDecisionValue[DecisionTrack]->setText(tr("激光雷达"));
+    m_pLblDecisionValue[DecisionTrack]->setText(tr("障碍物"));
     m_pLblDecisionValue[DecisionTrack]->show();
   }
 
   // data
-  m_pTextBrowser->setText(this->createTrajectoryString(data));
+  m_pTextBrowser->setText(this->createTrajectoryString(data, data_cost));
 }
 
 QString QPlanningParamWidget::getDecisionText(int index)
@@ -326,7 +327,9 @@ void QPlanningParamWidget::showReplayControls(bool show)
   m_pSliderPlay->setHidden(!show);
 }
 
-QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_PlanningData4Debug &data)
+QString QPlanningParamWidget::createTrajectoryString(
+    const debug_tool::ads_PlanningData4Debug &data,
+    const debug_tool::ads_PlanningData4Debug &data_cost)
 {
   double value[QPlanningCostWidget::Count];
   QCostValueWidget::getCostValue(value);
@@ -335,13 +338,8 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
   QString text = "id, cost, safety, lateral, smoothness, consistency, garbage: \n";
 
   const auto &val_planning_trajectory = data.planning_trajectory;
-//  double new_cost = value[QPlanningCostWidget::Safety] * val_planning_trajectory.safety_cost
-//      + value[QPlanningCostWidget::Lateral] * val_planning_trajectory.lateral_cost
-//      + value[QPlanningCostWidget::Smoothness] * val_planning_trajectory.smoothness_cost
-//      + value[QPlanningCostWidget::Consistency] * val_planning_trajectory.consistency_cost
-//      + value[QPlanningCostWidget::Garbage] * val_planning_trajectory.garbage_cost;
   text += QString(
-        "* %1,  %2,  %3,  %4,  %5,  %6,  %7").
+        "old %1,  %2,  %3,  %4,  %5,  %6,  %7").
       arg(val_planning_trajectory.id).
       arg(val_planning_trajectory.cost, 0, 'f', presice).
       arg(val_planning_trajectory.safety_cost, 0, 'f', presice).
@@ -349,42 +347,29 @@ QString QPlanningParamWidget::createTrajectoryString(const debug_tool::ads_Plann
       arg(val_planning_trajectory.smoothness_cost, 0, 'f', presice).
       arg(val_planning_trajectory.consistency_cost, 0, 'f', presice).
       arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);
-  text.append("\n\n");
+  text.append("\n");
 
-  auto val_candidates = data.planning_trajectory_candidates;
-  int size_candidates = val_candidates.size();
-  if (size_candidates > 10) {
-    using type_candidates = decltype(val_candidates[0]);
-    std::sort(val_candidates.begin(), val_candidates.end(), [](const type_candidates &val,
-              const type_candidates &val2){
-      return val.cost < val2.cost;
-    });
-  }
-  size_candidates = qBound<int>(0, size_candidates, 10);
-  for (int i = 0; i < size_candidates; ++ i) {
-    text += QString(
-          "%1,  %2,  %3,  %4,  %5,  %6,  %7").
-        arg(val_candidates[i].id).
-        arg(val_candidates[i].cost, 0, 'f', presice).
-        arg(val_candidates[i].safety_cost, 0, 'f', presice).
-        arg(val_candidates[i].lateral_cost, 0, 'f', presice).
-        arg(val_candidates[i].smoothness_cost, 0, 'f', presice).
-        arg(val_candidates[i].consistency_cost, 0, 'f', presice).
-        arg(val_candidates[i].garbage_cost, 0, 'f', presice);
-    text.append('\n');
-  }
-
-  text.append('\n');
+  const auto &val_planning_trajectory_cost = data_cost.planning_trajectory;
   text += QString(
-        "# %1,  %2,  %3,  %4,  %5,  %6,  %7").
+        "new %1,  %2,  %3,  %4,  %5,  %6,  %7").
+      arg(val_planning_trajectory_cost.id).
+      arg(val_planning_trajectory_cost.cost, 0, 'f', presice).
+      arg(val_planning_trajectory_cost.safety_cost, 0, 'f', presice).
+      arg(val_planning_trajectory_cost.lateral_cost, 0, 'f', presice).
+      arg(val_planning_trajectory_cost.smoothness_cost, 0, 'f', presice).
+      arg(val_planning_trajectory_cost.consistency_cost, 0, 'f', presice).
+      arg(val_planning_trajectory_cost.garbage_cost, 0, 'f', presice);
+  text.append("\n");
+
+  text += QString(
+        "new weight %1,  %2,  %3,  %4,  %5,  %6,  %7").
       arg("/").
-      arg(1.0, 0, 'f', presice).
+      arg("/").
       arg(value[QPlanningCostWidget::Safety], 0, 'f', presice).
       arg(value[QPlanningCostWidget::Lateral], 0, 'f', presice).
       arg(value[QPlanningCostWidget::Smoothness], 0, 'f', presice).
       arg(value[QPlanningCostWidget::Consistency], 0, 'f', presice).
       arg(value[QPlanningCostWidget::Garbage], 0, 'f', presice);
-  text.append("\n\n");
 
   return text;
 }

@@ -10,7 +10,6 @@
 
 #include <QMainWindow>
 
-class QReadDataObject;
 class QReadDataRosObject;
 class QProjectObject;
 class QDrawPathWidget;
@@ -29,8 +28,6 @@ protected:
   void createToolBar();
   void createWidget();
 
-  void readIniFile();
-
 private slots:
   void onActionNew();
   void onActionOpen();
@@ -44,7 +41,6 @@ private:
   QAction *m_pActionBuild;
   QAction *m_pActionClose;
 
-  QReadDataObject *m_pObjReadData;
   QReadDataRosObject *m_pObjReadDataRos;
   QProjectObject *m_pObjProject;
   QDrawPathWidget *m_pWdgDrawPath;

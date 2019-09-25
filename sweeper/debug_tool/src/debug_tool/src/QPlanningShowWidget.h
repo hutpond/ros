@@ -69,15 +69,8 @@ protected:
   void slToXy(const double s, const double l, QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
 
-  void calcPlanningPathWitCost();
   void addTracksToData();
   void addGarbageToData();
-
-  bool ObstacleCollisionCheck(const debug_tool::ads_planning_trajectory &,
-      const debug_tool::ads_TrackTarget &, double, double, double = 0.0);
-  bool RoadBoundaryCheck(const debug_tool::ads_planning_trajectory &,
-      const boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> &,
-      double, double, double, double = 0.0);
 
 private:
   boost::array<QPointF, 100> m_ptfsLeftRoadSide;
