@@ -20,47 +20,14 @@
 #include <QMatrix4x4>
 #include <QMessageBox>
 #include "QProjectObject.h"
-#include "QReadDataObject.h"
-#include "QOpenDriveObject.h"
 #include "gps.h"
 
-
-std::ostream & operator<<(std::ostream &out, const MapBinData &data) {
-  out.write(reinterpret_cast<const char*>(&data.id), sizeof(data.id));
-  out.write(reinterpret_cast<const char*>(&data.lat), sizeof(data.lat));
-  out.write(reinterpret_cast<const char*>(&data.lon), sizeof(data.lon));
-  out.write(reinterpret_cast<const char*>(&data.alt), sizeof(data.alt));
-  out.write(reinterpret_cast<const char*>(&data.pitch), sizeof(data.pitch));
-  out.write(reinterpret_cast<const char*>(&data.roll), sizeof(data.roll));
-  out.write(reinterpret_cast<const char*>(&data.yaw), sizeof(data.yaw));
-  out.write(reinterpret_cast<const char*>(&data.x), sizeof(data.x));
-  out.write(reinterpret_cast<const char*>(&data.y), sizeof(data.y));
-  out.write(reinterpret_cast<const char*>(&data.z), sizeof(data.z));
-
-  return out;
-}
-
-std::istream & operator>>(std::istream &in, MapBinData &data) {
-  in.read(reinterpret_cast<char*>(&data.id), sizeof(data.id));
-  in.read(reinterpret_cast<char*>(&data.lat), sizeof(data.lat));
-  in.read(reinterpret_cast<char*>(&data.lon), sizeof(data.lon));
-  in.read(reinterpret_cast<char*>(&data.alt), sizeof(data.alt));
-  in.read(reinterpret_cast<char*>(&data.pitch), sizeof(data.pitch));
-  in.read(reinterpret_cast<char*>(&data.roll), sizeof(data.roll));
-  in.read(reinterpret_cast<char*>(&data.yaw), sizeof(data.yaw));
-  in.read(reinterpret_cast<char*>(&data.x), sizeof(data.x));
-  in.read(reinterpret_cast<char*>(&data.y), sizeof(data.y));
-  in.read(reinterpret_cast<char*>(&data.z), sizeof(data.z));
-
-  return in;
-}
 
 QProjectObject::QProjectObject(QObject *parent)
   : QObject(parent)
   , m_strPathName("")
   , m_strProName("")
 {
-  m_pObjOpenDrive = new QOpenDriveObject(this);
 }
 
 /**
@@ -85,24 +52,17 @@ void QProjectObject::createProject(const QString &path, const QString &name)
     subdir.removeRecursively();
   }
   dir.mkpath(subpath);
-  m_strImuPath = subpath + "imudata/";
-  dir.mkpath(m_strImuPath);
-  m_nImuFileIndex = 100000;
 
   this->closeProject();
 
   QString filename = subpath;
   filename.append(name);
-  filename.append(".swe");
+  filename.append(".mpro");
   this->createProjectFile(filename);
 
   m_strPathName = subpath;
   m_strProName = name;
   m_vector3dOrigin = Eigen::Vector3d(10000, 10000, 10000);
-
-#ifdef TEST
-  this->createPointsList();
-#endif
 }
 
 /**
@@ -120,8 +80,7 @@ void QProjectObject::openProject(const QString &name)
   m_strProName.chop(1);
   m_vector3dOrigin = Eigen::Vector3d(10000, 10000, 10000);
 
-  m_listReferensePoints.clear();
-  m_pObjOpenDrive->readOpenDriveFile(m_strPathName, m_strProName, m_listReferensePoints);
+  this->readMapFile();
 }
 
 /**
@@ -149,6 +108,7 @@ void QProjectObject::createProjectFile(const QString &name)
   file.write(saveDoc.toJson());
 
   file.close();
+  m_mapData.Clear();
 }
 
 /**
@@ -159,9 +119,7 @@ void QProjectObject::createProjectFile(const QString &name)
  */
 void QProjectObject::stopProject()
 {
-  m_pObjOpenDrive->writeOpenDriveFile(m_strPathName, m_strProName, m_listReferensePoints);
-
-  m_listReferensePoints.clear();
+  this->saveMapFile();
   m_strPathName.clear();
   m_strProName.clear();
   m_vector3dOrigin = Eigen::Vector3d(10000, 10000, 10000);
@@ -180,94 +138,10 @@ void QProjectObject::closeProject()
 
 void QProjectObject::saveProject()
 {
-  m_pObjOpenDrive->writeOpenDriveFile(m_strPathName, m_strProName, m_listReferensePoints);
 }
 
 void QProjectObject::buildProject()
 {
-  if (m_listReferensePoints.size() == 0) {
-    return;
-  }
-  std::string fileName = m_strPathName.toLocal8Bit().data();
-  fileName.append(m_strProName.toLocal8Bit().data());
-  fileName.append(".bin");
-  std::ofstream out(fileName, std::ios::binary);
-  int number = 0;
-  out.write(reinterpret_cast<const char*>(&number), sizeof(int));
-
-  QSharedPointer<MapBinData> data = m_listReferensePoints[0];
-  data->id = number ++;
-  out << *data;
-
-  const int SIZE = static_cast<int>(m_listReferensePoints.size());
-  const double MAX_DIS = 0.5;
-  for (int i = 1; i < SIZE; ++ i) {
-    if (m_listReferensePoints[i]->clear ||
-        m_listReferensePoints[i]->distance(*data) < MAX_DIS) {
-      continue;
-    }
-
-    data = m_listReferensePoints[i];
-    data->id = number ++;
-    out << *data;
-  }
-  out.seekp(0);
-  out.write(reinterpret_cast<const char*>(&number), sizeof(int));
-  out.close();
-}
-
-/**
- * @brief 添加数据
- * @param data: IMU数据
- *
- * @return
- */
-void QProjectObject::setImuData(const DataPacket *data)
-{
-  if (m_strProName.isEmpty()) return;
-  std::shared_ptr<InfoPacket> pInfo(new InfoPacket);
-
-  pInfo->m_llMsGps = data->getGpsTime();
-  pInfo->m_dAltitude = data->getAltitude();
-  pInfo->m_dLatitude = data->getLatitude();
-  pInfo->m_dLongitude = data->getLongitude();
-
-  pInfo->m_dPitch = data->getAnglePitch();
-  pInfo->m_dRoll = data->getAngleRoll();
-  pInfo->m_dYaw = data->getAngleYaw();
-
-  pInfo->m_dVelEast = data->getVelocityX();
-  pInfo->m_dVelNorth = data->getVelocityY();
-  pInfo->m_dVelUniver = data->getVelocityZ();
-
-  pInfo->m_dGyroRotX = data->getGyroAngleVelocityX();
-  pInfo->m_dGyroRotY = data->getGyroAngleVelocityY();
-  pInfo->m_dGyroRotZ = data->getGyroAngleVelocityZ();
-
-  pInfo->m_dAccelX = data->getAcceleratedVelocityX();
-  pInfo->m_dAccelY = data->getAcceleratedVelocityY();
-  pInfo->m_dAccelZ = data->getAcceleratedVelocityZ();
-
-  pInfo->m_cGpsState = data->getStatus();
-  pInfo->m_cUpdateFlag = 1;
-
-  const double PI = 3.14159265;
-  if (m_vector3dOrigin(0) > 360) {
-    m_vector3dOrigin = Eigen::Vector3d(pInfo->m_dLatitude * PI / 180.0,
-                                       pInfo->m_dLongitude * PI / 180.0,
-                                       pInfo->m_dAltitude);
-  }
-  Eigen::Vector3d vector3d(pInfo->m_dLatitude * PI / 180,
-                           pInfo->m_dLongitude * PI / 180,
-                           pInfo->m_dAltitude);
-  vector3d = this->Blh2Xyz(vector3d);
-  vector3d = this->Ecef2enu(vector3d, m_vector3dOrigin);
-
-  QSharedPointer<MapBinData> point
-      (new MapBinData(vector3d(0), vector3d(1), vector3d(2),
-                      pInfo->m_dLatitude, pInfo->m_dLongitude, pInfo->m_dAltitude,
-                      pInfo->m_dPitch, pInfo->m_dRoll, pInfo->m_dYaw));
-  m_listReferensePoints.push_back(point);
 }
 
 void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &data)
@@ -277,7 +151,13 @@ void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &dat
   }
   if (m_vector3dOrigin(0) > 360) {
     m_vector3dOrigin = Eigen::Vector3d(data->lon, data->lat, data->height);
+    this->addLineSegmentPoint(data, true);
   }
+  this->addLineSegmentPoint(data, true);
+}
+
+QVector3D QProjectObject::lla2Enu(const path_editor::ads_ins_data::ConstPtr &data)
+{
   GpsTran gps_tran(m_vector3dOrigin(0), m_vector3dOrigin(1), m_vector3dOrigin(2));
 
   GpsDataType gps;
@@ -287,127 +167,73 @@ void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &dat
   gps.altitude  = data->height;
   gps_tran.fromGpsToNed(ned, gps);
 
-  QSharedPointer<MapBinData> point(
-        new MapBinData(ned.y_east, ned.x_north, -ned.z_down,
-                  data->lat, data->lon, data->height,
-                  data->pitch, data->roll, data->yaw));
+  QVector3D enu;
+  enu.setX(ned.y_east);
+  enu.setX(ned.x_north);
+  enu.setX(-ned.z_down);
 
-  if (point->yaw < 0) {
-    point->yaw += 360;
-  }
-  m_listReferensePoints.push_back(point);
+  return enu;
 }
 
-/**
- * @brief 地球坐标系转换为东北天标系的矩阵
- * @param pos: 原点经度、纬度、高度
- *
- * @return 转换矩阵
- */
-Eigen::Matrix3d QProjectObject::Mat_n2e(const Eigen::Vector3d &pos)
+const QString & QProjectObject::projectName()
 {
-  double si = std::sin(pos(0)), ci = std::cos(pos(0)),
-      sj = std::sin(pos(1)), cj = std::cos(pos(1));
-  Eigen::Matrix3d mat;
-  mat <<  -sj, -si*cj,  ci*cj,
-      cj, -si*sj,  ci*sj,
-      0,   ci,     si ;  //Cen
-  return mat;
+  return m_strProName;
 }
 
-/**
- * @brief 经纬度转换为地球坐标系坐标
- * @param pos: 经度、纬度、高度
- *
- * @return 地球坐标系坐标
- */
-Eigen::Vector3d QProjectObject::Blh2Xyz(const Eigen::Vector3d &blh)
+apollo::hdmap::Map & QProjectObject::mapData()
 {
-  double glv_re = 6378137.0;
-  double f=(1.0/298.257);
-  double e = sqrt(2*f-f*f);
-  double glv_e2 = e*e;
-  double sB = sin(blh(0)), cB = cos(blh(0)),
-      sL = sin(blh(1)), cL = cos(blh(1)),
-      N = glv_re/sqrt(1-glv_e2*sB*sB);
-  return Eigen::Vector3d((N+blh(2))*cB*cL, (N+blh(2))*cB*sL, (N*(1-glv_e2)+blh(2))*sB);
+  return m_mapData;
 }
 
-/**
- * @brief 地球坐标系转换为东北天标系坐标
- * @param pos_e: 地球坐标系坐标
- * @param blh: 原点经度、纬度、高度
- *
- * @return 东北天标系坐标
- */
-Eigen::Vector3d QProjectObject::Ecef2enu(const Eigen::Vector3d &pos_e, const Eigen::Vector3d &blh)
+const apollo::hdmap::Map & QProjectObject::mapData() const
 {
-  Eigen::Vector3d delta = pos_e - this->Blh2Xyz(blh);
-  return ( (Mat_n2e(blh).transpose()) * delta );
+  return m_mapData;
 }
 
-void QProjectObject::createPointsList()
+void QProjectObject::saveMapFile()
 {
-  constexpr int SIZE = 500;
-  for (int i = 0; i < SIZE; ++i) {
-    double s = 3 + 0.01 * i;
-    double angle = i * (2 * 3.14159265 * 3 / SIZE);
-    double x = s * qSin(angle);
-    double y = s * qCos(angle);
-    QSharedPointer<MapBinData> pt(new MapBinData(x, y, 0, 0, 0, 0, 0, 0, 0));
-    m_listReferensePoints.append(pt);
-  }
+  QString fileName = m_strPathName + m_strProName + ".bin";
+
+  std::fstream output(fileName.toStdString(), std::ios::out | std::ios::binary);
+  m_mapData.SerializePartialToOstream(&output);
+  output.close();
 }
 
-/**
- * @brief 获取路径点
- * @param
- *
- * @return 路径点列表
- */
-const QList<QSharedPointer<MapBinData>> & QProjectObject::getPathPoints() const
+void QProjectObject::readMapFile()
 {
-  return m_listReferensePoints;
+  m_mapData.Clear();
+  QString fileName = m_strPathName + m_strProName;
+  std::fstream input(fileName.toStdString(), std::ios::in | std::ios::binary);
+  m_mapData.ParseFromIstream(&input);
+  input.close();
 }
 
-QList<QSharedPointer<MapBinData>> & QProjectObject::getPathPoints()
+void QProjectObject::addLineSegmentPoint(const path_editor::ads_ins_data::ConstPtr &data, bool force)
 {
-  return m_listReferensePoints;
-}
-
-void QProjectObject::saveImuData(const InfoPacket &info)
-{
-  QString strFileName = QString("%1.%2.txt").arg(m_strImuPath).arg(m_nImuFileIndex ++);
-
-  QFile saveFile(strFileName);
-  if (!saveFile.open(QIODevice::WriteOnly)) {
+  constexpr double MAX_DIS = 0.05;
+  QVector3D enu = this->lla2Enu(data);
+  if (!force && m_prePoint.distanceToPoint(enu) < MAX_DIS) {
     return;
   }
 
-  QJsonObject dataObject;
-  dataObject["pitch"] = info.m_dPitch;
-  dataObject["roll"] = info.m_dRoll;
-  dataObject["yaw"] = info.m_dYaw;
-  dataObject["rotx"] = info.m_dGyroRotX;
-  dataObject["roty"] = info.m_dGyroRotY;
-  dataObject["rotz"] = info.m_dGyroRotZ;
-  dataObject["accelx"] = info.m_dAccelX;
-  dataObject["accely"] = info.m_dAccelY;
-  dataObject["accelz"] = info.m_dAccelZ;
-  dataObject["latitude"] = info.m_dLatitude;
-  dataObject["longtitude"] = info.m_dLongitude;
-  dataObject["altitude"] = info.m_dAltitude;
-  dataObject["north"] = info.m_dVelNorth;
-  dataObject["east"] = info.m_dVelEast;
-  dataObject["univer"] = info.m_dVelUniver;
-  dataObject["gpsms"] = info.m_llMsGps;
-  dataObject["gpsstate"] = info.m_cGpsState;
-  dataObject["flag"] = info.m_cUpdateFlag;
+  apollo::hdmap::Lane *lane = m_mapData.mutable_lane(0);
+  if (lane == nullptr) {
+    return;
+  }
+  apollo::hdmap::CurveSegment *curve_segment = lane->mutable_central_curve()->mutable_segment(0);
+  apollo::hdmap::LineSegment *line_segment = curve_segment->mutable_line_segment();
+  apollo::common::PointENU* pt = line_segment->add_point();
+  pt->set_x(enu.x());
+  pt->set_y(enu.y());
+  pt->set_z(enu.z());
+  pt->set_lon(data->lon);
+  pt->set_lat(data->lat);
+  pt->set_alt(data->height);
+  pt->set_pitch(data->pitch);
+  pt->set_roll(data->roll);
+  pt->set_yaw(data->yaw);
 
-  QJsonDocument jsonDoc(dataObject);
-  saveFile.write(jsonDoc.toJson());
-
-  saveFile.close();
+  m_prePoint = enu;
 }
 
 
@@ -446,9 +272,9 @@ QCreateProjectDialog::QCreateProjectDialog(QWidget *parent)
 
   hLayout = new QHBoxLayout;
   hLayout->addStretch(1);
-  hLayout->addWidget(m_pBtnOK, 1);
-  hLayout->addStretch(1);
   hLayout->addWidget(m_pBtnCancel, 1);
+  hLayout->addStretch(1);
+  hLayout->addWidget(m_pBtnOK, 1);
   hLayout->addStretch(1);
   vLayout->addLayout(hLayout);
 

@@ -3,7 +3,7 @@ int8 GPSSTATE_SINGLEPOINT = 1   #单点
 int8 GPSSTATE_FLOATPOINT = 2    #浮点  
 int8 GPSSTATE_RTK = 3           #RTK
 
-Header  header
+#Header  header
 int8    head                    # 帧头
 uint64  gps_ms                  # GPS时间: 周内秒，单位ms
 float64   lat                   # degree

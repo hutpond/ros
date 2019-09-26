@@ -97,20 +97,16 @@ void QDrawPathWidget::drawMapBorder(QPainter &painter)
 
 void QDrawPathWidget::drawPath(QPainter &painter)
 {
+  const apollo::hdmap::Map &map = m_rObjProject.mapData();
+  const apollo::hdmap::Lane &lane = map.lane(0);
+  const auto &curve_segment = lane.central_curve().segment(0);
+  const auto &line_segment = curve_segment.line_segment();
+  const int size_pts = line_segment.point_size();
+
   QPolygonF pgf;
-  const QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
-  const int SIZE = points.size();
-  for (int i = 0; i < SIZE - 1; ++i) {
-    const QSharedPointer<MapBinData> pt = points.at(i);
-    if (pt->clear) {
-      if (pgf.size() > 0) {
-        pgf = m_transform.map(pgf);
-        painter.drawPolyline(pgf);
-        pgf.clear();
-      }
-      continue;
-    }
-    pgf << QPointF(pt->x, pt->y);
+  for (int i = 0; i < size_pts; ++i) {
+    const auto &pt = line_segment.point(i);
+    pgf << QPointF(pt.x(), pt.y());
   }
   if (pgf.size() > 0) {
     pgf = m_transform.map(pgf);
@@ -133,8 +129,13 @@ void QDrawPathWidget::calcMapRect()
 {
   constexpr float COEF = 1.2;
   if (qFuzzyCompare(m_rectfSelectMap.width(), 0)) {
-    const QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
-    if (points.size() == 0) {
+    const apollo::hdmap::Map &map = m_rObjProject.mapData();
+    const apollo::hdmap::Lane &lane = map.lane(0);
+    const auto &curve_segment = lane.central_curve().segment(0);
+    const auto &line_segment = curve_segment.line_segment();
+    const int size_pts = line_segment.point_size();
+
+    if (size_pts == 0) {
       const float WIDTH = 8;
       const float LENGTH = WIDTH / m_rectPicture.width() * m_rectPicture.height();
       m_rectfMap = QRectF(0, 0, WIDTH, LENGTH);
@@ -144,21 +145,19 @@ void QDrawPathWidget::calcMapRect()
       float x_max = -MAX_POS;
       float y_min = MAX_POS;
       float y_max = -MAX_POS;
-      for (const auto &it : points) {
-        if (it->clear) {
-          continue;
+      for (int i = 0; i < size_pts; ++i) {
+        const auto &pt = line_segment.point(i);
+        if (x_min > pt.x()) {
+          x_min = pt.x();
         }
-        if (x_min > it->x) {
-          x_min = it->x;
+        if (x_max < pt.x()) {
+          x_max = pt.x();
         }
-        if (x_max < it->x) {
-          x_max = it->x;
+        if (y_min > pt.y()) {
+          y_min = pt.y();
         }
-        if (y_min > it->y) {
-          y_min = it->y;
-        }
-        if (y_max < it->y) {
-          y_max = it->y;
+        if (y_max < pt.y()) {
+          y_max = pt.y();
         }
       }
       float width = x_max - x_min;
@@ -296,12 +295,12 @@ void QDrawPathWidget::mouseMoveEvent(QMouseEvent *e)
   }
   else if (m_nOperateIndex == QPanelWidget::TypeDelete) {
     if (m_bMouseLeftPressed) {
-      QTransform inverted = m_transform.inverted();
+      /*QTransform inverted = m_transform.inverted();
       QLineF linef = QLineF(ptf.x(), ptf.y(), ptf.x() + m_nDeleteRadius / 2 - 3, ptf.y());
       linef = inverted.map(linef);
       const double RADIUS = linef.length();
       ptf = inverted.map(ptf);
-      QList<QSharedPointer<MapBinData>> &points = m_rObjProject.getPathPoints();
+      QList<QSharedPointer<MapBinData>> points;
       foreach (auto &pt, points) {
         if (pt->clear) {
           continue;
@@ -310,7 +309,7 @@ void QDrawPathWidget::mouseMoveEvent(QMouseEvent *e)
         if (length <= RADIUS) {
           pt->clear = true;
         }
-      }
+      }*/
     }
   }
   else if (m_nOperateIndex == QPanelWidget::TypeZoomLocal) {

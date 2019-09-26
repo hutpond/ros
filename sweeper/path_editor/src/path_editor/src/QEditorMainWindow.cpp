@@ -18,10 +18,10 @@
 #include <QDir>
 #include <QFileDialog>
 #include "QEditorMainWindow.h"
-#include "QReadDataObject.h"
 #include "QReadDataRosObject.h"
 #include "QSettingDialog.h"
 #include "QProjectObject.h"
+#include "QProjectManagerWidget.h"
 #include "QDrawPathWidget.h"
 #include "QPanelWidget.h"
 
@@ -31,6 +31,7 @@ static const QString WND_TITLE = "Path Editor";
 
 QEditorMainWindow::QEditorMainWindow(QWidget *parent)
   : QMainWindow(parent)
+  , m_pDockWdgProjectManager(nullptr)
   , m_pWdgDrawPath(nullptr)
   , m_pWdgPanel(nullptr)
   , m_pTextBrowserOutput(nullptr)
@@ -146,6 +147,14 @@ void QEditorMainWindow::createWidget()
   }
   m_pDockWdgPanel->show();
 
+  if (m_pDockWdgProjectManager == nullptr) {
+    m_pDockWdgProjectManager = new QDockWidget(tr("map"), this);
+    m_pWdgProjectManager = new QProjectManagerWidget(m_pObjProject, m_pDockWdgProjectManager);
+    m_pDockWdgProjectManager->setWidget(m_pWdgProjectManager);
+    this->addDockWidget(Qt::LeftDockWidgetArea, m_pDockWdgProjectManager);
+  }
+  m_pDockWdgProjectManager->show();
+
   if (m_pTextBrowserOutput == nullptr) {
     m_pTextBrowserOutput = new QTextBrowser;
     m_pDockWdgOutput = new QDockWidget(tr("Output"), this);
@@ -184,6 +193,7 @@ void QEditorMainWindow::onActionNew()
     this->createWidget();
     QString title = WND_TITLE + " - " + name;
     this->setWindowTitle(title);
+    m_pWdgProjectManager->doUpdate();
   }
 }
 
@@ -206,6 +216,7 @@ void QEditorMainWindow::onActionOpen()
 
   this->createWidget();
   m_pObjProject->openProject(project);
+  m_pWdgProjectManager->doUpdate();
   m_pWdgDrawPath->onOperate(QPanelWidget::TypeZoomReset);
   m_pActionSave->setEnabled(true);
   m_pActionBuild->setEnabled(true);
@@ -249,6 +260,7 @@ void QEditorMainWindow::onActionClose()
 {
   m_pObjProject->closeProject();
   this->centralWidget()->close();
+  m_pDockWdgProjectManager->close();
   m_pDockWdgPanel->close();
   m_pDockWdgOutput->close();
 

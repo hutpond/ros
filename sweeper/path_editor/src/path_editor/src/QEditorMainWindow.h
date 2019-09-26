@@ -15,6 +15,7 @@ class QProjectObject;
 class QDrawPathWidget;
 class QPanelWidget;
 class QTextBrowser;
+class QProjectManagerWidget;
 
 class QEditorMainWindow : public QMainWindow
 {
@@ -44,8 +45,13 @@ private:
   QReadDataRosObject *m_pObjReadDataRos;
   QProjectObject *m_pObjProject;
   QDrawPathWidget *m_pWdgDrawPath;
+
+  QDockWidget *m_pDockWdgProjectManager;
+  QProjectManagerWidget *m_pWdgProjectManager;
+
   QDockWidget *m_pDockWdgPanel;
   QPanelWidget *m_pWdgPanel;
+
   QDockWidget *m_pDockWdgOutput;
   QTextBrowser *m_pTextBrowserOutput;
 };

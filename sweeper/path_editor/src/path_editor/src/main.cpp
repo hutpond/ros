@@ -9,9 +9,11 @@
 #include <QApplication>
 #include <QScreen>
 #include <ros/ros.h>
+#include <gflags/gflags.h>
 
 int main(int argc, char *argv[])
 {
+  google::ParseCommandLineFlags(&argc, &argv, true);
   ros::init(argc, argv, "path_editor_subscribe_node_");
   QApplication a(argc, argv);
 
