@@ -98,7 +98,15 @@ void QDrawPathWidget::drawMapBorder(QPainter &painter)
 void QDrawPathWidget::drawPath(QPainter &painter)
 {
   const apollo::hdmap::Map &map = m_rObjProject.mapData();
+  const int size_lane = map.lane_size();
+  if (size_lane == 0) {
+    return;
+  }
   const apollo::hdmap::Lane &lane = map.lane(0);
+  const int size_segment = lane.central_curve().segment_size();
+  if (size_segment == 0) {
+    return;
+  }
   const auto &curve_segment = lane.central_curve().segment(0);
   const auto &line_segment = curve_segment.line_segment();
   const int size_pts = line_segment.point_size();
@@ -130,22 +138,32 @@ void QDrawPathWidget::calcMapRect()
   constexpr float COEF = 1.2;
   if (qFuzzyCompare(m_rectfSelectMap.width(), 0)) {
     const apollo::hdmap::Map &map = m_rObjProject.mapData();
-    const apollo::hdmap::Lane &lane = map.lane(0);
-    const auto &curve_segment = lane.central_curve().segment(0);
-    const auto &line_segment = curve_segment.line_segment();
-    const int size_pts = line_segment.point_size();
+    int size = map.lane_size();
+    if (size > 0) {
+      const apollo::hdmap::Lane &lane = map.lane(0);
+      size = lane.central_curve().segment_size();
+      if (size > 0) {
+        const auto &curve_segment = lane.central_curve().segment(0);
+        const auto &line_segment = curve_segment.line_segment();
+        size = line_segment.point_size();
+      }
+    }
 
-    if (size_pts == 0) {
+    if (size == 0) {
       const float WIDTH = 8;
       const float LENGTH = WIDTH / m_rectPicture.width() * m_rectPicture.height();
       m_rectfMap = QRectF(0, 0, WIDTH, LENGTH);
     }
     else {
+      const apollo::hdmap::Lane &lane = map.lane(0);
+      const auto &curve_segment = lane.central_curve().segment(0);
+      const auto &line_segment = curve_segment.line_segment();
+
       float x_min = MAX_POS;
       float x_max = -MAX_POS;
       float y_min = MAX_POS;
       float y_max = -MAX_POS;
-      for (int i = 0; i < size_pts; ++i) {
+      for (int i = 0; i < size; ++i) {
         const auto &pt = line_segment.point(i);
         if (x_min > pt.x()) {
           x_min = pt.x();

@@ -18,10 +18,13 @@ protected:
   void resizeEvent(QResizeEvent *);
   void contextMenuEvent(QContextMenuEvent *);
 
+protected:
+
 signals:
 
 public slots:
   void onActionAddLane();
+  void onActionAddBoundary();
 
 private:
   QProjectObject *m_pObjProject;

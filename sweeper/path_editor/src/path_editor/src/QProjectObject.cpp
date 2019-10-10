@@ -138,6 +138,7 @@ void QProjectObject::closeProject()
 
 void QProjectObject::saveProject()
 {
+  this->saveMapFile();
 }
 
 void QProjectObject::buildProject()
@@ -153,7 +154,7 @@ void QProjectObject::onSetImuData(const path_editor::ads_ins_data::ConstPtr &dat
     m_vector3dOrigin = Eigen::Vector3d(data->lon, data->lat, data->height);
     this->addLineSegmentPoint(data, true);
   }
-  this->addLineSegmentPoint(data, true);
+  this->addLineSegmentPoint(data);
 }
 
 QVector3D QProjectObject::lla2Enu(const path_editor::ads_ins_data::ConstPtr &data)
@@ -169,8 +170,8 @@ QVector3D QProjectObject::lla2Enu(const path_editor::ads_ins_data::ConstPtr &dat
 
   QVector3D enu;
   enu.setX(ned.y_east);
-  enu.setX(ned.x_north);
-  enu.setX(-ned.z_down);
+  enu.setY(ned.x_north);
+  enu.setZ(-ned.z_down);
 
   return enu;
 }
@@ -197,12 +198,13 @@ void QProjectObject::saveMapFile()
   std::fstream output(fileName.toStdString(), std::ios::out | std::ios::binary);
   m_mapData.SerializePartialToOstream(&output);
   output.close();
+  output.sync();
 }
 
 void QProjectObject::readMapFile()
 {
   m_mapData.Clear();
-  QString fileName = m_strPathName + m_strProName;
+  QString fileName = m_strPathName + m_strProName + ".bin";
   std::fstream input(fileName.toStdString(), std::ios::in | std::ios::binary);
   m_mapData.ParseFromIstream(&input);
   input.close();
@@ -210,18 +212,28 @@ void QProjectObject::readMapFile()
 
 void QProjectObject::addLineSegmentPoint(const path_editor::ads_ins_data::ConstPtr &data, bool force)
 {
-  constexpr double MAX_DIS = 0.05;
+  constexpr double MAX_DIS = 0.1;
   QVector3D enu = this->lla2Enu(data);
   if (!force && m_prePoint.distanceToPoint(enu) < MAX_DIS) {
     return;
   }
 
+  const int size_lane = m_mapData.lane_size();
+  if (size_lane == 0) {
+    return;
+  }
   apollo::hdmap::Lane *lane = m_mapData.mutable_lane(0);
   if (lane == nullptr) {
     return;
   }
   apollo::hdmap::CurveSegment *curve_segment = lane->mutable_central_curve()->mutable_segment(0);
+  if (curve_segment == nullptr) {
+    return;
+  }
   apollo::hdmap::LineSegment *line_segment = curve_segment->mutable_line_segment();
+  if (line_segment == nullptr) {
+    return;
+  }
   apollo::common::PointENU* pt = line_segment->add_point();
   pt->set_x(enu.x());
   pt->set_y(enu.y());
