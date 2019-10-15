@@ -61,7 +61,6 @@ set(HEADERS
   src/QDrawPathWidget.h
   src/QProjectObject.h
   src/QProjectManagerWidget.h
-  src/QSettingDialog.h
   src/QEditorMainWindow.h
   src/QPanelWidget.h
   src/QReadDataRosObject.h
@@ -76,7 +75,6 @@ set(SOURCES
   src/QDrawPathWidget.cpp
   src/QProjectManagerWidget.cpp
   src/QProjectObject.cpp
-  src/QSettingDialog.cpp
   src/gps.cpp
   src/QAddElementDialog.cpp
   )

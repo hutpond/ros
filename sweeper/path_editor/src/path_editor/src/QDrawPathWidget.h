@@ -9,6 +9,9 @@
 #define QDRAWPATHWIDGET_H
 
 #include <QWidget>
+#include "MapDefines.h"
+#include "modules/map/hdmap/hdmap.h"
+#include "modules/map/hdmap/hdmap_util.h"
 
 class QProjectObject;
 
@@ -30,16 +33,28 @@ protected:
 
 protected:
   void drawImage();
-  void drawPath(QPainter &);
+  void drawLane(QPainter &);
   void drawMapBorder(QPainter &);
   void drawSelectRect(QPainter &);
+  void doUpdate();
 
   void calcMapRect();
+
+  void addElementToMap(const QPointF &);
+  void addBoundaryPoint(const QPointF &);
+  void addSignalSign(const QPointF &);
+  void addCrosswalk(const QPointF &);
+
+  QPointF pixelToENU(const QPointF &);
+  QPolygonF getCurvePoints(const apollo::hdmap::Curve &);
 
 signals:
 
 public slots:
   void onOperate(int);
+
+  void onAddBoundary(int, int, int);
+  void onOperateSignal(MapOperation);
 
 private:
   QProjectObject &m_rObjProject;
@@ -47,7 +62,7 @@ private:
   QImage m_image;
   QRectF m_rectfMap;              // 显示区域的物理范围，单位：米，车体坐标系
   QRect  m_rectPicture;           // 显示区域的像素范围，单位：像素，屏幕显示坐标系
-  QRectF m_rectfSelect;            // 鼠标选择区域像素范围
+  QRectF m_rectfSelect;           // 鼠标选择区域像素范围
   QRectF m_rectfSelectMap;        // 鼠标选择区域物理范围
 
   QTransform m_transform;
@@ -59,6 +74,11 @@ private:
   int m_nOperateIndex;
   bool m_bMouseLeftPressed;
   int m_nDeleteRadius;
+
+  MapOperation m_enumMapOperation;  // 对地图的操作类别
+  int m_nCurrentLane;               // 地图当前Lane
+  int m_nCurrentSegment;            // 地图元素当前segment
+  int m_nBoundarySide;              // boundary位置
 };
 
 #endif // QDRAWPATHWIDGET_H

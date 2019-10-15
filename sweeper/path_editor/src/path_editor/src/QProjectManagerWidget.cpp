@@ -11,8 +11,8 @@
 #include "modules/map/hdmap/hdmap_util.h"
 
 QProjectManagerWidget::QProjectManagerWidget(QProjectObject *obj, QWidget *parent)
-  : m_pObjProject(obj)
-  , QWidget(parent)
+  : QWidget(parent)
+  , m_pObjProject(obj)
 {
   this->setContextMenuPolicy(Qt::DefaultContextMenu);
   m_pTreeWidget = new QTreeWidget(this);
@@ -20,11 +20,17 @@ QProjectManagerWidget::QProjectManagerWidget(QProjectObject *obj, QWidget *paren
   m_pTreeWidget->setItemsExpandable(true);
 }
 
+QSize QProjectManagerWidget::sizeHint() const
+{
+  QSize size = this->size();
+  size.setWidth(250);
+  return size;
+}
+
 void QProjectManagerWidget::resizeEvent(QResizeEvent *)
 {
   m_pTreeWidget->setGeometry(this->rect());
 }
-
 
 void QProjectManagerWidget::contextMenuEvent(QContextMenuEvent *e)
 {
@@ -41,6 +47,38 @@ void QProjectManagerWidget::contextMenuEvent(QContextMenuEvent *e)
   connect(action, &QAction::triggered,
           this, &QProjectManagerWidget::onActionAddBoundary);
   menu_lane->addAction(action);
+
+  // signal
+  QMenu *menu_signal = menu->addMenu(tr("Signal"));
+  action = new QAction(tr("Add SignalSign"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddSignalSign);
+  menu_signal->addAction(action);
+
+  action = new QAction(tr("Add Crosswalk"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddCrosswalk);
+  menu_signal->addAction(action);
+
+  action = new QAction(tr("Add StopSign"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddStopSign);
+  menu_signal->addAction(action);
+
+  action = new QAction(tr("Add YieldSign"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddYieldSign);
+  menu_signal->addAction(action);
+
+  action = new QAction(tr("Add ClearArea"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddClearArea);
+  menu_signal->addAction(action);
+
+  action = new QAction(tr("Add SpeedBump"), menu_signal);
+  connect(action, &QAction::triggered,
+          this, &QProjectManagerWidget::onActionAddSpeedBump);
+  menu_signal->addAction(action);
 
   menu->exec(e->globalPos());
   delete menu;
@@ -106,9 +144,10 @@ void QProjectManagerWidget::doUpdate()
 
 void QProjectManagerWidget::onActionAddLane()
 {
-  QAddLaneDialog dlg;
+  apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddLaneDialog dlg(map, this);
   QRect rect(0, 0, 350, 120);
-  moveRectToCenter(rect);
+  dlg.moveRectToCenter(rect);
   dlg.setGeometry(rect);
   if (dlg.exec() == QDialog::Rejected) {
     return;
@@ -116,14 +155,13 @@ void QProjectManagerWidget::onActionAddLane()
   int type = dlg.type();
   int direction = dlg.direction();
 
-  apollo::hdmap::Map &map = m_pObjProject->mapData();
   const int size_lane = map.lane_size();
-  if ( (type == QAddLaneDialog::Central && size_lane > 0) ||
-       (type != QAddLaneDialog::Central && size_lane == 0) ) {
+  if ( (type == static_cast<int>(LaneSide::Central) && size_lane > 0) ||
+       (type != static_cast<int>(LaneSide::Central) && size_lane == 0) ) {
     return;
   }
 
-  if (type == QAddLaneDialog::Central) {
+  if (type == static_cast<int>(LaneSide::Central)) {
     apollo::hdmap::Lane *lane = map.add_lane();
     lane->mutable_id()->set_id("lane_central");
     lane->mutable_central_curve()->add_segment();
@@ -131,12 +169,12 @@ void QProjectManagerWidget::onActionAddLane()
     lane->mutable_left_boundary()->mutable_curve()->add_segment();
     lane->mutable_right_boundary()->mutable_curve()->add_segment();
   }
-  else if (type == QAddLaneDialog::Left) {
+  else if (type == static_cast<int>(LaneSide::Left)) {
     auto lane_reference = map.mutable_lane(0);
 
     apollo::hdmap::Lane *lane = map.add_lane();
     decltype(lane->mutable_id()) id;
-    if (direction == QAddLaneDialog::Forward) {
+    if (direction == static_cast<int>(LaneDirection::Forward)) {
       id = lane_reference->add_left_neighbor_forward_lane_id();
       const int size = lane_reference->left_neighbor_forward_lane_id_size();
       id->set_id("lane_left_forward_" + std::to_string(size));
@@ -156,7 +194,7 @@ void QProjectManagerWidget::onActionAddLane()
 
     apollo::hdmap::Lane *lane = map.add_lane();
     decltype(lane->mutable_id()) id;
-    if (direction == QAddLaneDialog::Forward) {
+    if (direction == static_cast<int>(LaneDirection::Forward)) {
       id = lane_reference->add_right_neighbor_forward_lane_id();
       const int size = lane_reference->right_neighbor_forward_lane_id_size();
       id->set_id("lane_right_forward_" + std::to_string(size));
@@ -170,9 +208,6 @@ void QProjectManagerWidget::onActionAddLane()
 
     lane->mutable_left_boundary()->mutable_curve()->add_segment();
     lane->mutable_right_boundary()->mutable_curve()->add_segment();
-
-    lane->mutable_left_boundary()->mutable_curve()->add_segment();
-    lane->mutable_right_boundary()->mutable_curve()->add_segment();
   }
 
   this->doUpdate();
@@ -183,7 +218,7 @@ void QProjectManagerWidget::onActionAddBoundary()
   const apollo::hdmap::Map &map = m_pObjProject->mapData();
   QAddBoundaryDialog dlg(map);
   QRect rect(0, 0, 400, 120);
-  moveRectToCenter(rect);
+  dlg.moveRectToCenter(rect);
   dlg.setGeometry(rect);
   if (dlg.exec() == QDialog::Rejected) {
     return;
@@ -191,5 +226,89 @@ void QProjectManagerWidget::onActionAddBoundary()
   int index_lane, index_segment, index_side;
   dlg.getIndex(index_lane, index_segment, index_side);
 
+  emit addBoundary(index_lane, index_segment, index_side);
 }
 
+void QProjectManagerWidget::onActionAddSignalSign()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddSignalSignDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::SignalSign);
+}
+
+void QProjectManagerWidget::onActionAddCrosswalk()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddCrosswalkDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::Crosswalk);
+}
+
+void QProjectManagerWidget::onActionAddStopSign()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddStopSignDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::StopSign);
+}
+
+void QProjectManagerWidget::onActionAddYieldSign()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddYieldSignDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::YieldSign);
+}
+
+void QProjectManagerWidget::onActionAddClearArea()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddClearAreaDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::ClearArea);
+}
+
+void QProjectManagerWidget::onActionAddSpeedBump()
+{
+  const apollo::hdmap::Map &map = m_pObjProject->mapData();
+  QAddSpeedBumpDialog dlg(map);
+  QRect rect(0, 0, 400, 120);
+  dlg.moveRectToCenter(rect);
+  dlg.setGeometry(rect);
+  if (dlg.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  emit operateSignal(MapOperation::SpeedBump);
+}

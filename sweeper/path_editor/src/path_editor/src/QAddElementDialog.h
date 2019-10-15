@@ -4,15 +4,24 @@
 #include <QDialog>
 
 class QComboBox;
+namespace apollo {
+namespace hdmap {
+  class Map;
+}
+}
 
 class QAddElementDialog : public QDialog
 {
   Q_OBJECT
 
 public:
-  explicit QAddElementDialog(QWidget * = Q_NULLPTR);
+  explicit QAddElementDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+
+  void moveRectToCenter(QRect &);
 
 protected:
+  const apollo::hdmap::Map &m_rMap;
+
   QPushButton *m_pBtnOk;
   QPushButton *m_pBtnCancel;
 };
@@ -22,21 +31,7 @@ class QAddLaneDialog : public QAddElementDialog
   Q_OBJECT
 
 public:
-  enum
-  {
-    Central,
-    Left,
-    Right
-  };
-
-  enum
-  {
-    Forward,
-    Reverse
-  };
-
-public:
-  explicit QAddLaneDialog(QWidget * = Q_NULLPTR);
+  explicit QAddLaneDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
 
   int type();
   int direction();
@@ -46,22 +41,9 @@ private:
   QComboBox *m_pCmbDirection;
 };
 
-
-namespace apollo {
-namespace hdmap {
-  class Map;
-}
-}
 class QAddBoundaryDialog : public QAddElementDialog
 {
   Q_OBJECT
-
-public:
-  enum
-  {
-    Left,
-    Right
-  };
 
 public:
   explicit QAddBoundaryDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
@@ -71,13 +53,57 @@ protected slots:
   void onLaneAndSideChanged();
 
 private:
-  const apollo::hdmap::Map &m_rMap;
-
   QComboBox *m_pCmbLane;
   QComboBox *m_pCmbSide;
   QComboBox  *m_pCmbSegment;
 };
 
-void moveRectToCenter(QRect &);
+class QAddSignalSignDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddSignalSignDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
+
+class QAddCrosswalkDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddCrosswalkDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
+
+class QAddStopSignDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddStopSignDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
+
+class QAddYieldSignDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddYieldSignDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
+
+class QAddClearAreaDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddClearAreaDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
+
+class QAddSpeedBumpDialog : public QAddElementDialog
+{
+  Q_OBJECT
+
+public:
+  explicit QAddSpeedBumpDialog(const apollo::hdmap::Map &, QWidget * = Q_NULLPTR);
+};
 
 #endif // QADDELEMENTDIALOG_H

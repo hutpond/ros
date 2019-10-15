@@ -58,6 +58,7 @@ bool GpsTran::resetInitialGps(double initial_longitude, double initial_latitude,
 
 	//std::cout.flags(ios::fixed);
 	//std::cout.precision(9); 
+	return true;
 }
 
 bool GpsTran::resetInitialGps(const GpsDataType& initial_gps)
@@ -75,6 +76,7 @@ bool GpsTran::resetInitialGps(const GpsDataType& initial_gps)
 
 	//std::cout.flags(ios::fixed);
 	//std::cout.precision(9); 
+	return true;
 }
 
 GpsTran::~GpsTran() {}
@@ -209,7 +211,7 @@ bool GpsTran::fromGpsToNed(NedDataType& ned, const GpsDataType& gps)
 		ROS_ERROR("the initial gps data is out of bounds.");
 		ROS_WARN("please reset initial gps with member functions resetInitialGps().");
 	}
-	
+	return true;
 }
 
 void GpsTran::fromNedToGps(GpsDataType& gps, const NedDataType& ned)

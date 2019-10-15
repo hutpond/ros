@@ -19,7 +19,6 @@
 #include <QFileDialog>
 #include "QEditorMainWindow.h"
 #include "QReadDataRosObject.h"
-#include "QSettingDialog.h"
 #include "QProjectObject.h"
 #include "QProjectManagerWidget.h"
 #include "QDrawPathWidget.h"
@@ -31,8 +30,8 @@ static const QString WND_TITLE = "Path Editor";
 
 QEditorMainWindow::QEditorMainWindow(QWidget *parent)
   : QMainWindow(parent)
-  , m_pDockWdgProjectManager(nullptr)
   , m_pWdgDrawPath(nullptr)
+  , m_pDockWdgProjectManager(nullptr)
   , m_pWdgPanel(nullptr)
   , m_pTextBrowserOutput(nullptr)
 {
@@ -152,6 +151,11 @@ void QEditorMainWindow::createWidget()
     m_pWdgProjectManager = new QProjectManagerWidget(m_pObjProject, m_pDockWdgProjectManager);
     m_pDockWdgProjectManager->setWidget(m_pWdgProjectManager);
     this->addDockWidget(Qt::LeftDockWidgetArea, m_pDockWdgProjectManager);
+
+    connect(m_pWdgProjectManager, &QProjectManagerWidget::addBoundary,
+            m_pWdgDrawPath, &QDrawPathWidget::onAddBoundary);
+    connect(m_pWdgProjectManager, &QProjectManagerWidget::operateSignal,
+            m_pWdgDrawPath, &QDrawPathWidget::onOperateSignal);
   }
   m_pDockWdgProjectManager->show();
 

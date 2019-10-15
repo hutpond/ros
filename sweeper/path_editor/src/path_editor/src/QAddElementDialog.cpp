@@ -3,10 +3,14 @@
 #include <QHBoxLayout>
 #include <QGuiApplication>
 #include <QScreen>
+#include "modules/map/hdmap/hdmap.h"
+#include "modules/map/hdmap/hdmap_util.h"
 #include "QAddElementDialog.h"
+#include "MapDefines.h"
 
-QAddElementDialog::QAddElementDialog(QWidget *parent)
+QAddElementDialog::QAddElementDialog(const apollo::hdmap::Map &map, QWidget *parent)
   : QDialog(parent)
+  , m_rMap(map)
 {
   m_pBtnOk = new QPushButton("OK", this);
   m_pBtnCancel = new QPushButton("CANCEL", this);
@@ -15,9 +19,16 @@ QAddElementDialog::QAddElementDialog(QWidget *parent)
   connect(m_pBtnCancel, &QPushButton::clicked, this, &QAddLaneDialog::reject);
 }
 
+void QAddElementDialog::moveRectToCenter(QRect &rect)
+{
+  QList<QScreen *> screens = QGuiApplication::screens();
+  QRect rectScreen = screens.at(0)->availableGeometry();
+  rect.moveCenter(rectScreen.center());
+}
 
-QAddLaneDialog::QAddLaneDialog(QWidget *parent)
-  : QAddElementDialog(parent)
+
+QAddLaneDialog::QAddLaneDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
 {
   m_pCmbType = new QComboBox(this);
   m_pCmbType->addItem("Central");
@@ -61,11 +72,8 @@ int QAddLaneDialog::direction()
 }
 
 
-#include "modules/map/hdmap/hdmap.h"
-#include "modules/map/hdmap/hdmap_util.h"
 QAddBoundaryDialog::QAddBoundaryDialog(const apollo::hdmap::Map &map, QWidget *parent)
-  : m_rMap(map)
-  , QAddElementDialog(parent)
+  : QAddElementDialog(map, parent)
 {
   m_pCmbLane = new QComboBox(this);
   m_pCmbSegment = new QComboBox(this);
@@ -110,7 +118,7 @@ QAddBoundaryDialog::QAddBoundaryDialog(const apollo::hdmap::Map &map, QWidget *p
 
   this->setLayout(layout);
 
-  this->setWindowTitle("Add Lane");
+  this->setWindowTitle("Add Boundary");
 
 }
 
@@ -137,7 +145,7 @@ void QAddBoundaryDialog::onLaneAndSideChanged()
   const auto &lane = m_rMap.lane(index_lane);
 
   m_pCmbSegment->clear();
-  if (index_side == Left) {
+  if (index_side == static_cast<int>(BoundarySide::Left)) {
     const int size_left_boundary = lane.left_boundary().curve().segment_size();
     for (int j = 0; j < size_left_boundary; ++j) {
       m_pCmbSegment->addItem(QString("segment %1").arg(j + 1));
@@ -152,9 +160,110 @@ void QAddBoundaryDialog::onLaneAndSideChanged()
 }
 
 
-void moveRectToCenter(QRect &rect)
+QAddSignalSignDialog::QAddSignalSignDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
 {
-  QList<QScreen *> screens = QGuiApplication::screens();
-  QRect rectScreen = screens.at(0)->availableGeometry();
-  rect.moveCenter(rectScreen.center());
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add Signal Sign");
+}
+
+QAddCrosswalkDialog::QAddCrosswalkDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
+{
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add Crosswalk");
+}
+
+QAddStopSignDialog::QAddStopSignDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
+{
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add StopSign");
+}
+
+QAddYieldSignDialog::QAddYieldSignDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
+{
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add YieldSign");
+}
+
+QAddClearAreaDialog::QAddClearAreaDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
+{
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add ClearArea");
+}
+
+QAddSpeedBumpDialog::QAddSpeedBumpDialog(const apollo::hdmap::Map &map, QWidget *parent)
+  : QAddElementDialog(map, parent)
+{
+  QVBoxLayout *layout = new QVBoxLayout;
+
+  QHBoxLayout *hlayout2 = new QHBoxLayout;
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnOk);
+  hlayout2->addStretch();
+  hlayout2->addWidget(m_pBtnCancel);
+  hlayout2->addStretch();
+  layout->addLayout(hlayout2);
+
+  this->setLayout(layout);
+
+  this->setWindowTitle("Add SpeedBump");
 }

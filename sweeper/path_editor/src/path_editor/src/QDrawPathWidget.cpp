@@ -24,6 +24,7 @@ QDrawPathWidget::QDrawPathWidget(QProjectObject &project, QWidget *parent)
   , m_nDisplayRatio(1)
   , m_nOperateIndex(QPanelWidget::TypeMove)
   , m_bMouseLeftPressed(false)
+  , m_enumMapOperation(MapOperation::None)
 {
   m_nTimerId = startTimer(1000);
 }
@@ -51,9 +52,7 @@ void QDrawPathWidget::timerEvent(QTimerEvent *e)
 {
   int id = e->timerId();
   if (id == m_nTimerId) {
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
+    this->doUpdate();
   }
 }
 
@@ -66,7 +65,7 @@ void QDrawPathWidget::drawImage()
 #ifdef DEBUG
   this->drawMapBorder(painter);
 #endif
-  this->drawPath(painter);
+  this->drawLane(painter);
   if (m_nOperateIndex == QPanelWidget::TypeZoomLocal && m_bMouseLeftPressed) {
     this->drawSelectRect(painter);
   }
@@ -95,31 +94,68 @@ void QDrawPathWidget::drawMapBorder(QPainter &painter)
   painter.restore();
 }
 
-void QDrawPathWidget::drawPath(QPainter &painter)
+void QDrawPathWidget::drawLane(QPainter &painter)
 {
   const apollo::hdmap::Map &map = m_rObjProject.mapData();
   const int size_lane = map.lane_size();
-  if (size_lane == 0) {
-    return;
-  }
-  const apollo::hdmap::Lane &lane = map.lane(0);
-  const int size_segment = lane.central_curve().segment_size();
-  if (size_segment == 0) {
-    return;
-  }
-  const auto &curve_segment = lane.central_curve().segment(0);
-  const auto &line_segment = curve_segment.line_segment();
-  const int size_pts = line_segment.point_size();
 
-  QPolygonF pgf;
-  for (int i = 0; i < size_pts; ++i) {
-    const auto &pt = line_segment.point(i);
-    pgf << QPointF(pt.x(), pt.y());
+  painter.save();
+  for (int i = 0; i < size_lane; ++i) {
+    const apollo::hdmap::Lane &lane = map.lane(i);
+
+    // central curve
+    if (i == 0) {
+      const int size_segment = lane.central_curve().segment_size();
+      if (size_segment == 0) {
+        continue;
+      }
+      const auto &curve = lane.central_curve();
+      QPolygonF &&pgf = this->getCurvePoints(curve);
+      if (pgf.size() > 0) {
+        QPen pen;
+        pen.setColor(Qt::black);
+        pen.setWidth(1);
+        pen.setStyle(Qt::DashDotLine);
+        painter.setPen(pen);
+
+        pgf = m_transform.map(pgf);
+        painter.drawPolyline(pgf);
+      }
+    }
+
+    // left boundary
+    {
+      const auto curve = lane.left_boundary().curve();
+      QPolygonF &&pgf = this->getCurvePoints(curve);
+      if (pgf.size() > 0) {
+        QPen pen;
+        pen.setColor(Qt::yellow);
+        pen.setWidth(2);
+        pen.setStyle(Qt::SolidLine);
+        painter.setPen(pen);
+
+        pgf = m_transform.map(pgf);
+        painter.drawPolyline(pgf);
+      }
+    }
+
+    // right boundary
+    {
+      const auto curve = lane.right_boundary().curve();
+      QPolygonF &&pgf = this->getCurvePoints(curve);
+      if (pgf.size() > 0) {
+        QPen pen;
+        pen.setColor(Qt::yellow);
+        pen.setWidth(2);
+        pen.setStyle(Qt::SolidLine);
+        painter.setPen(pen);
+
+        pgf = m_transform.map(pgf);
+        painter.drawPolyline(pgf);
+      }
+    }
   }
-  if (pgf.size() > 0) {
-    pgf = m_transform.map(pgf);
-    painter.drawPolyline(pgf);
-  }
+  painter.restore();
 }
 
 void QDrawPathWidget::drawSelectRect(QPainter &painter)
@@ -131,6 +167,13 @@ void QDrawPathWidget::drawSelectRect(QPainter &painter)
   painter.setPen(pen);
   painter.drawRect(m_rectfSelect);
   painter.restore();
+}
+
+void QDrawPathWidget::doUpdate()
+{
+  this->calcMapRect();
+  this->drawImage();
+  this->update();
 }
 
 void QDrawPathWidget::calcMapRect()
@@ -243,27 +286,35 @@ void QDrawPathWidget::onOperate(int index)
       break;
     case QPanelWidget::TypeZoomIn:
       m_nDisplayRatio--;
-      this->calcMapRect();
-      this->drawImage();
-      this->update();
+      this->doUpdate();
       break;
     case QPanelWidget::TypeZoomOut:
       m_nDisplayRatio++;
-      this->calcMapRect();
-      this->drawImage();
-      this->update();
+      this->doUpdate();
       break;
     case QPanelWidget::TypeZoomReset:
       m_nDisplayRatio = 1;
       m_ptfTranslate = QPointF(0, 0);
       m_rectfSelectMap.setWidth(0);
-      this->calcMapRect();
-      this->drawImage();
-      this->update();
+      this->doUpdate();
       break;
     default:
       break;
   }
+}
+
+void QDrawPathWidget::onAddBoundary(int index_lane, int index_segment, int index_side)
+{
+  m_enumMapOperation = MapOperation::Boundary;
+
+  m_nCurrentLane = index_lane;
+  m_nCurrentSegment = index_segment;
+  m_nBoundarySide = index_side;
+}
+
+void QDrawPathWidget::onOperateSignal(MapOperation operation)
+{
+  m_enumMapOperation = operation;
 }
 
 void QDrawPathWidget::mousePressEvent(QMouseEvent *e)
@@ -271,6 +322,7 @@ void QDrawPathWidget::mousePressEvent(QMouseEvent *e)
   if (e->button() == Qt::LeftButton) {
     m_ptfMouseMove = e->localPos();
     m_bMouseLeftPressed = true;
+    this->addElementToMap(m_ptfMouseMove);
   }
 }
 
@@ -291,9 +343,7 @@ void QDrawPathWidget::mouseReleaseEvent(QMouseEvent *e)
         );
     m_rectfSelect.setWidth(0);
 
-    this->calcMapRect();
-    this->drawImage();
-    this->update();
+    this->doUpdate();
   }
 }
 
@@ -339,16 +389,133 @@ void QDrawPathWidget::mouseMoveEvent(QMouseEvent *e)
         );
   }
 
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate();
 }
 
 void QDrawPathWidget::wheelEvent(QWheelEvent *e)
 {
   m_nDisplayRatio += e->delta() / 120;
-  this->calcMapRect();
-  this->drawImage();
-  this->update();
+  this->doUpdate();
+}
+
+void QDrawPathWidget::addElementToMap(const QPointF &ptf)
+{
+  switch (m_enumMapOperation) {
+    case MapOperation::None:
+      break;
+    case MapOperation::Boundary:
+      this->addBoundaryPoint(ptf);
+      break;
+    case MapOperation::SignalSign:
+      this->addSignalSign(ptf);
+      m_enumMapOperation = MapOperation::None;
+      break;
+    case MapOperation::Crosswalk:
+      this->addCrosswalk(ptf);
+      m_enumMapOperation = MapOperation::None;
+      break;
+    case MapOperation::StopSign:
+      m_enumMapOperation = MapOperation::None;
+      break;
+    case MapOperation::YieldSign:
+      m_enumMapOperation = MapOperation::None;
+      break;
+    case MapOperation::ClearArea:
+      m_enumMapOperation = MapOperation::None;
+      break;
+    case MapOperation::SpeedBump:
+      m_enumMapOperation = MapOperation::None;
+      break;
+  }
+  this->doUpdate();
+}
+
+void QDrawPathWidget::addBoundaryPoint(const QPointF &ptf)
+{
+  apollo::hdmap::Map &map = m_rObjProject.mapData();
+  auto lane = map.mutable_lane(m_nCurrentLane);
+  if (lane == nullptr) {
+    return;
+  }
+  apollo::hdmap::LaneBoundary *boundary = nullptr;
+  if (m_nBoundarySide == static_cast<int>(BoundarySide::Left)) {
+    boundary = lane->mutable_left_boundary();
+  }
+  else {
+    boundary = lane->mutable_right_boundary();
+  }
+  if (boundary == nullptr) {
+    return;
+  }
+
+  auto curve_segment = boundary->mutable_curve();
+  if (curve_segment == nullptr) {
+    return;
+  }
+  const int size_boundary_segment = curve_segment->segment_size();
+  if (m_nCurrentSegment >= size_boundary_segment) {
+    return;
+  }
+  auto line_segment = curve_segment->mutable_segment(m_nCurrentSegment)->mutable_line_segment();
+
+  QPointF ptfENU = this->pixelToENU(ptf);
+  auto pointENU = line_segment->add_point();
+  pointENU->set_x(ptfENU.x());
+  pointENU->set_y(ptfENU.y());
+}
+
+void QDrawPathWidget::addSignalSign(const QPointF &ptf)
+{
+
+}
+
+void QDrawPathWidget::addCrosswalk(const QPointF &ptf)
+{
+  QPointF ptfENU = this->pixelToENU(ptf);
+
+  apollo::hdmap::Map &map = m_rObjProject.mapData();
+  auto crosswalk = map.add_crosswalk();
+  const int size = map.crosswalk_size();
+
+  crosswalk->mutable_id()->set_id("crosswalk_" + std::to_string(size + 1));
+  apollo::hdmap::Polygon* polygon = crosswalk->mutable_polygon();
+  apollo::common::PointENU* pt = polygon->add_point();
+  pt->set_x(170000.0);
+  pt->set_y(170000.0);
+  pt->set_z(0.0);
+  pt = polygon->add_point();
+  pt->set_x(170003.0);
+  pt->set_y(170000.0);
+  pt->set_z(0.0);
+  pt = polygon->add_point();
+  pt->set_x(170003.0);
+  pt->set_y(170003.0);
+  pt->set_z(0.0);
+  pt = polygon->add_point();
+  pt->set_x(170000.0);
+  pt->set_y(170003.0);
+  pt->set_z(0.0);
+}
+
+QPointF QDrawPathWidget::pixelToENU(const QPointF &ptf)
+{
+  QTransform inverted = m_transform.inverted();
+  QPointF ptfENU = inverted.map(ptf);
+  return ptfENU;
+}
+
+QPolygonF QDrawPathWidget::getCurvePoints(const apollo::hdmap::Curve &curve)
+{
+  QPolygonF pgf;
+  const int size = curve.segment_size();
+  for (int i = 0; i < size; ++i) {
+    const auto &line_segment = curve.segment(i).line_segment();
+    const int size_pts = line_segment.point_size();
+    for (int j = 0; j < size_pts; ++j) {
+      const auto &pt = line_segment.point(j);
+      pgf << QPointF(pt.x(), pt.y());
+    }
+  }
+  return std::move(pgf);
 }
 
