@@ -229,13 +229,13 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   carStatus["HEAD_DISTANCE"] = planningData.head_distance;
 
   // radar 28 target
-  const debug_tool::ads_Radar28fTargetColl &radar28Result = planningData.radar28f_results;
+  const auto &radar28Result = planningData.radar28f_results;
   Json::Value radar28Trargets, radar28Trarget;
-  int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
-  radar28Trargets["OBJECT_COUNT"] = radar28Result.object_count;
+  int sizeTarget28 = radar28Result.size();
+  radar28Trargets["OBJECT_COUNT"] = sizeTarget28;
   for (int i = 0; i < sizeTarget28; ++i) {
     Json::Value item;
-    const debug_tool::ads_RadarTarget &target = radar28Result.radar_objects[i];
+    const debug_tool::ads_RadarTarget &target = radar28Result[i];
     item["ID"] = target.id;
     item["RANGE"] = target.range;
     item["RANGE_LAT"] = target.range_lat;
@@ -254,13 +254,13 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   radar28Trargets["RADAR28_OBJECTS"] = radar28Trarget;
 
   // radar 73 target
-  const debug_tool::ads_Radar73fTargetColl &radar73Result = planningData.radar73f_results;
+  const auto &radar73Result = planningData.radar73f_results;
   Json::Value radar73Trargets, radar73Trarget;
-  int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
-  radar73Trargets["OBJECT_COUNT"] = radar73Result.object_count;
+  int sizeTarget73 = radar73Result.size();
+  radar73Trargets["OBJECT_COUNT"] = sizeTarget73;
   for (int i = 0; i < sizeTarget73; ++i) {
     Json::Value item;
-    const debug_tool::ads_RadarTarget &target = radar73Result.radar_objects[i];
+    const debug_tool::ads_RadarTarget &target = radar73Result[i];
     item["ID"] = target.id;
     item["RANGE"] = target.range;
     item["RANGE_LAT"] = target.range_lat;
@@ -279,13 +279,13 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   radar73Trargets["RADAR73_OBJECTS"] = radar73Trarget;
 
   // UltraSonic
-  const debug_tool::ads_UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
+  const auto &ultrasonicResult = planningData.ultrasonic_results;
   Json::Value ultrasonicTrargets, ultrasonicTrarget;
-  int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
-  ultrasonicTrargets["OBJECT_COUNT"] = static_cast<int>(ultrasonicResult.object_count);
+  int sizeTarget = ultrasonicResult.size();
+  ultrasonicTrargets["OBJECT_COUNT"] = static_cast<int>(sizeTarget);
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
-    const debug_tool::ads_UltraSonicTarget &target = ultrasonicResult.us_objects[i];
+    const debug_tool::ads_UltraSonicTarget &target = ultrasonicResult[i];
 
     item["POS_ID"] = static_cast<int>(target.radar_pos_id);
     item["DISTANCE"] = target.distance;
@@ -294,13 +294,13 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   ultrasonicTrargets["US_OBJECTS"] = ultrasonicTrarget;
 
   // Track Target
-  const debug_tool::ads_TrackTargetColl &trackResult = planningData.fusion_results;
+  const auto &trackResult = planningData.fusion_results;
   Json::Value trackTrargets, trackTrarget;
-  sizeTarget = qMin<int>(250, trackResult.object_count);
-  trackTrargets["OBJECT_COUNT"] = trackResult.object_count;
+  sizeTarget = trackResult.size();
+  trackTrargets["OBJECT_COUNT"] = sizeTarget;
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
-    const debug_tool::ads_TrackTarget &target = trackResult.track_objects[i];
+    const debug_tool::ads_TrackTarget &target = trackResult[i];
 
     item["TRACK_ID"] = static_cast<int32_t>(target.TRACK_ID);
     item["X"] = target.X;
@@ -326,7 +326,7 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
 
   // garbage
   Json::Value garbage;
-  const auto &garbage_result = planningData.garbage_detection_results.result;
+  const auto &garbage_result = planningData.garbage_detection_results;
   auto garbage_size = garbage_result.size();
   using size_g = decltype (garbage_size);
   for (size_g i = 0; i < garbage_size; ++i) {
@@ -335,6 +335,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["SIZE"] = garbage_result[i].size;
     item["ANGLE"] = garbage_result[i].angle;
     item["DISTANCE"] = garbage_result[i].distance;
+    item["LENGTH"] = garbage_result[i].length;
+    item["WIDTH"] = garbage_result[i].width;
     garbage.append(item);
   }
 
@@ -454,22 +456,13 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
 
   // road info
   Json::Value roadInfo;
-  roadInfo["LEFT_HALF_ROAD_WIDTH"] = planningData.left_half_road_width;
-  roadInfo["RIGHT_HALF_ROAD_WIDTH"] = planningData.right_half_road_width;
+  roadInfo["LEFT_HALF_ROAD_WIDTH"] = planningData.left_road_width;
+  roadInfo["RIGHT_HALF_ROAD_WIDTH"] = planningData.right_road_width;
   roadInfo["MIN_SAFE_DISTANCE"] = planningData.safe_dis1;
   roadInfo["SAFE_DISTANCE"] = planningData.safe_dis2;
   roadInfo["MAX_PLANNING_DISTANCE"] = planningData.max_planning_distance;
   roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"] = planningData.left_road_boundary_available;
   roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"] = planningData.right_road_boundary_available;
-  Json::Value leftRoadBoundary, rightRoadBoundary;
-  for (size_t i = 0; i < 5; ++i) {
-    Json::Value itemLeft = planningData.left_road_boundary[i];
-    leftRoadBoundary.append(itemLeft);
-    Json::Value itemRight = planningData.right_road_boundary[i];
-    rightRoadBoundary.append(itemRight);
-  }
-  roadInfo["LEFT_ROAD_BOUNDARY"] = leftRoadBoundary;
-  roadInfo["RIGHT_ROAD_BOUNDARY"] = rightRoadBoundary;
   roadInfo["LEFT_ROAD_BOUNDARY_START_S"] = planningData.left_road_boundary_start_s;
   roadInfo["LEFT_ROAD_BOUNDARY_END_S"] = planningData.left_road_boundary_end_s;
   roadInfo["RIGHT_ROAD_BOUNDARY_START_S"] = planningData.right_road_boundary_start_s;
@@ -488,9 +481,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   ads_pubcurb["Point_R2_Y"] = planningData.curb.Point_R2.y;
   roadInfo["ADS_PUBCURB"] = ads_pubcurb;
 
-  roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"] = planningData.num_left_road_boundary_splines;
-  const int SIZE_LEFT_ROAD_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_left_road_boundary_splines), 100);
+  const int SIZE_LEFT_ROAD_SPLINES = planningData.left_road_boundary_splines.size();
+  roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"] = SIZE_LEFT_ROAD_SPLINES;
   Json::Value left_road_splines;
   for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
     Json::Value item;
@@ -505,9 +497,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     left_road_splines.append(item);
   }
   roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"] = left_road_splines;
-  roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"] = planningData.num_right_road_boundary_splines;
-  const int SIZE_RIGHT_ROAD_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_right_road_boundary_splines), 100);
+  const int SIZE_RIGHT_ROAD_SPLINES = planningData.right_road_boundary_splines.size();
+  roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"] = SIZE_RIGHT_ROAD_SPLINES;
   Json::Value right_road_splines;
   for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
     Json::Value item;
@@ -526,8 +517,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   // referene
   Json::Value referenceLine;
   Json::Value referencePoints;
-  sizeTarget = qMin<int>(100, planningData.num_reference_points);
-  referenceLine["NUM_REFERENCE_POINTS"] = static_cast<int>(planningData.num_reference_points);
+  sizeTarget = planningData.reference_points.size();
+  referenceLine["NUM_REFERENCE_POINTS"] = sizeTarget;
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item;
     const debug_tool::ads_ReferencePoint &reference = planningData.reference_points[i];
@@ -540,9 +531,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   }
   referenceLine["REFERENCE_POINTS"] = referencePoints;
 
-  referenceLine["NUM_REFERENCE_SPLINES"] = static_cast<int>(planningData.num_reference_splines);
-  const int SIZE_REFERENCE_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_reference_splines), 100);
+  const int SIZE_REFERENCE_SPLINES = planningData.reference_splines.size();
+  referenceLine["NUM_REFERENCE_SPLINES"] = SIZE_REFERENCE_SPLINES;
   Json::Value reference_splines;
   for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
     Json::Value item;
@@ -608,13 +598,12 @@ void QPlanningWidget::parseDataFromJson(
   planningData.head_distance = carStatus["HEAD_DISTANCE"].asDouble();
 
   // radar 28 target
-  debug_tool::ads_Radar28fTargetColl &radar28Result = planningData.radar28f_results;
-  radar28Result.object_count = radar28Trargets["OBJECT_COUNT"].asInt();
+  auto &radar28Result = planningData.radar28f_results;
   Json::Value radar28Trarget = radar28Trargets["RADAR28_OBJECTS"];
-  int sizeTarget28 = qMin<int>(100, radar28Result.object_count);
+  int sizeTarget28 = radar28Trargets["OBJECT_COUNT"].asInt();
   for (int i = 0; i < sizeTarget28; ++i) {
     Json::Value item = radar28Trarget[i];
-    debug_tool::ads_RadarTarget &target = radar28Result.radar_objects[i];
+    debug_tool::ads_RadarTarget target;
     target.id = item["ID"].asInt();
     target.range = item["RANGE"].asDouble();
     target.range_lat = item["RANGE_LAT"].asDouble();
@@ -627,16 +616,17 @@ void QPlanningWidget::parseDataFromJson(
     target.w = item["W"].asDouble();
     target.l = item["L"].asDouble();
     target.devid = item["DEVID"].asInt();
+
+    radar28Result.push_back(target);
   }
 
   // radar 73 target
-  debug_tool::ads_Radar73fTargetColl &radar73Result = planningData.radar73f_results;
-  radar73Result.object_count = radar73Trargets["OBJECT_COUNT"].asInt();
+  auto &radar73Result = planningData.radar73f_results;
+  int sizeTarget73 = radar73Trargets["OBJECT_COUNT"].asInt();
   Json::Value radar73Trarget = radar73Trargets["RADAR73_OBJECTS"];
-  int sizeTarget73 = qMin<int>(100, radar73Result.object_count);
   for (int i = 0; i < sizeTarget73; ++i) {
     Json::Value item = radar73Trarget[i];
-    debug_tool::ads_RadarTarget &target = radar73Result.radar_objects[i];
+    debug_tool::ads_RadarTarget target;
     target.id = item["ID"].asInt();
     target.range = item["RANGE"].asDouble();
     target.range_lat = item["RANGE_LAT"].asDouble();
@@ -649,30 +639,31 @@ void QPlanningWidget::parseDataFromJson(
     target.w = item["W"].asDouble();
     target.l = item["L"].asDouble();
     target.devid = item["DEVID"].asInt();
+
+    radar73Result.push_back(target);
   }
 
   // UltraSonic
-  debug_tool::ads_UltraSonicTargetColl &ultrasonicResult = planningData.ultrasonic_results;
-  ultrasonicResult.object_count = static_cast<int8_t>(
-        ultrasonicTrargets["OBJECT_COUNT"].asInt());
+  auto &ultrasonicResult = planningData.ultrasonic_results;
   Json::Value ultrasonicTrarget = ultrasonicTrargets["US_OBJECTS"];
-  int sizeTarget = qMin<int>(8, ultrasonicResult.object_count);
+  int sizeTarget = ultrasonicTrargets["OBJECT_COUNT"].asInt();
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = ultrasonicTrarget[i];
-    debug_tool::ads_UltraSonicTarget &target = ultrasonicResult.us_objects[i];
+    debug_tool::ads_UltraSonicTarget target;
 
     target.radar_pos_id = static_cast<int8_t>(item["POS_ID"].asInt());
     target.distance = item["DISTANCE"].asFloat();
+
+    ultrasonicResult.push_back(target);
   }
 
   // Track Target
-  debug_tool::ads_TrackTargetColl &trackResult = planningData.fusion_results;
-  trackResult.object_count = trackTrargets["OBJECT_COUNT"].asInt();
+  auto &trackResult = planningData.fusion_results;
   Json::Value trackTrarget = trackTrargets["TRACK_OBJECTS"];
-  sizeTarget = qMin<int>(250, trackResult.object_count);
+  sizeTarget = trackTrargets["OBJECT_COUNT"].asInt();
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = trackTrarget[i];
-    debug_tool::ads_TrackTarget &target = trackResult.track_objects[i];
+    debug_tool::ads_TrackTarget target;
 
     target.TRACK_ID = static_cast<int64_t>(item["TRACK_ID"].asInt());
     target.X = item["X"].asDouble();
@@ -691,10 +682,12 @@ void QPlanningWidget::parseDataFromJson(
     target.P4_X = item["P4_X"].asFloat();
     target.P4_Y = item["P4_Y"].asFloat();
     target.STATUS = item["STATUS"].asFloat();
+
+    trackResult.push_back(target);
   }
 
   // garbage
-  auto &garbage_result = planningData.garbage_detection_results.result;
+  auto &garbage_result = planningData.garbage_detection_results;
   garbage_result.resize(1);
   auto gargage_item = garbage_result[0];
   using garbage_type = decltype (gargage_item);
@@ -707,6 +700,8 @@ void QPlanningWidget::parseDataFromJson(
     result.size = item["SIZE"].asFloat();
     result.angle = item["ANGLE"].asFloat();
     result.distance = item["DISTANCE"].asFloat();
+    result.length = item["LENGTH"].asFloat();
+    result.width = item["WIDTH"].asFloat();
     garbage_result.push_back(result);
   }
 
@@ -820,21 +815,13 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // road info
-  planningData.left_half_road_width = roadInfo["LEFT_HALF_ROAD_WIDTH"].asDouble();
-  planningData.right_half_road_width = roadInfo["RIGHT_HALF_ROAD_WIDTH"].asDouble();
+  planningData.left_road_width = roadInfo["LEFT_HALF_ROAD_WIDTH"].asDouble();
+  planningData.right_road_width = roadInfo["RIGHT_HALF_ROAD_WIDTH"].asDouble();
   planningData.safe_dis1 = roadInfo["MIN_SAFE_DISTANCE"].asDouble();
   planningData.safe_dis2 = roadInfo["SAFE_DISTANCE"].asDouble();
   planningData.max_planning_distance = roadInfo["MAX_PLANNING_DISTANCE"].asDouble();
   planningData.left_road_boundary_available = roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"].asBool();
   planningData.right_road_boundary_available = roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"].asBool();
-  int SIZE_BOUND = qBound<int>(0, static_cast<int>(roadInfo["LEFT_ROAD_BOUNDARY"].size()), 5);
-  for (int i = 0; i < SIZE_BOUND; ++i) {
-    planningData.left_road_boundary[i] = roadInfo["LEFT_ROAD_BOUNDARY"][i].asDouble();
-  }
-  SIZE_BOUND = qBound<int>(0, static_cast<int>(roadInfo["RIGHT_ROAD_BOUNDARY"].size()), 5);
-  for (int i = 0; i < SIZE_BOUND; ++i) {
-    planningData.right_road_boundary[i] = roadInfo["RIGHT_ROAD_BOUNDARY"][i].asDouble();
-  }
   planningData.left_road_boundary_start_s = roadInfo["LEFT_ROAD_BOUNDARY_START_S"].asDouble();
   planningData.left_road_boundary_end_s = roadInfo["LEFT_ROAD_BOUNDARY_END_S"].asDouble();
   planningData.right_road_boundary_start_s = roadInfo["RIGHT_ROAD_BOUNDARY_START_S"].asDouble();
@@ -852,67 +839,69 @@ void QPlanningWidget::parseDataFromJson(
   planningData.curb.Point_R2.x = ads_pubcurb["Point_R2_X"].asDouble();
   planningData.curb.Point_R2.y = ads_pubcurb["Point_R2_Y"].asDouble();
 
-  planningData.num_left_road_boundary_splines = static_cast<int8_t>(
-        roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"].asInt());
-  const int SIZE_LEFT_ROAD_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_left_road_boundary_splines), 100);
+  const int SIZE_LEFT_ROAD_SPLINES = roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"].size();
   for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
     Json::Value item = roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"][i];
-    planningData.left_road_boundary_splines[i].xb.x = item["XB_X"].asDouble();
-    planningData.left_road_boundary_splines[i].xb.y = item["XB_Y"].asDouble();
-    planningData.left_road_boundary_splines[i].xb.z = item["XB_Z"].asDouble();
-    planningData.left_road_boundary_splines[i].xb.w = item["XB_W"].asDouble();
-    planningData.left_road_boundary_splines[i].yb.x = item["YB_X"].asDouble();
-    planningData.left_road_boundary_splines[i].yb.y = item["YB_Y"].asDouble();
-    planningData.left_road_boundary_splines[i].yb.z = item["YB_Z"].asDouble();
-    planningData.left_road_boundary_splines[i].yb.w = item["YB_W"].asDouble();
+    debug_tool::ads_Spline spline;
+    spline.xb.x = item["XB_X"].asDouble();
+    spline.xb.y = item["XB_Y"].asDouble();
+    spline.xb.z = item["XB_Z"].asDouble();
+    spline.xb.w = item["XB_W"].asDouble();
+    spline.yb.x = item["YB_X"].asDouble();
+    spline.yb.y = item["YB_Y"].asDouble();
+    spline.yb.z = item["YB_Z"].asDouble();
+    spline.yb.w = item["YB_W"].asDouble();
+
+    planningData.left_road_boundary_splines.push_back(spline);
   }
-  planningData.num_right_road_boundary_splines = static_cast<int8_t>(
-        roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"].asInt());
-  const int SIZE_RIGHT_ROAD_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_right_road_boundary_splines), 100);
+  const int SIZE_RIGHT_ROAD_SPLINES = roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"].size();
   for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
     Json::Value item = roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"][i];
-    planningData.right_road_boundary_splines[i].xb.x = item["XB_X"].asDouble();
-    planningData.right_road_boundary_splines[i].xb.y = item["XB_Y"].asDouble();
-    planningData.right_road_boundary_splines[i].xb.z = item["XB_Z"].asDouble();
-    planningData.right_road_boundary_splines[i].xb.w = item["XB_W"].asDouble();
-    planningData.right_road_boundary_splines[i].yb.x = item["YB_X"].asDouble();
-    planningData.right_road_boundary_splines[i].yb.y = item["YB_Y"].asDouble();
-    planningData.right_road_boundary_splines[i].yb.z = item["YB_Z"].asDouble();
-    planningData.right_road_boundary_splines[i].yb.w = item["YB_W"].asDouble();
+    debug_tool::ads_Spline spline;
+
+    spline.xb.x = item["XB_X"].asDouble();
+    spline.xb.y = item["XB_Y"].asDouble();
+    spline.xb.z = item["XB_Z"].asDouble();
+    spline.xb.w = item["XB_W"].asDouble();
+    spline.yb.x = item["YB_X"].asDouble();
+    spline.yb.y = item["YB_Y"].asDouble();
+    spline.yb.z = item["YB_Z"].asDouble();
+    spline.yb.w = item["YB_W"].asDouble();
+
+    planningData.right_road_boundary_splines.push_back(spline);
   }
 
   // referene
   Json::Value referencePoints = referenceLine["REFERENCE_POINTS"];
-  planningData.num_reference_points = static_cast<int8_t>(
-        referenceLine["NUM_REFERENCE_POINTS"].asInt());
-  sizeTarget = qMin<int>(100, planningData.num_reference_points);
+  sizeTarget = referenceLine["REFERENCE_POINTS"].size();
   for (int i = 0; i < sizeTarget; ++i) {
     Json::Value item = referencePoints[i];
-    debug_tool::ads_ReferencePoint &reference = planningData.reference_points[i];
+    debug_tool::ads_ReferencePoint reference;
     reference.id = static_cast<int8_t>(item["ID"].asInt());
     reference.l = item["L"].asDouble();
     reference.s = item["S"].asDouble();
     reference.x = item["X"].asDouble();
     reference.y = item["Y"].asDouble();
+
+    planningData.reference_points.push_back(reference);
   }
 
-  planningData.num_reference_splines = static_cast<int8_t>(
-        referenceLine["NUM_REFERENCE_SPLINES"].asInt());
-  const int SIZE_REFERENCE_SPLINES = qBound<int>(
-        0, static_cast<int>(planningData.num_reference_splines), 100);
   Json::Value reference_splines = referenceLine["REFERENCE_SPLINES"];
+  const int SIZE_REFERENCE_SPLINES = reference_splines.size();
   for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
     Json::Value item = reference_splines[i];
-    planningData.reference_splines[i].xb.x = item["XB_X"].asDouble();
-    planningData.reference_splines[i].xb.y = item["XB_Y"].asDouble();
-    planningData.reference_splines[i].xb.z = item["XB_Z"].asDouble();
-    planningData.reference_splines[i].xb.w = item["XB_W"].asDouble();
-    planningData.reference_splines[i].yb.x = item["YB_X"].asDouble();
-    planningData.reference_splines[i].yb.y = item["YB_Y"].asDouble();
-    planningData.reference_splines[i].yb.z = item["YB_Z"].asDouble();
-    planningData.reference_splines[i].yb.w = item["YB_W"].asDouble();
+    debug_tool::ads_Spline spline;
+
+    spline.xb.x = item["XB_X"].asDouble();
+    spline.xb.y = item["XB_Y"].asDouble();
+    spline.xb.z = item["XB_Z"].asDouble();
+    spline.xb.w = item["XB_W"].asDouble();
+    spline.yb.x = item["YB_X"].asDouble();
+    spline.yb.y = item["YB_Y"].asDouble();
+    spline.yb.z = item["YB_Z"].asDouble();
+    spline.yb.w = item["YB_W"].asDouble();
+
+    planningData.reference_splines.push_back(spline);
   }
 
   // debug info
@@ -922,8 +911,8 @@ void QPlanningWidget::parseDataFromJson(
 
 void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
 {
-  auto &tracks = data.fusion_results.track_objects;
-  const int SIZE = static_cast<int>(data.fusion_results.object_count);
+  auto &tracks = data.fusion_results;
+  const int SIZE = static_cast<int>(data.fusion_results.size());
   auto begin = tracks.begin();
   auto end = begin;
   for (int i = 0; i < SIZE; ++i) {
@@ -1038,7 +1027,7 @@ void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug 
 
 bool QPlanningWidget::RoadBoundaryCheck(
     const debug_tool::ads_planning_trajectory &path,
-    const boost::array< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> , 100> &references,
+    const std::vector< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> > &references,
     double left_road_width,
     double right_road_width,
     double vehicle_width,
@@ -1116,8 +1105,8 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
   });
 
   int index = -1;
-  int targets_count = planningData.fusion_results.object_count;
-  const auto &targets = planningData.fusion_results.track_objects;
+  int targets_count = planningData.fusion_results.size();
+  const auto &targets = planningData.fusion_results;
   for (int i = 0; i < size_candidates; ++ i) {
     bool check = false;
     for (int j = 0; j < targets_count; ++j) {
@@ -1130,8 +1119,8 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
     if (check) continue;
     check = this->RoadBoundaryCheck(
           candidates[i], planningData.reference_points,
-          planningData.left_half_road_width,
-          planningData.right_half_road_width,
+          planningData.left_road_width,
+          planningData.right_road_width,
           planningData.vehicle_width,
           0
           );
