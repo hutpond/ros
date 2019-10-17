@@ -1148,10 +1148,9 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
 
   for (int i = 0; i < SIZE; ++i) {
     QPolygonF pgf;
-    pgf << QPointF(TRACKS[i].P1_X, TRACKS[i].P1_Y) <<
-           QPointF(TRACKS[i].P2_X, TRACKS[i].P2_Y) <<
-           QPointF(TRACKS[i].P3_X, TRACKS[i].P3_Y) <<
-           QPointF(TRACKS[i].P4_X, TRACKS[i].P4_Y);
+    for (const auto &point : TRACKS[i].edge_points) {
+      pgf << QPointF(point.x, point.y);
+    }
 
     bool contains = m_bFlagShowAllTargets;
     const qreal x_max = m_planningData.max_planning_distance + m_planningData.head_distance;
@@ -1198,12 +1197,11 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
   // new targets
   pen.setStyle(Qt::DotLine);
   painter.setPen(pen);
-  for (int i = SIZE; i < SIZE + m_nNewTracksCount; ++i) {
+  for (int i = SIZE - m_nNewTracksCount; i < SIZE; ++i) {
     QPolygonF pgf;
-    pgf << QPointF(TRACKS[i].P1_X, TRACKS[i].P1_Y) <<
-           QPointF(TRACKS[i].P2_X, TRACKS[i].P2_Y) <<
-           QPointF(TRACKS[i].P3_X, TRACKS[i].P3_Y) <<
-           QPointF(TRACKS[i].P4_X, TRACKS[i].P4_Y);
+    for (const auto &point : TRACKS[i].edge_points) {
+      pgf << QPointF(point.x, point.y);
+    }
     pgf = m_transform.map(pgf);
     painter.drawPolygon(pgf);
     painter.drawText(pgf.boundingRect(), Qt::AlignCenter, QString::number(i));
@@ -1634,28 +1632,33 @@ void QPlanningShowWidget::addTracksToData()
   QPolygon pg = pgf.toPolygon();
 
   int trackId = size == 0 ? 0 : tracks[size - 1].TRACK_ID;
-  auto &track = tracks[size + m_nNewTracksCount];
+  debug_tool::ads_TrackTarget_<std::allocator<void>> track;
   track.TRACK_ID = trackId + 1;
 
   QPointF ptf(pg.point(0).x(), pg.point(0).y());
   ptf = this->pixelToMap(ptf);
-  track.P1_X = ptf.x();
-  track.P1_Y = ptf.y();
+  ::geometry_msgs::Point32_<std::allocator<void>> point;
+  point.x = ptf.x();
+  point.y = ptf.y();
+  track.edge_points.push_back(point);
 
   ptf = QPointF(pg.point(1).x(), pg.point(1).y());
   ptf = this->pixelToMap(ptf);
-  track.P2_X = ptf.x();
-  track.P2_Y = ptf.y();
+  point.x = ptf.x();
+  point.y = ptf.y();
+  track.edge_points.push_back(point);
 
   ptf = QPointF(pg.point(2).x(), pg.point(2).y());
   ptf = this->pixelToMap(ptf);
-  track.P3_X = ptf.x();
-  track.P3_Y = ptf.y();
+  point.x = ptf.x();
+  point.y = ptf.y();
+  track.edge_points.push_back(point);
 
   ptf = QPointF(pg.point(3).x(), pg.point(3).y());
   ptf = this->pixelToMap(ptf);
-  track.P4_X = ptf.x();
-  track.P4_Y = ptf.y();
+  point.x = ptf.x();
+  point.y = ptf.y();
+  track.edge_points.push_back(point);
 
   ++ m_nNewTracksCount;
   m_ptfTargets.clear();

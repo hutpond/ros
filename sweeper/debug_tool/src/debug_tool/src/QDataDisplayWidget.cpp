@@ -444,23 +444,23 @@ void QDataDisplayWidget::setPlanningData(
     itemChild = new QTreeWidgetItem(item);
     itemChild->setText(0, QString("H: %1").arg(planningData.fusion_results[i].H));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P1_X: %1").arg(planningData.fusion_results[i].P1_X));
+    itemChild->setText(0, QString("DEVICE_SOURCE: %1").
+                       arg(static_cast<int>(planningData.fusion_results[i].DEVICE_SOURCE)));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P1_Y: %1").arg(planningData.fusion_results[i].P1_Y));
+    itemChild->setText(0, QString("MOTION_STATUS: %1").
+                       arg(static_cast<int>(planningData.fusion_results[i].MOTION_STATUS)));
     itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P2_X: %1").arg(planningData.fusion_results[i].P2_X));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P2_Y: %1").arg(planningData.fusion_results[i].P2_Y));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P3_X: %1").arg(planningData.fusion_results[i].P3_X));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P3_Y: %1").arg(planningData.fusion_results[i].P3_Y));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P4_X: %1").arg(planningData.fusion_results[i].P4_X));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("P4_Y: %1").arg(planningData.fusion_results[i].P4_Y));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("STATUS: %1").arg(planningData.fusion_results[i].STATUS));
+    itemChild->setText(0, QString("TARGET_TYPE: %1").
+                       arg(static_cast<int>(planningData.fusion_results[i].TARGET_TYPE)));
+    int index = 0;
+    for (const auto &point : planningData.fusion_results[i].edge_points) {
+      itemChild = new QTreeWidgetItem(item);
+      itemChild->setText(0, QString("index: %1, x: %2, y: %3, z: %4").
+                         arg(index ++).
+                         arg(point.x).
+                         arg(point.y).
+                         arg(point.z));
+    }
   }
 
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);

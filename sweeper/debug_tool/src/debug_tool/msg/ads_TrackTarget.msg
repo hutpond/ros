@@ -6,12 +6,7 @@ float32    ANGLE
 float32    W
 float32    L
 float32    H
-float32    P1_X
-float32    P1_Y
-float32    P2_X
-float32    P2_Y
-float32    P3_X
-float32    P3_Y
-float32    P4_X
-float32    P4_Y
-float32    STATUS
+int8       DEVICE_SOURCE                       #0-UNKNOW 1-RADAR 2-LIDAR 3-CAMERA 5-ZED
+int8       MOTION_STATUS                       #preserved
+int8       TARGET_TYPE                         #UNKNOW = -1,VEHICLE = 0,TRUCK = 1,BIKE = 2,	PEDESTRIAN = 3,MOTORCYCLE =4,GARBAGE=5
+geometry_msgs/Point32[] edge_points

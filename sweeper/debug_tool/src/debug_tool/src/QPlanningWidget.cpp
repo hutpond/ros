@@ -310,15 +310,19 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["W"] = target.W;
     item["L"] = target.L;
     item["H"] = target.H;
-    item["P1_X"] = target.P1_X;
-    item["P1_Y"] = target.P1_Y;
-    item["P2_X"] = target.P2_X;
-    item["P2_Y"] = target.P2_Y;
-    item["P3_X"] = target.P3_X;
-    item["P3_Y"] = target.P3_Y;
-    item["P4_X"] = target.P4_X;
-    item["P4_Y"] = target.P4_Y;
-    item["STATUS"] = target.STATUS;
+    item["DEVICE_SOURCE"] = static_cast<int>(target.DEVICE_SOURCE);
+    item["MOTION_STATUS"] = static_cast<int>(target.MOTION_STATUS);
+    item["TARGET_TYPE"] = static_cast<int>(target.TARGET_TYPE);
+
+    Json::Value json_points;
+    for (const auto &point : target.edge_points) {
+      Json::Value json_point;
+      json_point["POINT_X"] = point.x;
+      json_point["POINT_Y"] = point.y;
+      json_point["POINT_Z"] = point.z;
+      json_points.append(json_point);
+    }
+    item["POINTS"] = json_points;
 
     trackTrarget.append(item);
   }
@@ -673,15 +677,20 @@ void QPlanningWidget::parseDataFromJson(
     target.W = item["W"].asFloat();
     target.L = item["L"].asFloat();
     target.H = item["H"].asFloat();
-    target.P1_X = item["P1_X"].asFloat();
-    target.P1_Y = item["P1_Y"].asFloat();
-    target.P2_X = item["P2_X"].asFloat();
-    target.P2_Y = item["P2_Y"].asFloat();
-    target.P3_X = item["P3_X"].asFloat();
-    target.P3_Y = item["P3_Y"].asFloat();
-    target.P4_X = item["P4_X"].asFloat();
-    target.P4_Y = item["P4_Y"].asFloat();
-    target.STATUS = item["STATUS"].asFloat();
+    target.DEVICE_SOURCE = static_cast<int8_t>(item["DEVICE_SOURCE"].asInt());
+    target.MOTION_STATUS = static_cast<int8_t>(item["MOTION_STATUS"].asInt());
+    target.TARGET_TYPE = static_cast<int8_t>(item["TARGET_TYPE"].asInt());
+
+    const int size_point = item["POINTS"].size();
+    for (int j = 0; j < size_point; ++j) {
+      Json::Value json_point = item["POINTS"][j];
+      ::geometry_msgs::Point32_<std::allocator<void>> point;
+      point.x = json_point["POINT_X"].asDouble();
+      point.y = json_point["POINT_Y"].asDouble();
+      point.z = json_point["POINT_Z"].asDouble();
+
+      target.edge_points.push_back(point);
+    }
 
     trackResult.push_back(target);
   }
@@ -912,17 +921,11 @@ void QPlanningWidget::parseDataFromJson(
 void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
 {
   auto &tracks = data.fusion_results;
-  const int SIZE = static_cast<int>(data.fusion_results.size());
-  auto begin = tracks.begin();
-  auto end = begin;
-  for (int i = 0; i < SIZE; ++i) {
-    ++ end;
-  }
 
   using TypeTrack = decltype(tracks[0]);
-  std::sort(begin, end, [](const TypeTrack &track,
+  std::sort(tracks.begin(), tracks.end(), [](const TypeTrack &track,
             const TypeTrack &track2) {
-    return (track.P1_X + track.P3_X) < (track2.P1_X + track2.P3_X);
+    return (track.edge_points[0].x) < (track2.edge_points[0].x);
   });
 }
 
@@ -963,14 +966,10 @@ bool QPlanningWidget::ObstacleCollisionCheck(
   std::vector<SplineLib::Vec2f> points;
   double x[4], y[4];
 
-  SplineLib::Vec2f point = { target.P1_X, target.P1_Y };
-  points.push_back(point);
-  point = { target.P2_X, target.P2_Y };
-  points.push_back(point);
-  point = { target.P3_X, target.P3_Y };
-  points.push_back(point);
-  point = { target.P4_X, target.P4_Y };
-  points.push_back(point);
+  for (const auto &point : target.edge_points) {
+    SplineLib::Vec2f spline_point = { point.x, point.y };
+    points.push_back(spline_point);
+  }
 
   for (int i = 0; i < 4; i++)
   {
