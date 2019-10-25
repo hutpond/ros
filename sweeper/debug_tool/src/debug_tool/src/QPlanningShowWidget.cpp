@@ -174,7 +174,7 @@ void QPlanningShowWidget::drawImage()
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawNewTarget(painter);
-  //this->drawPlanningCandidatesSplines(painter);
+  this->drawPlanningPoint(painter);
   this->drawPlanningSplines(painter);
   this->drawGarbageResults(painter);
 }
@@ -706,14 +706,14 @@ void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
         m_planningData.planning_output.pose.position.y
         );
   QPointF ptf = m_transform.map(ptfPlanning);
-  QRect rect = QRect(0, 0, 10, 10);
+  QRect rect = QRect(0, 0, 13, 13);
   rect.moveCenter(ptf.toPoint());
   QLineF line(rect.topLeft(), rect.bottomRight());
   QLineF line2(rect.bottomLeft(), rect.topRight());
 
   painter.save();
   QPen pen;
-  pen.setColor(Qt::black);
+  pen.setColor(Qt::darkGreen);
   pen.setWidth(4);
   painter.setPen(pen);
   painter.drawLine(line);

@@ -576,7 +576,6 @@ void QPlanningWidget::parseDataFromJson(
     const Json::Value &data,
     debug_tool::ads_PlanningData4Debug &planningData)
 {
-  //memset(&planningData, 0, sizeof(planningData));
   Json::Value carStatus = data["CAR_STATUS"];
   Json::Value radar28Trargets = data["RADAR28_TRARGETS"];
   Json::Value radar73Trargets = data["RADAR73_TRARGETS"];

@@ -146,6 +146,9 @@ double QFullViewWidget::yLocal2Global(const debug_tool::ads_PlanningData4Debug &
 
 void QFullViewWidget::addReference(const debug_tool::ads_PlanningData4Debug &data, quint64 index)
 {
+  if (data.reference_points.size() == 0) {
+    return;
+  }
   QSharedPointer<MapPoint> reference;
   reference.reset(new MapPoint);
   reference->index = index;

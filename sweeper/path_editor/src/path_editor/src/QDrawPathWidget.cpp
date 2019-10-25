@@ -251,8 +251,8 @@ void QDrawPathWidget::calcMapRect()
     width *= qPow(COEF, m_nDisplayRatio);
     height *= qPow(COEF, m_nDisplayRatio);
     m_rectfMap = QRectF(
-          m_rectfSelectMap.x()- m_ptfTranslate.x(),
-          m_rectfSelectMap.y()- m_ptfTranslate.y(),
+          m_rectfSelectMap.x() - m_ptfTranslate.x(),
+          m_rectfSelectMap.y() - m_ptfTranslate.y(),
           width,
           height
           );

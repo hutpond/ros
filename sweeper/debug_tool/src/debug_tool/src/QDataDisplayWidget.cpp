@@ -14,6 +14,7 @@ QDataDisplayWidget::QDataDisplayWidget(QWidget *parent)
 {
   m_pTreeWidget = new QTreeWidget(this);
   m_pTreeWidget->header()->hide();
+  m_pTreeWidget->setFont(QFont("Mono", 12));
 }
 
 void QDataDisplayWidget::resizeEvent(QResizeEvent *)
@@ -55,6 +56,8 @@ void QDataDisplayWidget::setPlanningData(
   item->setText(0, QString("VEHICLE_LENGTH: %1").arg(planningData.vehicle_length));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("VEHICLE_WIDTH: %1").arg(planningData.vehicle_width));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("HEAD_DISTANCE: %1").arg(planningData.head_distance));
 
   // decision
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
@@ -307,18 +310,13 @@ void QDataDisplayWidget::setPlanningData(
   itemRoot->setText(0, QString("REFERENCE_LINE [%1]").arg(SIZE));
   for (int i = 0; i < SIZE; ++i) {
     item = new QTreeWidgetItem(itemRoot);
-    item->setText(0, QString("Index: %1").arg(i));
-
-    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("ID: %1").arg(planningData.reference_points[i].id));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("L: %1").arg(planningData.reference_points[i].l));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("S: %1").arg(planningData.reference_points[i].s));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("X: %1").arg(planningData.reference_points[i].x));
-    itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("Y: %1").arg(planningData.reference_points[i].y));
+    item->setText(0, QString("ID: %1, L: %2, S: %3, X: %4, Y: %5").
+                  arg(planningData.reference_points[i].id, 2, 10, QLatin1Char(' ')).
+                  arg(planningData.reference_points[i].l, 1).
+                  arg(planningData.reference_points[i].s, 6, 'f', 2).
+                  arg(planningData.reference_points[i].x, 6, 'f', 2).
+                  arg(planningData.reference_points[i].y, 6, 'f', 2)
+                  );
   }
 
   // reference splines

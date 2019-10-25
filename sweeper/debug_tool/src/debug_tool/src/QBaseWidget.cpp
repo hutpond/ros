@@ -208,13 +208,13 @@ void QBaseWidget::setViewResolution(int index)
 ********************************************************/
 void QBaseWidget::startReplay(const QString &path)
 {
+  m_bFlagPauseReplay = true;
   m_pWdgFullView->clearMapDatas();
-  m_bFlagPauseReplay = false;
   m_listPlanningFiles.clear();
   this->fileList(path.toStdString(), m_listPlanningFiles);
+  m_itFile = m_listPlanningFiles.begin();
   m_pWdgParam->setFrameCount(m_listPlanningFiles.size());
 
-  m_itFile = m_listPlanningFiles.begin();
   m_bFlagPauseReplay = false;
 }
 
