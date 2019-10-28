@@ -58,6 +58,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   namespace fs = boost::filesystem;
   m_fsPath = getenv("HOME");
   m_fsPath /= "PlanningData";
+  m_pWdgFullView->loadReferenceFile(m_fsPath);
 
   char time_str[64] = {0};
   time_t times = time(NULL);

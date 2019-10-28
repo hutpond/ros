@@ -6,7 +6,7 @@
 
 struct MapPoint
 {
-  quint64 index;
+  int index;
   double x;
   double y;
 };
@@ -29,7 +29,6 @@ void QFullViewWidget::mousePressEvent(QMouseEvent *e)
 
 void QFullViewWidget::clearMapDatas()
 {
-  m_listReferences.clear();
   m_listVehicleLine.clear();
 }
 
@@ -37,7 +36,6 @@ void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &
                                       const QString &name, bool update)
 {
   quint64 index = this->nameToIndex(name);
-  this->addReference(data, index);
   this->addVehicleLine(data, index);
 
   if (update) {
@@ -130,34 +128,6 @@ int QFullViewWidget::isIndexValid(const QList<QSharedPointer<MapPoint>> &points,
     }
   }
   return ret;
-}
-
-double QFullViewWidget::xLocal2Global(const debug_tool::ads_PlanningData4Debug &data, double x)
-{
-  double global = data.vehicle_x + x;
-  return global;
-}
-
-double QFullViewWidget::yLocal2Global(const debug_tool::ads_PlanningData4Debug &data, double y)
-{
-  double global = data.vehicle_y + y;
-  return global;
-}
-
-void QFullViewWidget::addReference(const debug_tool::ads_PlanningData4Debug &data, quint64 index)
-{
-  if (data.reference_points.size() == 0) {
-    return;
-  }
-  QSharedPointer<MapPoint> reference;
-  reference.reset(new MapPoint);
-  reference->index = index;
-  reference->x = this->xLocal2Global(data, data.reference_points[0].x);
-  reference->y = this->yLocal2Global(data, data.reference_points[0].y);
-
-  if (this->isIndexValid(m_listReferences, index) == 1) {
-    m_listReferences.append(reference);
-  }
 }
 
 void QFullViewWidget::addVehicleLine(const debug_tool::ads_PlanningData4Debug &data,
@@ -279,4 +249,53 @@ void QFullViewWidget::drawVehicle(QPainter &painter)
   painter.setPen(pen);
   painter.drawEllipse(ptf, 3, 3);
   painter.restore();
+}
+
+void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
+{
+  namespace fs = boost::filesystem;
+  fs::directory_iterator end_iter;
+  std::string name;
+  for (fs::directory_iterator it(path); it != end_iter; ++it) {
+    std::stringstream ss;
+    ss << *it;
+    name = ss.str();
+    std::string substr = name.substr(name.size() - 4, 3);
+    if (substr == "bin") {
+      break;
+    }
+    name.clear();
+  }
+  if (name.empty()) {
+    return;
+  }
+  name = name.substr(1, name.size() - 2);
+
+  if (!QFile::exists(QString::fromStdString(name))) {
+    return;
+  }
+
+  m_listReferences.clear();
+  std::ifstream in(name, std::ios::binary);
+  int number = 0;
+  in.read(reinterpret_cast<char*>(&number), sizeof(int));
+
+  for (int i = 0; i < number; ++i) {
+    QSharedPointer<MapPoint> point(new MapPoint);
+    double value;
+    in.read(reinterpret_cast<char*>(&point->index), sizeof(point->index));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&point->x), sizeof(point->x));
+    in.read(reinterpret_cast<char*>(&point->y), sizeof(point->y));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+
+    m_listReferences.push_back(point);
+  }
+  this->calcMapRect();
+  in.close();
 }

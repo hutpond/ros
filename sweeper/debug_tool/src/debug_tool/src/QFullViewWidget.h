@@ -1,6 +1,7 @@
 #ifndef QFULLVIEWWIDGET_H
 #define QFULLVIEWWIDGET_H
 
+#include <boost/filesystem.hpp>
 #include "QBaseShowWidget.h"
 #include "debug_tool/ads_PlanningData4Debug.h"
 
@@ -16,6 +17,7 @@ public:
   void clearMapDatas();
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &,
                        const QString &, bool);
+  void loadReferenceFile(const boost::filesystem::path &);
 
 protected:
   void mousePressEvent(QMouseEvent *);
@@ -29,10 +31,7 @@ protected:
 
   quint64 nameToIndex(const QString &);
   int findIndexPos(const QList<QSharedPointer<MapPoint>>&, quint64);
-  double xLocal2Global(const debug_tool::ads_PlanningData4Debug &, double);
-  double yLocal2Global(const debug_tool::ads_PlanningData4Debug &, double);
 
-  void addReference(const debug_tool::ads_PlanningData4Debug &, quint64);
   void addVehicleLine(const debug_tool::ads_PlanningData4Debug &, quint64);
   int isIndexValid(const QList<QSharedPointer<MapPoint>>&, quint64);
 
