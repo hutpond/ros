@@ -254,9 +254,21 @@ void QFullViewWidget::drawVehicle(QPainter &painter)
 void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
 {
   namespace fs = boost::filesystem;
+  fs::path parent_path = path.parent_path();
+
   fs::directory_iterator end_iter;
-  std::string name;
+  std::string name, name_sub;
   for (fs::directory_iterator it(path); it != end_iter; ++it) {
+    std::stringstream ss;
+    ss << *it;
+    name_sub = ss.str();
+    std::string substr = name_sub.substr(name_sub.size() - 4, 3);
+    if (substr == "bin") {
+      break;
+    }
+    name_sub.clear();
+  }
+  for (fs::directory_iterator it(parent_path); it != end_iter; ++it) {
     std::stringstream ss;
     ss << *it;
     name = ss.str();
@@ -266,11 +278,15 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
     }
     name.clear();
   }
-  if (name.empty()) {
+
+  if (name_sub.empty()) {
+    name_sub = name;
+  }
+  if (name_sub.empty()) {
     return;
   }
-  name = name.substr(1, name.size() - 2);
 
+  name = name_sub.substr(1, name_sub.size() - 2);
   if (!QFile::exists(QString::fromStdString(name))) {
     return;
   }
