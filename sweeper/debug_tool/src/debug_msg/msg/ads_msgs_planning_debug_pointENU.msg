@@ -1,3 +1,9 @@
 float64 X
 float64 Y
 float64 Z
+float64 v
+float64 a
+float64 kappa
+float64 dkappa
+float64 theta
+float64 s

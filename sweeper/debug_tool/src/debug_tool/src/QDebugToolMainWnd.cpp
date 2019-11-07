@@ -26,7 +26,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V3.4.13";
+static const char *WND_TITLE = "Debug Tool V3.4.14";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
@@ -35,7 +35,6 @@ QPlanningCostWidget * QDebugToolMainWnd::s_pWdgPlanningCost = Q_NULLPTR;
 
 QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   : QMainWindow(parent)
-  , m_pWdgCurrent(Q_NULLPTR)
 {
   m_pWdgEditTool = new QEditToolsWidget(this);
   QDockWidget *pDockWdg = new QDockWidget("", this);
@@ -49,7 +48,6 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
           m_pWdgPlanning[OldPlanning], &QPlanningWidget::onSelectTool);
   m_pWdgPlanning[OldPlanning]->onSelectTool(QEditToolsWidget::Move, true);
-  m_pWdgCurrent = m_pWdgPlanning[OldPlanning];
   m_nCurrentIndex = OldPlanning;
 
   m_pWdgPlanning[NewPlanning] = new QNewPlanningWidget(this->centralWidget());
@@ -169,10 +167,9 @@ void QDebugToolMainWnd::createPlanningToolBar()
 void QDebugToolMainWnd::onActionOldPlanning()
 {
   if (m_nCurrentIndex != OldPlanning) {
-    m_pWdgCurrent->hide();
-    m_pWdgCurrent = m_pWdgPlanning[OldPlanning];
+    m_pWdgPlanning[m_nCurrentIndex]->hide();
     m_nCurrentIndex = OldPlanning;
-    m_pWdgCurrent->show();
+    m_pWdgPlanning[m_nCurrentIndex]->show();
     this->setWndTitle();
   }
 }
@@ -180,10 +177,9 @@ void QDebugToolMainWnd::onActionOldPlanning()
 void QDebugToolMainWnd::onActionNewPlanning()
 {
   if (m_nCurrentIndex != NewPlanning) {
-    m_pWdgCurrent->hide();
-    m_pWdgCurrent = m_pWdgPlanning[NewPlanning];
+    m_pWdgPlanning[m_nCurrentIndex]->hide();
     m_nCurrentIndex = NewPlanning;
-    m_pWdgCurrent->show();
+    m_pWdgPlanning[m_nCurrentIndex]->show();
     this->setWndTitle();
   }
 }
@@ -196,11 +192,10 @@ void QDebugToolMainWnd::onActionNewPlanning()
 ********************************************************/
 void QDebugToolMainWnd::onActionPlanningLiveDisplay()
 {
-  int type = m_pWdgPlanning[OldPlanning]->showType();
+  int type = m_pWdgPlanning[m_nCurrentIndex]->showType();
   type = (type == QPlanningWidget::LivePlay ?
             QPlanningWidget::RePlay : QPlanningWidget::LivePlay);
-  m_pWdgPlanning[OldPlanning]->setShowType(type);
-  m_pWdgPlanning[NewPlanning]->setShowType(type);
+  m_pWdgPlanning[m_nCurrentIndex]->setShowType(type);
   this->setWndTitle();
 }
 
@@ -226,9 +221,8 @@ void QDebugToolMainWnd::onActionPlanningReplay()
   if (!strPath.isEmpty()) {
     int index = strPath.lastIndexOf('/');
     strOpenPath = strPath.mid(0, index);
-    m_pWdgCurrent->startReplay(strPath);
-    m_pWdgPlanning[OldPlanning]->setShowType(QPlanningWidget::RePlay);
-    m_pWdgPlanning[NewPlanning]->setShowType(QPlanningWidget::RePlay);
+    m_pWdgPlanning[m_nCurrentIndex]->startReplay(strPath);
+    m_pWdgPlanning[m_nCurrentIndex]->setShowType(QPlanningWidget::RePlay);
     this->setWndTitle();
   }
 }
@@ -292,7 +286,7 @@ void QDebugToolMainWnd::createViewToolBar()
 ********************************************************/
 void QDebugToolMainWnd::onActionViewZoomIn()
 {
-  m_pWdgCurrent->setViewResolution(1);
+  m_pWdgPlanning[m_nCurrentIndex]->setViewResolution(1);
 }
 
 /*******************************************************
@@ -303,7 +297,7 @@ void QDebugToolMainWnd::onActionViewZoomIn()
 ********************************************************/
 void QDebugToolMainWnd::onActionViewZoomOut()
 {
-  m_pWdgCurrent->setViewResolution(-1);
+  m_pWdgPlanning[m_nCurrentIndex]->setViewResolution(-1);
 }
 
 /*******************************************************
@@ -314,7 +308,7 @@ void QDebugToolMainWnd::onActionViewZoomOut()
 ********************************************************/
 void QDebugToolMainWnd::onActionViewReset()
 {
-  m_pWdgCurrent->setViewResolution(0);
+  m_pWdgPlanning[m_nCurrentIndex]->setViewResolution(0);
 }
 
 /*******************************************************
@@ -338,17 +332,6 @@ void QDebugToolMainWnd::createSettingToolBar()
   pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
   pToolBar->insertSeparator(action);
 
-  action = new QAction(tr("<->"), this);
-  action->setToolTip("switch ENU and FRENET");
-  connect(action, &QAction::triggered,
-          this, &QDebugToolMainWnd::onActionChangeCoord);
-  pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);
-  pToolBar->addAction(action);
-  pWdgAction = pToolBar->widgetForAction(action);
-  pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
-  pWdgAction->setStyleSheet("background-color: rgb(200, 255, 200);");
-  pToolBar->insertSeparator(action);
-
   m_bFlagShowAllTargets = false;
   m_pActionShowTargets = new QAction(tr("T"), this);
   m_pActionShowTargets->setToolTip("Set Show All Targets");
@@ -364,17 +347,8 @@ void QDebugToolMainWnd::createSettingToolBar()
 
 void QDebugToolMainWnd::onActionChangeView()
 {
-  m_pWdgPlanning[OldPlanning]->changeShowView();
-  m_pWdgPlanning[NewPlanning]->changeShowView();
+  m_pWdgPlanning[m_nCurrentIndex]->changeShowView();
   this->setWndTitle();
-}
-
-void QDebugToolMainWnd::onActionChangeCoord()
-{
-  if (m_nCurrentIndex == NewPlanning) {
-    m_pWdgPlanning[NewPlanning]->changeShowCoord();
-    this->setWndTitle();
-  }
 }
 
 /*******************************************************
@@ -446,19 +420,32 @@ void QDebugToolMainWnd::onActionHelpAbout()
 
 void QDebugToolMainWnd::setWndTitle()
 {
-  int type = m_pWdgPlanning[OldPlanning]->showType();
-  int view = m_pWdgPlanning[OldPlanning]->showView();
+  int type = m_pWdgPlanning[m_nCurrentIndex]->showType();
+  int view = m_pWdgPlanning[m_nCurrentIndex]->showView();
   QString title = WND_TITLE;
   title.append(" - ");
   title.append(m_nCurrentIndex == NewPlanning ? "NEW" : "OLD");
   title.append(" - ");
   title.append(type == QPlanningWidget::LivePlay ? "LIVE" : "REPLAY");
   title.append(" - ");
-  title.append(view == QPlanningWidget::LocalView ? "LOCAL" : "FULL");
-  if (m_nCurrentIndex == NewPlanning) {
-    int coord = m_pWdgPlanning[NewPlanning]->showCoord();
-    title.append(" - ");
-    title.append(coord == QBaseShowWidget::EnuCoord ? "ENU" : "FRENET");
+  switch (view) {
+    case QBaseWidget::LocalViewVehicle:
+      title.append("LOCAL VEHICLE");
+      break;
+    case QBaseWidget::LocalViewENU:
+      title.append("LOCAL ENU");
+      break;
+    case QBaseWidget::LocalViewFrenet:
+      title.append("LOCAL FRENET");
+      break;
+    case QBaseWidget::PlottingView:
+      title.append("PLOTTING");
+      break;
+    case QBaseWidget::FullView:
+      title.append("FULL");
+      break;
+    default:
+      break;
   }
   this->setWindowTitle(title);
 }

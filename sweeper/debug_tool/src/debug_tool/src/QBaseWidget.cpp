@@ -10,11 +10,13 @@
 #include "QPlanningParamWidget.h"
 #include "QFullViewWidget.h"
 #include "QReadDataManagerRos.h"
+#include "QNewPlanningPlot.h"
 
 static constexpr int REPLAY_MSEC[3] = {50, 200, 400};
 
 QBaseWidget::QBaseWidget(QWidget *parent)
   : QWidget(parent)
+  , m_pWdgPlotting(Q_NULLPTR)
   , m_nTimerId(0)
 {
 }
@@ -30,11 +32,29 @@ void QBaseWidget::resizeEvent(QResizeEvent *)
   const int HEIGHT = this->height();
 
   const int WDG_SHWO_W = WIDTH * W_PERCENT / 200;
-  for (int i = 0; i < 2; ++i) {
-    m_pWdgShow[i]->setGeometry(
-          i * WDG_SHWO_W,
+  if (m_pWdgShow[1] != Q_NULLPTR) {
+    for (int i = 0; i < 2; ++i) {
+      m_pWdgShow[i]->setGeometry(
+            i * WDG_SHWO_W,
+            0,
+            WDG_SHWO_W,
+            HEIGHT
+            );
+    }
+  }
+  else {
+    m_pWdgShow[0]->setGeometry(
           0,
-          WDG_SHWO_W,
+          0,
+          WDG_SHWO_W * 2,
+          HEIGHT
+          );
+  }
+  if (m_pWdgPlotting != Q_NULLPTR) {
+    m_pWdgPlotting->setGeometry(
+          0,
+          0,
+          WDG_SHWO_W * 2,
           HEIGHT
           );
   }
@@ -112,21 +132,6 @@ int QBaseWidget::showView()
   return m_nShowView;
 }
 
-void QBaseWidget::changeShowView()
-{
-  m_nShowView = m_nShowView == LocalView ? FullView : LocalView;
-  if (m_nShowView == LocalView) {
-    m_pWdgShow[0]->show();
-    m_pWdgShow[1]->show();
-    m_pWdgFullView->hide();
-  }
-  else {
-    m_pWdgShow[0]->hide();
-    m_pWdgShow[1]->hide();
-    m_pWdgFullView->show();
-  }
-}
-
 void QBaseWidget::setReplaySpeedIndex(int index)
 {
   m_nReplaySpeedIndex = index;
@@ -150,12 +155,20 @@ int QBaseWidget::replaySpeedIndex()
 ********************************************************/
 void QBaseWidget::setViewResolution(int index)
 {
-  if (m_nShowView == LocalView) {
-    m_pWdgShow[0]->setViewResolution(index);
-    m_pWdgShow[1]->setViewResolution(index);
-  }
-  else {
-    m_pWdgFullView->setViewResolution(index);
+  switch (m_nShowView) {
+    case LocalViewVehicle:
+    case LocalViewENU:
+    case LocalViewFrenet:
+      m_pWdgShow[0]->setViewResolution(index);
+      if (m_pWdgShow[1] != Q_NULLPTR) {
+        m_pWdgShow[1]->setViewResolution(index);
+      }
+      break;
+    case FullView:
+      m_pWdgFullView->setViewResolution(index);
+      break;
+    default:
+      break;
   }
 }
 
@@ -205,24 +218,17 @@ void QBaseWidget::stopDisplay()
 void QBaseWidget::setShowAllTargets(bool show)
 {
   m_pWdgShow[0]->setShowAllTargets(show);
-  m_pWdgShow[1]->setShowAllTargets(show);
-}
-
-void QBaseWidget::changeShowCoord()
-{
-  m_pWdgShow[0]->changeShowCoord();
-  m_pWdgShow[1]->changeShowCoord();
-}
-
-int QBaseWidget::showCoord()
-{
-  return m_pWdgShow[0]->showCoord();
+  if (m_pWdgShow[1] != Q_NULLPTR) {
+    m_pWdgShow[1]->setShowAllTargets(show);
+  }
 }
 
 void QBaseWidget::onSelectTool(int index, bool checkable)
 {
   m_pWdgShow[LivePlay]->setToolIndex(index, checkable);
-  m_pWdgShow[RePlay]->setToolIndex(index, checkable);
+  if (m_pWdgShow[1] != Q_NULLPTR) {
+    m_pWdgShow[RePlay]->setToolIndex(index, checkable);
+  }
 }
 
 std::string QBaseWidget::dataFileName()

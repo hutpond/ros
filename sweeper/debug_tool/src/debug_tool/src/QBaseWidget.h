@@ -17,6 +17,7 @@
 class QBaseShowWidget;
 class QPlanningParamWidget;
 class QFullViewWidget;
+class QNewPlanningPlot;
 
 class QBaseWidget : public QWidget
 {
@@ -29,7 +30,10 @@ public:
   };
 
   enum {
-    LocalView,
+    LocalViewVehicle,
+    LocalViewENU,
+    LocalViewFrenet,
+    PlottingView,
     FullView
   };
 
@@ -42,15 +46,13 @@ public:
 
   void setShowType(int);
   int showType();
-  void changeShowView();
+  virtual void changeShowView() = 0;
   int showView();
 
   void setViewResolution(int);
   void startReplay(const QString &);
   void stopDisplay();
   void setShowAllTargets(bool);
-  void changeShowCoord();
-  int showCoord();
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -68,6 +70,7 @@ protected slots:
 
 protected:
   QBaseShowWidget *m_pWdgShow[2];
+  QNewPlanningPlot *m_pWdgPlotting;
   QPlanningParamWidget *m_pWdgParam;
   QFullViewWidget *m_pWdgFullView;
 

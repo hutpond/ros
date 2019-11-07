@@ -9,11 +9,14 @@
 #include "QPlanningCostWidget.h"
 #include "QDebugToolMainWnd.h"
 #include "QNewPlanningShowWidget.h"
+#include "QNewPlanningPlot.h"
 
 QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
   : QBaseWidget(parent)
 {
   this->setFont(G_TEXT_FONT);
+  m_pWdgPlotting = new QNewPlanningPlot(this);
+
   m_pWdgParam = new QPlanningParamWidget(this);
   m_pWdgParam->setShowType(LivePlay);
   connect(m_pWdgParam, &QPlanningParamWidget::replayState,
@@ -25,15 +28,12 @@ QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
 
   boost::function<void(float, float, float, float)> fun = boost::bind(&QPlanningParamWidget::showMousePosition, m_pWdgParam,
                        _1, _2, _3, _4);
-  for (int i = 0; i < 2; ++i) {
-    m_pWdgShow[i] = new QNewPlanningShowWidget(this);
-    m_pWdgShow[i]->setFunPosition(fun);
-//    connect(m_pWdgShow[i], &QBaseShowWidget::saveDataToFile,
-//        this, &QPlanningWidget::onSaveDataToFile);
-  }
-  m_pWdgShow[1]->setCostType(QPlanningShowWidget::NEW_COST);
+  m_pWdgShow[0] = new QNewPlanningShowWidget(this);
+  m_pWdgShow[0]->setFunPosition(fun);
+  m_pWdgShow[1] = Q_NULLPTR;
+
   m_nShowType = LivePlay;
-  m_nShowView = LocalView;
+  m_nShowView = LocalViewENU;
 
   m_pWdgFullView = new QFullViewWidget(this);
   m_pWdgFullView->setFunPosition(fun);
@@ -113,17 +113,10 @@ void QNewPlanningWidget::onParsePlanningData(
 
 void QNewPlanningWidget::setPlanningData(
     const debug_ads_msgs::ads_msgs_planning_debug_frame &data,
-    const QString &name)
+    const QString &)
 {
-  if (m_nShowView == LocalView) {
-    m_pWdgShow[0]->setPlanningData(data);
-    m_pWdgShow[1]->setPlanningData(data);
-    //m_pWdgFullView->setPlanningData(data, name, false);
-  }
-  else {
-    //m_pWdgFullView->setPlanningData(data, name, true);
-  }
-  //m_pWdgParam->setPlanningData(data);
+  m_pWdgShow[0]->setPlanningData(data);
+  m_pWdgPlotting->setPlanningData(data);
 }
 
 void QNewPlanningWidget::saveDataToJsonFile(
@@ -131,75 +124,122 @@ void QNewPlanningWidget::saveDataToJsonFile(
     const debug_ads_msgs::ads_msgs_planning_debug_frame &data)
 {
   Json::Value json_frame;
+  // num obstacle
+  json_frame["NUM_OBSTACLE"] = static_cast<double>(data.num_obstacle);
+
   // obstacle
-  Json::Value json_obstacles, json_obstacles_data;
-  json_obstacles["NUM_OBSTACLE"] = static_cast<double>(data.num_obstacle);
+  Json::Value json_obstacles;
   const int size_obstacle = data.obstacles.size();
   for (int i = 0; i < size_obstacle; ++i) {
-    Json::Value json_item;
+    Json::Value json_points, json_points_enu, json_points_frenet;
     for (int j = 0; j < 4; ++j) {
       Json::Value json_point;
       json_point["X"] = data.obstacles[i].points_enu[j].X;
       json_point["Y"] = data.obstacles[i].points_enu[j].Y;
       json_point["Z"] = data.obstacles[i].points_enu[j].Z;
+      json_point["v"] = data.obstacles[i].points_enu[j].v;
+      json_point["a"] = data.obstacles[i].points_enu[j].a;
+      json_point["kappa"] = data.obstacles[i].points_enu[j].kappa;
+      json_point["dkappa"] = data.obstacles[i].points_enu[j].dkappa;
+      json_point["theta"] = data.obstacles[i].points_enu[j].theta;
+      json_point["s"] = data.obstacles[i].points_enu[j].s;
+      json_points_enu.append(json_point);
+
+      json_point.clear();
       json_point["S"] = data.obstacles[i].points_frenet[j].s;
       json_point["L"] = data.obstacles[i].points_frenet[j].l;
-
-      json_item.append(json_point);
+      json_points_frenet.append(json_point);
     }
-    json_obstacles_data.append(json_item);
-  }
-  json_obstacles["DATA"] = json_obstacles_data;
-
-  // trajectories
-  Json::Value json_trajectories;
-  const int size_trajectories = data.trajectories.size();
-  for (int i = 0; i < size_trajectories; ++i) {
-    Json::Value json_item, json_current, json_last, json_current_frenet;
-    const int size_current = data.trajectories[i].current_traj_points_enu.size();
-    for (int j = 0; j < size_current; ++j) {
-      Json::Value json_point;
-      json_point["X"] = data.trajectories[i].current_traj_points_enu[j].X;
-      json_point["Y"] = data.trajectories[i].current_traj_points_enu[j].Y;
-      json_point["Z"] = data.trajectories[i].current_traj_points_enu[j].Z;
-      json_current.append(json_point);
-    }
-    json_item["CURRENT"] = json_current;
-
-    const int size_last = data.trajectories[i].last_traj_points_enu.size();
-    for (int j = 0; j < size_last; ++j) {
-      Json::Value json_point;
-      json_point["X"] = data.trajectories[i].last_traj_points_enu[j].X;
-      json_point["Y"] = data.trajectories[i].last_traj_points_enu[j].Y;
-      json_point["Z"] = data.trajectories[i].last_traj_points_enu[j].Z;
-      json_last.append(json_point);
-    }
-    json_item["LAST"] = json_last;
-
-    const int size_current_frenet = data.trajectories[i].current_traj_points_frenet.size();
-    for (int j = 0; j < size_current_frenet; ++j) {
-      Json::Value json_point;
-      json_point["S"] = data.trajectories[i].current_traj_points_frenet[j].s;
-      json_point["L"] = data.trajectories[i].current_traj_points_frenet[j].l;
-      json_current_frenet.append(json_point);
-    }
-    json_item["CURRENT_FRENET"] = json_current_frenet;
-
-    json_trajectories.append(json_item);
+    json_points["ENU"] = json_points_enu;
+    json_points["FRENET"] = json_points_frenet;
+    json_obstacles.append(json_points);
   }
 
-  // reference
-  Json::Value json_reference, json_reference_enu, json_reference_frenet;
+  // current trajectories
+  Json::Value json_current_trajectories;
+  Json::Value json_current_trajectories_enu;
+  const int size_current_trajectories_enu =
+      data.trajectory_current.current_traj_points_enu.size();
+  for (int i = 0; i < size_current_trajectories_enu; ++i) {
+    Json::Value json_point;
+    json_point["X"] = data.trajectory_current.current_traj_points_enu[i].X;
+    json_point["Y"] = data.trajectory_current.current_traj_points_enu[i].Y;
+    json_point["Z"] = data.trajectory_current.current_traj_points_enu[i].Z;
+    json_point["v"] = data.trajectory_current.current_traj_points_enu[i].v;
+    json_point["a"] = data.trajectory_current.current_traj_points_enu[i].a;
+    json_point["kappa"] = data.trajectory_current.current_traj_points_enu[i].kappa;
+    json_point["dkappa"] = data.trajectory_current.current_traj_points_enu[i].dkappa;
+    json_point["theta"] = data.trajectory_current.current_traj_points_enu[i].theta;
+    json_point["s"] = data.trajectory_current.current_traj_points_enu[i].s;
+    json_current_trajectories_enu.append(json_point);
+  }
+  json_current_trajectories["ENU"] = json_current_trajectories_enu;
+
+  Json::Value json_current_trajectories_frenet;
+  const int size_current_trajectories_frenet =
+      data.trajectory_current.current_traj_points_frenet.size();
+  for (int i = 0; i < size_current_trajectories_frenet; ++i) {
+    Json::Value json_point;
+    json_point["s"] = data.trajectory_current.current_traj_points_frenet[i].s;
+    json_point["l"] = data.trajectory_current.current_traj_points_frenet[i].l;
+    json_current_trajectories_frenet.append(json_point);
+  }
+  json_current_trajectories["FRENET"] = json_current_trajectories_frenet;
+
+  json_current_trajectories["COST"] = data.trajectory_current.cost;
+
+  // last trajectories
+  Json::Value json_last_trajectories;
+  Json::Value json_last_trajectories_enu;
+  const int size_last_trajectories_enu =
+      data.trajectory_last.current_traj_points_enu.size();
+  for (int i = 0; i < size_last_trajectories_enu; ++i) {
+    Json::Value json_point;
+    json_point["X"] = data.trajectory_last.current_traj_points_enu[i].X;
+    json_point["Y"] = data.trajectory_last.current_traj_points_enu[i].Y;
+    json_point["Z"] = data.trajectory_last.current_traj_points_enu[i].Z;
+    json_point["v"] = data.trajectory_last.current_traj_points_enu[i].v;
+    json_point["a"] = data.trajectory_last.current_traj_points_enu[i].a;
+    json_point["kappa"] = data.trajectory_last.current_traj_points_enu[i].kappa;
+    json_point["dkappa"] = data.trajectory_last.current_traj_points_enu[i].dkappa;
+    json_point["theta"] = data.trajectory_last.current_traj_points_enu[i].theta;
+    json_point["s"] = data.trajectory_last.current_traj_points_enu[i].s;
+    json_last_trajectories_enu.append(json_point);
+  }
+  json_last_trajectories["ENU"] = json_last_trajectories_enu;
+
+  Json::Value json_last_trajectories_frenet;
+  const int size_last_trajectories_frenet =
+      data.trajectory_last.current_traj_points_frenet.size();
+  for (int i = 0; i < size_last_trajectories_frenet; ++i) {
+    Json::Value json_point;
+    json_point["s"] = data.trajectory_last.current_traj_points_frenet[i].s;
+    json_point["l"] = data.trajectory_last.current_traj_points_frenet[i].l;
+    json_current_trajectories_frenet.append(json_point);
+  }
+  json_last_trajectories["FRENET"] = json_last_trajectories_frenet;
+
+  json_last_trajectories["COST"] = data.trajectory_last.cost;
+
+  // reference enu
+  Json::Value json_reference_enu;
   const int size_reference_enu = data.reference_line_enu.size();
   for (int i = 0; i < size_reference_enu; ++i) {
     Json::Value json_point;
     json_point["X"] = data.reference_line_enu[i].X;
     json_point["Y"] = data.reference_line_enu[i].Y;
     json_point["Z"] = data.reference_line_enu[i].Z;
+    json_point["v"] = data.reference_line_enu[i].v;
+    json_point["a"] = data.reference_line_enu[i].a;
+    json_point["kappa"] = data.reference_line_enu[i].kappa;
+    json_point["dkappa"] = data.reference_line_enu[i].dkappa;
+    json_point["theta"] = data.reference_line_enu[i].theta;
+    json_point["s"] = data.reference_line_enu[i].s;
     json_reference_enu.append(json_point);
   }
-  json_reference["REFERENCE_ENU"] = json_reference_enu;
 
+  // reference frenet
+  Json::Value json_reference_frenet;
   const int size_reference_frenet = data.reference_line_frenet.size();
   for (int i = 0; i < size_reference_frenet; ++i) {
     Json::Value json_point;
@@ -207,31 +247,37 @@ void QNewPlanningWidget::saveDataToJsonFile(
     json_point["L"] = data.reference_line_frenet[i].l;
     json_reference_frenet.append(json_point);
   }
-  json_reference["REFERENCE_FRENET"] = json_reference_frenet;
 
-  // ego state
-  Json::Value json_ego_state, json_ego_state_enu, json_ego_state_frenet;
+  // ego state enu
+  Json::Value json_ego_state_enu;
   for (int i = 0; i < 4; ++i) {
     Json::Value json_point;
     json_point["X"] = data.ego_state_enu[i].X;
     json_point["Y"] = data.ego_state_enu[i].Y;
     json_point["Z"] = data.ego_state_enu[i].Z;
+    json_point["v"] = data.ego_state_enu[i].v;
+    json_point["a"] = data.ego_state_enu[i].a;
+    json_point["kappa"] = data.ego_state_enu[i].kappa;
+    json_point["dkappa"] = data.ego_state_enu[i].dkappa;
+    json_point["theta"] = data.ego_state_enu[i].theta;
+    json_point["s"] = data.ego_state_enu[i].s;
     json_ego_state_enu.append(json_point);
   }
-  json_ego_state["EGO_STATE_ENU"] = json_ego_state_enu;
+
+  // ego state frenet
+  Json::Value json_ego_state_frenet;
   for (int i = 0; i < 4; ++i) {
     Json::Value json_point;
     json_point["S"] = data.ego_state_frenet[i].s;
     json_point["L"] = data.ego_state_frenet[i].l;
     json_ego_state_frenet.append(json_point);
   }
-  json_ego_state["EGO_STATE_FRENET"] = json_ego_state_frenet;
 
   // state machine
   Json::Value json_state_machine;
-  json_state_machine["LAST_STATE"] = static_cast<int>(data.state_machine.last_state);
-  json_state_machine["CURRENT_STATE"] = static_cast<int>(data.state_machine.current_state);
-  json_state_machine["DECISION"] = static_cast<int>(data.state_machine.decision);
+  json_state_machine["LAST_STATE"] = data.state_machine.last_state;
+  json_state_machine["CURRENT_STATE"] = data.state_machine.current_state;
+  json_state_machine["DECISION"] = data.state_machine.decision;
   json_state_machine["STOP_REASON"] = data.state_machine.stop_reason;
 
   // parameters
@@ -245,9 +291,12 @@ void QNewPlanningWidget::saveDataToJsonFile(
 
   // json frame
   json_frame["OBSTACLES"] = json_obstacles;
-  json_frame["TRAJECTORIES"] = json_trajectories;
-  json_frame["REFERENCE"] = json_reference;
-  json_frame["EGO_STATE"] = json_ego_state;
+  json_frame["TRAJECTORIES_CURRENT"] = json_current_trajectories;
+  json_frame["TRAJECTORIES_LAST"] = json_last_trajectories;
+  json_frame["REFERENCE_ENU"] = json_reference_enu;
+  json_frame["REFERENCE_FRENET"] = json_reference_frenet;
+  json_frame["EGO_STATE_ENU"] = json_ego_state_enu;
+  json_frame["EGO_STATE_FRENET"] = json_ego_state_frenet;
   json_frame["STATE_MACHINE"] = json_state_machine;
   json_frame["PARAMETERS"] = json_parameters;
 
@@ -298,84 +347,154 @@ void QNewPlanningWidget::parseDataFromJson(
     debug_ads_msgs::ads_msgs_planning_debug_frame &data)
 {
   Json::Value json_obstacles = root["OBSTACLES"];
-  Json::Value json_trajectories = root["TRAJECTORIES"];
-  Json::Value json_reference = root["REFERENCE"];
-  Json::Value json_ego_state = root["EGO_STATE"];
+  Json::Value json_current_trajectories = root["TRAJECTORIES_CURRENT"];
+  Json::Value json_last_trajectories = root["TRAJECTORIES_LAST"];
+  Json::Value json_reference_enu = root["REFERENCE_ENU"];
+  Json::Value json_reference_frenet = root["REFERENCE_FRENET"];
+  Json::Value json_ego_state_enu = root["EGO_STATE_ENU"];
+  Json::Value json_ego_state_frenet = root["EGO_STATE_FRENET"];
   Json::Value json_state_machine = root["STATE_MACHINE"];
   Json::Value json_parameters = root["PARAMETERS"];
 
+  // num obstacle
+  data.num_obstacle = static_cast<int64_t>(root["NUM_OBSTACLE"].asDouble());
+
   // obstacle
-  data.num_obstacle = static_cast<int64_t>(json_obstacles["NUM_OBSTACLE"].asDouble());
-  const int size_obstacle = json_obstacles["DATA"].size();
+  const int size_obstacle = json_obstacles.size();
   for (int i = 0; i < size_obstacle; ++i) {
-    Json::Value json_item = json_obstacles["DATA"][i];
+    Json::Value json_points = json_obstacles[i];
+    Json::Value json_points_enu = json_points["ENU"];
+    Json::Value json_points_frenet = json_points["FRENET"];
+
+    debug_ads_msgs::ads_msgs_planning_debug_obstacle obstacles;
     for (int j = 0; j < 4; ++j) {
-      Json::Value json_point = json_item[j];
-      data.obstacles[i].points_enu[j].X = json_point["X"].asDouble();
-      data.obstacles[i].points_enu[j].Y = json_point["Y"].asDouble();
-      data.obstacles[i].points_enu[j].Z = json_point["Z"].asDouble();
-      data.obstacles[i].points_frenet[j].s = json_point["S"].asDouble();
-      data.obstacles[i].points_frenet[j].l = json_point["L"].asDouble();
+      Json::Value json_point = json_points_enu[j];
+      obstacles.points_enu[j].X = json_point["X"].asDouble();
+      obstacles.points_enu[j].Y = json_point["Y"].asDouble();
+      obstacles.points_enu[j].Z = json_point["Z"].asDouble();
+      obstacles.points_enu[j].v = json_point["v"].asDouble();
+      obstacles.points_enu[j].a = json_point["a"].asDouble();
+      obstacles.points_enu[j].kappa = json_point["kappa"].asDouble();
+      obstacles.points_enu[j].dkappa = json_point["dkappa"].asDouble();
+      obstacles.points_enu[j].theta = json_point["theta"].asDouble();
+      obstacles.points_enu[j].s = json_point["s"].asDouble();
+
+      Json::Value json_point_f = json_points_frenet[j];
+      obstacles.points_frenet[j].s = json_point_f["S"].asDouble();
+      obstacles.points_frenet[j].l = json_point_f["L"].asDouble();
     }
+    data.obstacles.push_back(obstacles);
   }
 
-  // trajectories
-  const int size_trajectories = json_trajectories.size();
-  for (int i = 0; i < size_trajectories; ++i) {
-    Json::Value json_current = json_trajectories[i]["CURRENT"];
-    const int size_current = json_current.size();
-    for (int j = 0; j < size_current; ++j) {
-      Json::Value json_point = json_current[j];
-      data.trajectories[i].current_traj_points_enu[j].X = json_point["X"].asDouble();
-      data.trajectories[i].current_traj_points_enu[j].Y = json_point["Y"].asDouble();
-      data.trajectories[i].current_traj_points_enu[j].Z = json_point["Z"].asDouble();
-    }
+  // current trajectories
+  Json::Value json_current_trajectories_enu = json_current_trajectories["ENU"];
+  const int size_current_trajectories_enu = json_current_trajectories_enu.size();
+  for (int i = 0; i < size_current_trajectories_enu; ++i) {
+    Json::Value json_point = json_current_trajectories_enu[i];
 
-    Json::Value json_last = json_trajectories[i]["LAST"];
-    const int size_last = json_last.size();
-    for (int j = 0; j < size_last; ++j) {
-      Json::Value json_point = json_last[j];
-      data.trajectories[i].last_traj_points_enu[j].X = json_point["X"].asDouble();
-      data.trajectories[i].last_traj_points_enu[j].Y = json_point["Y"].asDouble();
-      data.trajectories[i].last_traj_points_enu[j].Z = json_point["Z"].asDouble();
-    }
+    debug_ads_msgs::ads_msgs_planning_debug_pointENU point;
+    point.X = json_point["X"].asDouble();
+    point.Y = json_point["Y"].asDouble();
+    point.Z = json_point["Z"].asDouble();
+    point.v = json_point["v"].asDouble();
+    point.a = json_point["a"].asDouble();
+    point.kappa = json_point["kappa"].asDouble();
+    point.dkappa = json_point["dkappa"].asDouble();
+    point.theta = json_point["theta"].asDouble();
+    point.s = json_point["s"].asDouble();
 
-    Json::Value json_current_frenet = json_trajectories[i]["CURRENT_FRENET"];
-    const int size_current_frenet = json_current_frenet.size();
-    for (int j = 0; j < size_current_frenet; ++j) {
-      Json::Value json_point = json_current_frenet[j];
-      data.trajectories[i].current_traj_points_frenet[j].s = json_point["S"].asDouble();
-      data.trajectories[i].current_traj_points_frenet[j].l = json_point["L"].asDouble();
-    }
+    data.trajectory_current.current_traj_points_enu.push_back(point);
   }
+  Json::Value json_current_trajectories_frenet = json_current_trajectories["FRENET"];
+  const int size_current_trajectories_frenet = json_current_trajectories_frenet.size();
+  for (int i = 0; i < size_current_trajectories_frenet; ++i) {
+    Json::Value json_point = json_current_trajectories_frenet[i];
 
-  // reference
-  Json::Value json_reference_enu = json_reference["REFERENCE_ENU"];
+    debug_ads_msgs::ads_msgs_planning_debug_pointFRENET point;
+    point.s = json_point["s"].asDouble();
+    point.l = json_point["l"].asDouble();
+    data.trajectory_current.current_traj_points_frenet.push_back(point);
+  }
+  data.trajectory_current.cost = json_current_trajectories["COST"].asDouble();
+
+  // last trajectories
+  Json::Value json_last_trajectories_enu = json_last_trajectories["ENU"];
+  const int size_last_trajectories_enu = json_last_trajectories_enu.size();
+  for (int i = 0; i < size_last_trajectories_enu; ++i) {
+    Json::Value json_point = json_last_trajectories_enu[i];
+
+    debug_ads_msgs::ads_msgs_planning_debug_pointENU point;
+    point.X = json_point["X"].asDouble();
+    point.Y = json_point["Y"].asDouble();
+    point.Z = json_point["Z"].asDouble();
+    point.v = json_point["v"].asDouble();
+    point.a = json_point["a"].asDouble();
+    point.kappa = json_point["kappa"].asDouble();
+    point.dkappa = json_point["dkappa"].asDouble();
+    point.theta = json_point["theta"].asDouble();
+    point.s = json_point["s"].asDouble();
+
+    data.trajectory_last.current_traj_points_enu.push_back(point);
+  }
+  Json::Value json_last_trajectories_frenet = json_last_trajectories["FRENET"];
+  const int size_last_trajectories_frenet = json_last_trajectories_frenet.size();
+  for (int i = 0; i < size_last_trajectories_frenet; ++i) {
+    Json::Value json_point = json_last_trajectories_frenet[i];
+
+    debug_ads_msgs::ads_msgs_planning_debug_pointFRENET point;
+    point.s = json_point["s"].asDouble();
+    point.l = json_point["l"].asDouble();
+
+    data.trajectory_last.current_traj_points_frenet.push_back(point);
+  }
+  data.trajectory_last.cost = json_last_trajectories["COST"].asDouble();
+
+  // reference enu
   const int size_reference_enu = json_reference_enu.size();
   for (int i = 0; i < size_reference_enu; ++i) {
     Json::Value json_point = json_reference_enu[i];
-    data.reference_line_enu[i].X = json_point["X"].asDouble();
-    data.reference_line_enu[i].Y = json_point["Y"].asDouble();
-    data.reference_line_enu[i].Z = json_point["Z"].asDouble();
+
+    debug_ads_msgs::ads_msgs_planning_debug_pointENU point;
+    point.X = json_point["X"].asDouble();
+    point.Y = json_point["Y"].asDouble();
+    point.Z = json_point["Z"].asDouble();
+    point.v = json_point["v"].asDouble();
+    point.a = json_point["a"].asDouble();
+    point.kappa = json_point["kappa"].asDouble();
+    point.dkappa = json_point["dkappa"].asDouble();
+    point.theta = json_point["theta"].asDouble();
+    point.s = json_point["s"].asDouble();
+
+    data.reference_line_enu.push_back(point);
   }
 
-  Json::Value json_reference_frenet = json_reference["REFERENCE_FRENET"];
+  // reference frenet
   const int size_reference_frenet = json_reference_frenet.size();
   for (int i = 0; i < size_reference_frenet; ++i) {
     Json::Value json_point = json_reference_frenet[i];
-    data.reference_line_frenet[i].s = json_point["S"].asDouble();
-    data.reference_line_frenet[i].l = json_point["L"].asDouble();
+
+    debug_ads_msgs::ads_msgs_planning_debug_pointFRENET point;
+    point.s = json_point["S"].asDouble();
+    point.l = json_point["L"].asDouble();
+
+    data.reference_line_frenet.push_back(point);
   }
 
-  // ego state
-  Json::Value json_ego_state_enu = json_ego_state["EGO_STATE_ENU"];
+  // ego state enu
   for (int i = 0; i < 4; ++i) {
     Json::Value json_point = json_ego_state_enu[i];
     data.ego_state_enu[i].X = json_point["X"].asDouble();
     data.ego_state_enu[i].Y = json_point["Y"].asDouble();
     data.ego_state_enu[i].Z = json_point["Z"].asDouble();
+    data.ego_state_enu[i].v = json_point["v"].asDouble();
+    data.ego_state_enu[i].a = json_point["a"].asDouble();
+    data.ego_state_enu[i].kappa = json_point["kappa"].asDouble();
+    data.ego_state_enu[i].dkappa = json_point["dkappa"].asDouble();
+    data.ego_state_enu[i].theta = json_point["theta"].asDouble();
+    data.ego_state_enu[i].s = json_point["s"].asDouble();
   }
-  Json::Value json_ego_state_frenet = json_ego_state["EGO_STATE_FRENET"];
+
+  // ego state frenet
   for (int i = 0; i < 4; ++i) {
     Json::Value json_point = json_ego_state_frenet[i];
     data.ego_state_frenet[i].s = json_point["S"].asDouble();
@@ -383,9 +502,10 @@ void QNewPlanningWidget::parseDataFromJson(
   }
 
   // state machine
-  data.state_machine.last_state = static_cast<int8_t>(json_state_machine["LAST_STATE"].asInt());
-  data.state_machine.current_state = static_cast<int8_t>(json_state_machine["CURRENT_STATE"].asInt());
-  data.state_machine.decision = static_cast<int8_t>(json_state_machine["DECISION"].asInt());
+  data.state_machine.last_state = json_state_machine["LAST_STATE"].asInt();
+  data.state_machine.current_state = json_state_machine["CURRENT_STATE"].asInt();
+  data.state_machine.decision = json_state_machine["DECISION"].asInt();
+  data.state_machine.stop_reason = json_state_machine["DECISION"].asString();
 
   // parameters
   data.parameters.cost_1 = json_parameters["COST_1"].asDouble();
@@ -394,4 +514,27 @@ void QNewPlanningWidget::parseDataFromJson(
   data.parameters.cost_4 = json_parameters["COST_4"].asDouble();
   data.parameters.cost_5 = json_parameters["COST_5"].asDouble();
   data.parameters.cost_6 = json_parameters["COST_6"].asDouble();
+}
+
+void QNewPlanningWidget::changeShowView()
+{
+  switch (m_nShowView) {
+    case LocalViewENU:
+      m_pWdgShow[0]->setShowCoord(QBaseShowWidget::FrenetCoord);
+      m_nShowView = LocalViewFrenet;
+      break;
+    case LocalViewFrenet:
+      m_pWdgShow[0]->hide();
+      m_pWdgPlotting->show();
+      m_nShowView = PlottingView;
+      break;
+    case PlottingView:
+      m_pWdgPlotting->hide();
+      m_pWdgShow[0]->show();
+      m_pWdgShow[0]->setShowCoord(QBaseShowWidget::EnuCoord);
+      m_nShowView = LocalViewENU;
+      break;
+    default:
+      break;
+  }
 }

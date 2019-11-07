@@ -49,7 +49,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
   }
   m_pWdgShow[1]->setCostType(QPlanningShowWidget::NEW_COST);
   m_nShowType = LivePlay;
-  m_nShowView = LocalView;
+  m_nShowView = LocalViewVehicle;
 
   m_pWdgFullView = new QFullViewWidget(this);
   m_pWdgFullView->setFunPosition(fun);
@@ -940,7 +940,7 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   QCostValueWidget::setOriginCostValue(cost_value);
 
   debug_tool::ads_PlanningData4Debug data_cost = this->calcPlanningPathWitCost(data);
-  if (m_nShowView == LocalView) {
+  if (m_nShowView == LocalViewVehicle) {
     m_pWdgShow[0]->setPlanningData(data);
     m_pWdgShow[1]->setPlanningData(data_cost);
     m_pWdgFullView->setPlanningData(data, name, false);
@@ -1145,4 +1145,23 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
   return planningData;
 }
 
+void QPlanningWidget::changeShowView()
+{
+  switch (m_nShowView) {
+    case LocalViewVehicle:
+      m_pWdgShow[0]->hide();
+      m_pWdgShow[1]->hide();
+      m_pWdgFullView->show();
+      m_nShowView = FullView;
+      break;
+    case FullView:
+      m_pWdgFullView->hide();
+      m_pWdgShow[0]->show();
+      m_pWdgShow[1]->show();
+      m_nShowView = LocalViewVehicle;
+      break;
+    default:
+      break;
+  }
+}
 

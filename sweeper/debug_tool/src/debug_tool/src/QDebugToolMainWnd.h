@@ -57,7 +57,6 @@ protected slots:
   void onActionReplaySpeed();
 
   void onActionChangeView();
-  void onActionChangeCoord();
   void onActionShowTargets();
   void onActionHelpAbout();
 
@@ -66,15 +65,13 @@ private:
   QEditToolsWidget *m_pWdgEditTool;
 
   int m_nCurrentIndex;
-  QBaseWidget *m_pWdgCurrent;
 
   QAction *m_pActionOldPlanning;
   QAction *m_pActionNewPlanning;
-
   QAction *m_pActionReplaySpeed;
+  QAction *m_pActionShowTargets;
 
   bool m_bFlagShowAllTargets;
-  QAction *m_pActionShowTargets;
 
 public:
   static QStatusBar *s_pStatusBar;

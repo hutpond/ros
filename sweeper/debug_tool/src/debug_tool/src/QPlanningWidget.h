@@ -27,6 +27,8 @@ public:
   QPlanningWidget(QWidget *parent);
   ~QPlanningWidget();
 
+  void changeShowView() final;
+
 public slots:
   void onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &);
 

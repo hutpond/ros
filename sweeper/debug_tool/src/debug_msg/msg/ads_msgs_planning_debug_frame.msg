@@ -1,6 +1,7 @@
 int64 num_obstacle
 ads_msgs_planning_debug_obstacle[] obstacles
-ads_msgs_planning_debug_trajectory[] trajectories
+ads_msgs_planning_debug_trajectory trajectory_current
+ads_msgs_planning_debug_trajectory trajectory_last
 ads_msgs_planning_debug_pointENU[] reference_line_enu
 ads_msgs_planning_debug_pointFRENET[] reference_line_frenet
 ads_msgs_planning_debug_pointENU[4] ego_state_enu

@@ -26,7 +26,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #set(Qt5_DIR /opt/Qt5.9.5/5.9.5/gcc_64/lib/cmake/Qt5)
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
-find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
+
+include_directories(qwt/include)
+link_directories(qwt/lib)
 
 add_message_files (
   FILES
@@ -75,17 +78,19 @@ target_sources(debug_tool PRIVATE src/QEditToolsWidget.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningWidget.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningShowWidget.cpp)
 target_sources(debug_tool PRIVATE src/splines.cpp)
+target_sources(debug_tool PRIVATE src/QNewPlanningPlot.cpp)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)
 target_link_libraries(debug_tool boost_filesystem)
+target_link_libraries(debug_tool qwt)
 
 target_include_directories(debug_tool PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 add_dependencies(${PROJECT_NAME} debug_ads_msgs_gencpp)
 
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Svg)
 
 target_link_libraries(debug_tool ${catkin_LIBRARIES})
 

@@ -10,6 +10,7 @@
 
 #include <QWidget>
 #include "debug_tool/ads_PlanningData4Debug.h"
+#include "debug_ads_msgs/ads_msgs_planning_debug_frame.h"
 
 class QTreeWidget;
 class QDataDisplayWidget : public QWidget
@@ -18,6 +19,7 @@ class QDataDisplayWidget : public QWidget
 public:
   explicit QDataDisplayWidget(QWidget *parent = NULL);
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
+  void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);

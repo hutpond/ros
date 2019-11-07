@@ -21,6 +21,7 @@ QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   , m_nNewTracksCount(0)
   , m_nNewGarbageCount(0)
 {
+  m_nCoordType = VehicleCoord;
   m_fOriginRatio = 4.0;
   m_fDisplayRatio = m_fOriginRatio;
   this->setMouseTracking(true);
@@ -1671,7 +1672,6 @@ void QPlanningShowWidget::addGarbageToData()
   QPointF pt = this->pixelToMap(pg.point(0));
   QPointF pt2 = this->pixelToMap(pg.point(1));
   QPointF pt3 = this->pixelToMap(pg.point(2));
-  QPointF pt4 = this->pixelToMap(pg.point(3));
   QLineF linef(pt, pt3);
   QPointF center = linef.center();
   double length = QLineF(pt, pt2).length();

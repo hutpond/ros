@@ -12,8 +12,7 @@ public:
   explicit QNewPlanningShowWidget(QWidget *parent = Q_NULLPTR);
 
   void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
-  virtual void changeShowCoord();
-  virtual int showCoord();
+  virtual void setShowCoord(int) final;
 
 protected:
   void mousePressEvent(QMouseEvent *);
@@ -28,10 +27,15 @@ protected:
   void drawTrajectory(QPainter &);
   void drawObstacle(QPainter &);
 
+  void addPointsToPolygenF(
+      QPolygonF &,
+      const boost::array<debug_ads_msgs::ads_msgs_planning_debug_pointENU, 4> &);
+  void addPointsToPolygenF(
+      QPolygonF &,
+      const boost::array<debug_ads_msgs::ads_msgs_planning_debug_pointFRENET, 4> &);
+
 private:
   debug_ads_msgs::ads_msgs_planning_debug_frame m_planningData;
-
-  int m_nCoordType;
 };
 
 #endif // QNEWPLANNINGSHOWWIDGET_H

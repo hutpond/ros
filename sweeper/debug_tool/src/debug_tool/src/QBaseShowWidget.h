@@ -24,8 +24,9 @@ public:
   };
 
   enum {
+    VehicleCoord,
     EnuCoord,
-    FrenetCoord
+    FrenetCoord,
   };
 
 
@@ -39,8 +40,7 @@ public:
 
   virtual void setShowAllTargets(bool);
   virtual void setToolIndex(int, bool) {}
-  virtual void changeShowCoord() {}
-  virtual int showCoord() {return 0;}
+  virtual void setShowCoord(int) {}
 
   virtual void setPlanningData(const debug_tool::ads_PlanningData4Debug &) {}
   virtual void setPlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &) {}
@@ -82,6 +82,7 @@ protected:
   int m_nCostType;
   bool m_bFlagShowAllTargets;
   int m_nToolIndex;
+  int m_nCoordType;
 
   QVector<QPointF> m_ptfTargets;
   QPointF m_ptfTargetMove;

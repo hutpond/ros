@@ -8,6 +8,7 @@ class QNewPlanningWidget : public QBaseWidget
 {
 public:
   explicit QNewPlanningWidget(QWidget *parent = Q_NULLPTR);
+  void changeShowView() final;
 
 protected:
   void timerEvent(QTimerEvent *);

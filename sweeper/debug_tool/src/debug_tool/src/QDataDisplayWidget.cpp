@@ -476,3 +476,167 @@ void QDataDisplayWidget::setPlanningData(
                   arg(garbage_result[i].width));
   }
 }
+
+void QDataDisplayWidget::setPlanningData(
+    const debug_ads_msgs::ads_msgs_planning_debug_frame &frame)
+{
+  m_pTreeWidget->clear();
+  QTreeWidgetItem *item;
+
+  // obstacle
+  QTreeWidgetItem *itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "obstacle");
+  const int size_obstacles = frame.obstacles.size();
+  for (int i = 0; i < size_obstacles; ++i) {
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, QString("obstacle %1 {[x,y,z,v,a,kappa,dkappa,theta,s],[s,l]}").arg(i));
+    for (int j = 0; j < 4; ++j) {
+      const auto point_enu = frame.obstacles[i].points_enu[j];
+      const auto point_frenet = frame.obstacles[i].points_frenet[j];
+      QString text = QString("{[%1,%2,%3,%4,%5,%6,%7,%8,%9],[%10,%11]}").
+          arg(point_enu.X).arg(point_enu.Y).arg(point_enu.Z).
+          arg(point_enu.v).arg(point_enu.a).arg(point_enu.kappa).
+          arg(point_enu.dkappa).arg(point_enu.theta).arg(point_enu.s).
+          arg(point_frenet.s).arg(point_frenet.l);
+
+      QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
+      itemChild->setText(0, text);
+    }
+  }
+
+  // current trajectories
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "current trajectories {[x,y,z,v,a,kappa,dkappa,theta,s],[s,l]}");
+  const int size_current_trajectories_enu =
+      frame.trajectory_current.current_traj_points_enu.size();
+  const int size_current_trajectories_frenet =
+      frame.trajectory_current.current_traj_points_frenet.size();
+  const int size_current_trajectories = qMax<int>(size_current_trajectories_enu, size_current_trajectories_frenet);
+  for (int i = 0; i < size_current_trajectories; ++i) {
+    QString text;
+    if (i < size_current_trajectories_enu) {
+      const auto &point_enu = frame.trajectory_current.current_traj_points_enu[i];
+      text = QString("{%1:[%2,%3,%4,%5,%6,%7,%8,%9,%10],").
+          arg(i).arg(point_enu.X).arg(point_enu.Y).arg(point_enu.Z).
+          arg(point_enu.v).arg(point_enu.a).arg(point_enu.kappa).
+          arg(point_enu.dkappa).arg(point_enu.theta).arg(point_enu.s);
+    }
+    else {
+      text = QString("{%1:[],").arg(i);
+    }
+    if (i < size_current_trajectories_frenet) {
+      const auto &point_frenet = frame.trajectory_current.current_traj_points_frenet[i];
+      text += QString("[%1,%2]}").
+              arg(point_frenet.s).arg(point_frenet.l);
+    }
+    else {
+      text += QString("[]}");
+    }
+
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, text);
+  }
+
+  // last trajectories
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "last trajectories {[x,y,z,v,a,kappa,dkappa,theta,s],[s,l]}");
+  const int size_last_trajectories_enu =
+      frame.trajectory_last.current_traj_points_enu.size();
+  const int size_last_trajectories_frenet =
+      frame.trajectory_last.current_traj_points_frenet.size();
+  const int size_last_trajectories = qMax<int>(size_last_trajectories_enu, size_last_trajectories_frenet);
+  for (int i = 0; i < size_last_trajectories; ++i) {
+    QString text;
+    if (i < size_last_trajectories_enu) {
+      const auto &point_enu = frame.trajectory_last.current_traj_points_enu[i];
+      text = QString("{%1:[%2,%3,%4,%5,%6,%7,%8,%9,%10],").
+          arg(i).arg(point_enu.X).arg(point_enu.Y).arg(point_enu.Z).
+          arg(point_enu.v).arg(point_enu.a).arg(point_enu.kappa).
+          arg(point_enu.dkappa).arg(point_enu.theta).arg(point_enu.s);
+    }
+    else {
+      text = QString("{%1:[],").arg(i);
+    }
+    if (i < size_last_trajectories_frenet) {
+      const auto &point_frenet = frame.trajectory_last.current_traj_points_frenet[i];
+      text += QString("[%1,%2]}").
+              arg(point_frenet.s).arg(point_frenet.l);
+    }
+    else {
+      text += QString("[]}");
+    }
+
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, text);
+  }
+
+  // reference enu
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "reference {[x,y,z,v,a,kappa,dkappa,theta,s],[s,l]}");
+  const int size_reference_line_enu =
+      frame.reference_line_enu.size();
+  const int size_reference_line_frenet =
+      frame.reference_line_frenet.size();
+  const int size_reference_line = qMax<int>(
+        size_reference_line_enu, size_reference_line_frenet);
+  for (int i = 0; i < size_reference_line; ++i) {
+    QString text;
+    if (i < size_reference_line_enu) {
+      const auto &point_enu = frame.reference_line_enu[i];
+      text = QString("{%1:[%2,%3,%4,%5,%6,%7,%8,%9,%10],").
+          arg(i).arg(point_enu.X).arg(point_enu.Y).arg(point_enu.Z).
+          arg(point_enu.v).arg(point_enu.a).arg(point_enu.kappa).
+          arg(point_enu.dkappa).arg(point_enu.theta).arg(point_enu.s);
+    }
+    else {
+      text = QString("{%1:[],").arg(i);
+    }
+
+    if (i < size_reference_line_frenet) {
+      const auto &point_frenet = frame.reference_line_frenet[i];
+      text += QString("[%1,%2]}").
+          arg(point_frenet.s).arg(point_frenet.l);
+    }
+    else {
+      text += QString("[]}");
+    }
+
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, text);
+  }
+
+  // ego state enu
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, "ego state {[%1,%2,%3,%4,%5,%6,%7,%8,%9],[%10,%11]}");
+  for (int i = 0; i < 4; ++i) {
+    const auto &point_enu = frame.ego_state_enu[i];
+    const auto &point_frenet = frame.ego_state_frenet[i];
+
+    QString text = QString("%1:{[%2,%3,%4,%5,%6,%7,%8,%9,%10],[%11,%12]}").
+        arg(i).arg(point_enu.X).arg(point_enu.Y).arg(point_enu.Z).
+        arg(point_enu.v).arg(point_enu.a).arg(point_enu.kappa).
+        arg(point_enu.dkappa).arg(point_enu.theta).arg(point_enu.s).
+        arg(point_frenet.s).arg(point_frenet.l);
+
+    item = new QTreeWidgetItem(itemRoot);
+    item->setText(0, text);
+  }
+
+  // state machine
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, QString("state machine, LAST_STATE:%1, CURRENT_STATE:%2, DECISION:%3, REASON:%4").
+      arg(frame.state_machine.last_state).
+      arg(frame.state_machine.current_state).
+      arg(frame.state_machine.decision).
+      arg(frame.state_machine.stop_reason.c_str()));
+
+  // parameters
+  itemRoot = new QTreeWidgetItem(m_pTreeWidget);
+  itemRoot->setText(0, QString("cost [%1, %2, %3, %4, %5, %6]").
+      arg(frame.parameters.cost_1).
+      arg(frame.parameters.cost_2).
+      arg(frame.parameters.cost_3).
+      arg(frame.parameters.cost_4).
+      arg(frame.parameters.cost_5).
+      arg(frame.parameters.cost_6));
+}
