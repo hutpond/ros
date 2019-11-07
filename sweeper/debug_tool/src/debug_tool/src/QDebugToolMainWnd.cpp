@@ -322,7 +322,7 @@ void QDebugToolMainWnd::createSettingToolBar()
   QToolBar *pToolBar = this->addToolBar(SETTINT_TOOL_BAR);
 
   QAction *action = new QAction(tr("=>>"), this);
-  action->setToolTip("switch local view and full view");
+  action->setToolTip("switch view");
   connect(action, &QAction::triggered,
           this, &QDebugToolMainWnd::onActionChangeView);
   pToolBar->setMinimumHeight(TOOL_BAR_ACTION_SIZE);

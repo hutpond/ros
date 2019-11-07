@@ -6,8 +6,6 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-#SET(CMAKE_C_COMPILER gcc-5)
-#SET(CMAKE_CXX_COMPILER g++-5)
 add_compile_options(-std=c++11)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -28,8 +26,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 
-include_directories(qwt/include)
-link_directories(qwt/lib)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/qwt/include)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/qwt/lib)
 
 add_message_files (
   FILES

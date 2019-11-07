@@ -1,7 +1,7 @@
 #ifndef QCOSTVALUEQWIDGET_H
 #define QCOSTVALUEQWIDGET_H
 
-#include <QDialog>
+#include <QWidget>
 #include "QPlanningCostWidget.h"
 
 class QSlider;

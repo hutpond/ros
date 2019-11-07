@@ -1,6 +1,6 @@
 #include <QGridLayout>
-#include "qwt/qwt_plot.h"
-#include "qwt/qwt_plot_curve.h"
+#include "qwt_plot.h"
+#include "qwt_plot_curve.h"
 #include "QNewPlanningPlot.h"
 #include "GlobalDefine.h"
 
