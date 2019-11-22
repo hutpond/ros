@@ -33,7 +33,18 @@ void QPlotWidget::clearPoints()
 
 void QPlotWidget::addPoint(QSharedPointer<QPointF> point)
 {
-  m_points.push_back(point);
+  const int size_point = m_points.size();
+  if (size_point == 0 || point->x() > m_points.back()->x()) {
+    m_points.push_back(point);
+  }
+  else {
+    for (int i = 0; i < size_point; ++i) {
+      if (point->x() < m_points[i]->x()) {
+        m_points.insert(i, point);
+        break;
+      }
+    }
+  }
 }
 
 void QPlotWidget::plot()

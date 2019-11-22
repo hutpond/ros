@@ -76,7 +76,7 @@ private:
   QSlider *m_pSliderPlay;
 
   QCostValueWidget *m_pWdgCostValue;
-  QTextBrowser *m_pTextBrowser;
+  //QTextBrowser *m_pTextBrowser;
 
   int m_nSliderValue;
 };

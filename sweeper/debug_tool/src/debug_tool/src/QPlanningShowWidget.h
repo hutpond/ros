@@ -61,6 +61,7 @@ protected:
   void drawGarbageResults(QPainter &);
   void drawBezierLine(QPainter &, const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &);
   void drawNewTarget(QPainter &);
+  void drawText(QPainter &);
 
   void calcMapRect();
 

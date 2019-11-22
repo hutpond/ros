@@ -171,13 +171,14 @@ void QPlanningShowWidget::drawImage()
   }
   this->drawRoadSide(painter);
   this->drawSweeper(painter);
-  this->drawAreaLine(painter);
+  //this->drawAreaLine(painter);
   this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawNewTarget(painter);
   this->drawPlanningPoint(painter);
   this->drawPlanningSplines(painter);
   this->drawGarbageResults(painter);
+  this->drawText(painter);
 }
 
 /*******************************************************
@@ -228,8 +229,8 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
 
   painter.restore();
 
-  this->drawUltrasonic(painter);
-  this->drawRadar(painter);
+  //this->drawUltrasonic(painter);
+  //this->drawRadar(painter);
 }
 
 void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
@@ -702,24 +703,50 @@ void QPlanningShowWidget::drawDecisionPoint(QPainter &painter)
 ********************************************************/
 void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
 {
-  QPointF ptfPlanning = QPointF(
-        m_planningData.planning_output.pose.position.x,
-        m_planningData.planning_output.pose.position.y
-        );
-  QPointF ptf = m_transform.map(ptfPlanning);
-  QRect rect = QRect(0, 0, 13, 13);
-  rect.moveCenter(ptf.toPoint());
-  QLineF line(rect.topLeft(), rect.bottomRight());
-  QLineF line2(rect.bottomLeft(), rect.topRight());
+  QPointF ptfPlanning(-1000.0, -1000.0);
+  if (m_nCostType == OLD_COST) {
+    ptfPlanning = QPointF(
+          m_planningData.planning_output.pose.position.x,
+          m_planningData.planning_output.pose.position.y
+          );
+  }
+  else {
+    double arch_len = 0.0;
+    QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
+    for (const auto &spline : m_planningData.planning_trajectory.splines) {
+      ptfStart = QPointF(spline.xb.x, spline.yb.x);
+      ptfEnd = QPointF(spline.xb.w, spline.yb.w);
+      ptfControl1 = QPointF(spline.xb.y, spline.yb.y);
+      ptfControl2 = QPointF(spline.xb.z, spline.yb.z);
 
-  painter.save();
-  QPen pen;
-  pen.setColor(Qt::darkGreen);
-  pen.setWidth(4);
-  painter.setPen(pen);
-  painter.drawLine(line);
-  painter.drawLine(line2);
-  painter.restore();
+      QPainterPath path(ptfStart);
+      path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
+
+      if ( (arch_len + path.length()) >= 0.45 ) {
+        arch_len = 0.45 - arch_len;
+        qreal percent = path.percentAtLength(arch_len);
+        ptfPlanning = path.pointAtPercent(percent);
+        break;
+      }
+      arch_len += path.length();
+    }
+  }
+  if (ptfPlanning.x() > -999.0) {
+    QPointF ptf = m_transform.map(ptfPlanning);
+    QRect rect = QRect(0, 0, 13, 13);
+    rect.moveCenter(ptf.toPoint());
+    QLineF line(rect.topLeft(), rect.bottomRight());
+    QLineF line2(rect.bottomLeft(), rect.topRight());
+
+    painter.save();
+    QPen pen;
+    pen.setColor(Qt::darkGreen);
+    pen.setWidth(4);
+    painter.setPen(pen);
+    painter.drawLine(line);
+    painter.drawLine(line2);
+    painter.restore();
+  }
 }
 
 /*******************************************************
@@ -739,6 +766,21 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
   const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
   this->drawBezierLine(painter, val_planning_splines);
   painter.restore();
+
+  const int size_splines = val_planning_splines.size();
+  if (size_splines > 0) {
+    pen.setWidth(1);
+    pen.setColor(Qt::black);
+    painter.setFont(QFont("Times", 12));
+    painter.save();
+    painter.setPen(pen);
+
+    QPointF ptf(val_planning_splines[size_splines - 1].xb.w,
+        val_planning_splines[size_splines - 1].yb.w);
+    painter.drawText(m_transform.map(ptf), QString::number(m_planningData.planning_trajectory.id));
+
+    painter.restore();
+  }
 }
 
 /*******************************************************
@@ -1365,14 +1407,14 @@ void QPlanningShowWidget::drawDecisionTargetsSL(
 ********************************************************/
 void QPlanningShowWidget::drawBezierLine(
     QPainter &painter,
-    const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &spines)
+    const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &splines)
 {
   QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
-  for (const auto &spine : spines) {
-    ptfStart = QPointF(spine.xb.x, spine.yb.x);
-    ptfEnd = QPointF(spine.xb.w, spine.yb.w);
-    ptfControl1 = QPointF(spine.xb.y, spine.yb.y);
-    ptfControl2 = QPointF(spine.xb.z, spine.yb.z);
+  for (const auto &spline : splines) {
+    ptfStart = QPointF(spline.xb.x, spline.yb.x);
+    ptfEnd = QPointF(spline.xb.w, spline.yb.w);
+    ptfControl1 = QPointF(spline.xb.y, spline.yb.y);
+    ptfControl2 = QPointF(spline.xb.z, spline.yb.z);
     ptfStart = m_transform.map(ptfStart);
     ptfEnd = m_transform.map(ptfEnd);
     ptfControl1 = m_transform.map(ptfControl1);
@@ -1403,6 +1445,11 @@ void QPlanningShowWidget::drawNewTarget(QPainter &painter)
   }
 
   painter.restore();
+}
+
+void QPlanningShowWidget::drawText(QPainter &painter)
+{
+
 }
 
 /**

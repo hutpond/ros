@@ -51,13 +51,13 @@ void QPlanningCostWidget::setPlanningData(const debug_tool::ads_PlanningData4Deb
   QSharedPointer<QPointF> ptr_ptf;
   for (int i = 0; i < size_candidates; ++i) {
     QPointF *ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Cost]->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     double cost_new = value[Safety] * candidates[i].safety_cost
         + value[Lateral] * candidates[i].lateral_cost
         + value[Smoothness] * candidates[i].smoothness_cost
@@ -68,31 +68,31 @@ void QPlanningCostWidget::setPlanningData(const debug_tool::ads_PlanningData4Deb
     m_pWdgCostNew->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].safety_cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Safety]->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].lateral_cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Lateral]->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].smoothness_cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Smoothness]->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].consistency_cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Consistency]->addPoint(ptr_ptf);
 
     ptf = new QPointF;
-    ptf->setX(i);
+    ptf->setX(candidates[i].id);
     ptf->setY(candidates[i].garbage_cost);
     ptr_ptf.reset(ptf);
     m_pWdgCost[Garbage]->addPoint(ptr_ptf);

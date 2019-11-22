@@ -27,7 +27,7 @@ protected:
   QString m_strXName;
   QString m_strYName;
 
-  QVector<QSharedPointer<QPointF>> m_points;
+  QList<QSharedPointer<QPointF>> m_points;
   QImage m_image;
 };
 

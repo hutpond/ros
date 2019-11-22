@@ -50,7 +50,7 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pWdgCostValue = new QCostValueWidget(this);
   connect(m_pWdgCostValue, &QCostValueWidget::costValueChanged,
           this, &QPlanningParamWidget::costValueChanged);
-  m_pTextBrowser = new QTextBrowser(this);
+  //m_pTextBrowser = new QTextBrowser(this);
 }
 
 QPlanningParamWidget::~QPlanningParamWidget()
@@ -105,7 +105,7 @@ void QPlanningParamWidget::setFrameCount(int count)
 }
 
 void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data,
-                                           const debug_tool::ads_PlanningData4Debug &data_cost)
+                                           const debug_tool::ads_PlanningData4Debug &/*data_cost*/)
 {
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
@@ -148,7 +148,7 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
   }
 
   // data
-  m_pTextBrowser->setText(this->createTrajectoryString(data, data_cost));
+  //m_pTextBrowser->setText(this->createTrajectoryString(data, data_cost));
 }
 
 QString QPlanningParamWidget::getDecisionText(int index)
@@ -313,9 +313,9 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   yPos += ITEM_H + SPACE_Y;
   m_pWdgCostValue->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 8);
 
-  xPos = SPACE_X;
-  yPos += ITEM_H * 8 + SPACE_Y;
-  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 3);
+//  xPos = SPACE_X;
+//  yPos += ITEM_H * 8 + SPACE_Y;
+//  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 3);
 }
 
 void QPlanningParamWidget::showReplayControls(bool show)
