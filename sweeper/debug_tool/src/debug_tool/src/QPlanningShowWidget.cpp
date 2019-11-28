@@ -653,7 +653,7 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &bezier : beziers_left) {
     QPainterPath path(bezier.start);
     path.cubicTo(bezier.control, bezier.control2, bezier.end);
-    //painter.drawPath(m_transform.map(path));
+    painter.drawPath(m_transform.map(path));
   }
 
   // draw right bezier
@@ -666,11 +666,11 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &bezier : beziers_right) {
     QPainterPath path(bezier.start);
     path.cubicTo(bezier.control, bezier.control2, bezier.end);
-    //painter.drawPath(m_transform.map(path));
+    painter.drawPath(m_transform.map(path));
   }
 
   // draw point
-  QPolygonF pgf;
+  /*QPolygonF pgf;
   for (const auto &ptf : points_left) {
     pgf << ptf;
   }
@@ -680,7 +680,7 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &ptf : points_right) {
     pgf << ptf;
   }
-  painter.drawPolyline(m_transform.map(pgf));
+  painter.drawPolyline(m_transform.map(pgf));*/
 
   painter.restore();
 }
