@@ -310,12 +310,14 @@ void QDataDisplayWidget::setPlanningData(
   itemRoot->setText(0, QString("REFERENCE_LINE [%1]").arg(SIZE));
   for (int i = 0; i < SIZE; ++i) {
     item = new QTreeWidgetItem(itemRoot);
-    item->setText(0, QString("ID: %1, L: %2, S: %3, X: %4, Y: %5").
+    item->setText(0, QString("ID: %1, L: %2, S: %3, X: %4, Y: %5, LEFT: %6, RIGHT: %7").
                   arg(planningData.reference_points[i].id, 2, 10, QLatin1Char(' ')).
                   arg(planningData.reference_points[i].l, 1).
                   arg(planningData.reference_points[i].s, 6, 'f', 2).
                   arg(planningData.reference_points[i].x, 6, 'f', 2).
-                  arg(planningData.reference_points[i].y, 6, 'f', 2)
+                  arg(planningData.reference_points[i].y, 6, 'f', 2).
+                  arg(planningData.reference_points[i].left_road_width, 6, 'f', 2).
+                  arg(planningData.reference_points[i].right_road_width, 6, 'f', 2)
                   );
   }
 

@@ -1,16 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(debug_tool)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
 add_compile_options(-std=c++11)
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp std_msgs message_generation geometry_msgs debug_ads_msgs)
@@ -77,6 +68,7 @@ target_sources(debug_tool PRIVATE src/QNewPlanningWidget.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningShowWidget.cpp)
 target_sources(debug_tool PRIVATE src/splines.cpp)
 target_sources(debug_tool PRIVATE src/QNewPlanningPlot.cpp)
+target_sources(debug_tool PRIVATE src/QBezierCurve.cpp)
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)

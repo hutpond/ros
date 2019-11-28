@@ -531,6 +531,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["S"] = reference.s;
     item["X"] = reference.x;
     item["Y"] = reference.y;
+    item["LEFT_W"] = reference.left_road_width;
+    item["RIGHT_W"] = reference.right_road_width;
     referencePoints.append(item);
   }
   referenceLine["REFERENCE_POINTS"] = referencePoints;
@@ -890,6 +892,8 @@ void QPlanningWidget::parseDataFromJson(
     reference.s = item["S"].asDouble();
     reference.x = item["X"].asDouble();
     reference.y = item["Y"].asDouble();
+    reference.left_road_width = item["LEFT_W"].asDouble();
+    reference.right_road_width = item["RIGHT_W"].asDouble();
 
     planningData.reference_points.push_back(reference);
   }

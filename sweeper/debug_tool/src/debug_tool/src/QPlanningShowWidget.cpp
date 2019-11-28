@@ -15,6 +15,7 @@
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
 #include "QEditToolsWidget.h"
+#include "QBezierCurve.h"
 
 QPlanningShowWidget::QPlanningShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
@@ -169,7 +170,7 @@ void QPlanningShowWidget::drawImage()
   if (m_planningData.reference_splines.size() == 0) {
     return;
   }
-  this->drawRoadSide(painter);
+  this->drawRoadSideFromWidth(painter);
   this->drawSweeper(painter);
   //this->drawAreaLine(painter);
   this->drawDecisionTargets(painter);
@@ -584,6 +585,102 @@ void QPlanningShowWidget::drawRoadSide(QPainter &painter)
 //    pgfReference << QPointF(pts[i].x, pts[i].y);
 //  }
 //  painter.drawPolyline(m_transform.map(pgfReference));
+
+  painter.restore();
+}
+
+/**
+ * @brief 绘制参考线，路边沿(根据参考线左侧、右侧路宽数据绘制）
+ * @param painter
+ */
+void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
+{
+  painter.save();
+
+  // reference
+  QPen pen;
+  pen.setWidth(1);
+  pen.setColor(Qt::black);
+  pen.setStyle(Qt::DashLine);
+  painter.setPen(pen);
+
+  for (const auto &spline : m_planningData.reference_splines) {
+    QPainterPath path(QPointF(spline.xb.x, spline.yb.x));
+    path.cubicTo(
+          spline.xb.y, spline.yb.y,
+          spline.xb.z, spline.yb.z,
+          spline.xb.w, spline.yb.w
+          );
+    painter.drawPath(m_transform.map(path));
+  }
+
+  // reference points size
+  const int size_ref_points = m_planningData.reference_points.size();
+  if (size_ref_points == 0) {
+    return;
+  }
+
+  // road side points
+  pen.setWidth(4);
+  pen.setColor(Qt::yellow);
+  pen.setStyle(Qt::SolidLine);
+  painter.setPen(pen);
+  QVector<QPointF> points_left, points_right;
+  for (const auto &point : m_planningData.reference_points) {
+    QPointF ptf_left, ptf_right;
+    double l = point.l + point.left_road_width;
+    if (point.left_road_width < 0.01) {
+      l = point.l + 6.6;
+    }
+    this->slToXy(point.s, l, ptf_left);
+    points_left << ptf_left;
+
+    l = point.l - point.right_road_width;
+    if (point.right_road_width < 0.01) {
+      l = point.l - 0.875;
+    }
+    this->slToXy(point.s, l, ptf_right);
+    points_right << ptf_right;
+  }
+
+  // draw left bezier
+  QBezierCurve bezierCurve;
+  for (const auto &ptf : points_left) {
+    bezierCurve.addPoint(ptf);
+  }
+  bezierCurve.calcBezier();
+  const auto &beziers_left = bezierCurve.getBezier();
+  for (const auto &bezier : beziers_left) {
+    QPainterPath path(bezier.start);
+    path.cubicTo(bezier.control, bezier.control2, bezier.end);
+    //painter.drawPath(m_transform.map(path));
+  }
+
+  // draw right bezier
+  bezierCurve.clear();
+  for (const auto &ptf : points_right) {
+    bezierCurve.addPoint(ptf);
+  }
+  bezierCurve.calcBezier();
+  const auto &beziers_right = bezierCurve.getBezier();
+  for (const auto &bezier : beziers_right) {
+    QPainterPath path(bezier.start);
+    path.cubicTo(bezier.control, bezier.control2, bezier.end);
+    //painter.drawPath(m_transform.map(path));
+  }
+
+  // draw point
+  QPolygonF pgf;
+  for (const auto &ptf : points_left) {
+    pgf << ptf;
+  }
+  painter.drawPolyline(m_transform.map(pgf));
+
+  pgf.clear();
+  for (const auto &ptf : points_right) {
+    pgf << ptf;
+  }
+  painter.drawPolyline(m_transform.map(pgf));
 
   painter.restore();
 }
@@ -1447,7 +1544,7 @@ void QPlanningShowWidget::drawNewTarget(QPainter &painter)
   painter.restore();
 }
 
-void QPlanningShowWidget::drawText(QPainter &painter)
+void QPlanningShowWidget::drawText(QPainter &)
 {
 
 }

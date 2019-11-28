@@ -300,6 +300,7 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
   for (int i = 0; i < number; ++i) {
     QSharedPointer<MapPoint> point(new MapPoint);
     double value;
+    int value_2;
     in.read(reinterpret_cast<char*>(&point->index), sizeof(point->index));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
@@ -310,6 +311,10 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
     in.read(reinterpret_cast<char*>(&point->x), sizeof(point->x));
     in.read(reinterpret_cast<char*>(&point->y), sizeof(point->y));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value), sizeof(value));
+    in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
+    in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
 
     m_listReferences.push_back(point);
   }

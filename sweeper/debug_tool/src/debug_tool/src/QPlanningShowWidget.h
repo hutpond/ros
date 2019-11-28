@@ -45,6 +45,7 @@ protected:
   void drawUltrasonic(QPainter &);
   void drawRadar(QPainter &);
   void drawRoadSide(QPainter &);
+  void drawRoadSideFromWidth(QPainter &);
   void drawAreaLine(QPainter &);
   void drawDecisionPoint(QPainter &);
   void drawPlanningPoint(QPainter &);
