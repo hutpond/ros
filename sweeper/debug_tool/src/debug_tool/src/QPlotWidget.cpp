@@ -69,7 +69,7 @@ void QPlotWidget::plot()
   painter.drawText(rect_title, Qt::AlignCenter, m_strTitle);
 
   // axis
-  constexpr int x_size = 5;
+  int x_size = 5;
   double x_min = 0;
   double x_max = 100;
   int y_size = 6;
@@ -108,6 +108,7 @@ void QPlotWidget::plot()
   }
   x_unit = double(bound) / qPow(10, bit);
   x_min = x_unit * (int(x_min / x_unit));
+  x_size = qCeil((x_max - x_min) / x_unit);
   x_max = x_min + x_unit * x_size;
 
   // y axis range
@@ -168,7 +169,7 @@ void QPlotWidget::plot()
   QPolygonF pgf;
   for (const auto &pt : m_points) {
     QPointF ptf = QPoint(
-          rect_curve.x() + pt->x() / (x_unit * x_size) * rect_curve.width(),
+          rect_curve.x() + (pt->x() - x_min) / (x_unit * x_size) * rect_curve.width(),
           rect_curve.y() + (y_max - pt->y()) / (y_unit * y_size) * rect_curve.height()
           );
     pgf << ptf;

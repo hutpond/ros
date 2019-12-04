@@ -615,7 +615,8 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   }
 
   // reference points size
-  const int size_ref_points = m_planningData.reference_points.size();
+  const auto &points = m_planningData.reference_points;
+  const int size_ref_points = points.size();
   if (size_ref_points == 0) {
     return;
   }
@@ -626,20 +627,32 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   pen.setStyle(Qt::SolidLine);
   painter.setPen(pen);
   QVector<QPointF> points_left, points_right;
-  for (const auto &point : m_planningData.reference_points) {
+  for (int i = 0; i < size_ref_points; ++i) {
     QPointF ptf_left, ptf_right;
-    double l = point.l + point.left_road_width;
-    if (point.left_road_width < 0.01) {
-      l = point.l + 6.6;
+    double l = points[i].l + points[i].left_road_width;
+    if (points[i].left_road_width < 0.01) {
+      l = points[i].l + 6.6;
     }
-    this->slToXy(point.s, l, ptf_left);
+    this->slToXy(points[i].s, l, ptf_left);
+    int index = this->findReferenceIndex(ptf_left.x(), ptf_left.y());
+    if (index != i) {
+      QPointF ptf;
+      this->slToXy(points[index].s, l, ptf);
+      ptf_left = (ptf_left + ptf) / 2;
+    }
     points_left << ptf_left;
 
-    l = point.l - point.right_road_width;
-    if (point.right_road_width < 0.01) {
-      l = point.l - 0.875;
+    l = points[i].l - points[i].right_road_width;
+    if (points[i].right_road_width < 0.01) {
+      l = points[i].l - 0.875;
     }
-    this->slToXy(point.s, l, ptf_right);
+    this->slToXy(points[i].s, l, ptf_right);
+    index = this->findReferenceIndex(ptf_right.x(), ptf_right.y());
+    if (index != i) {
+      QPointF ptf;
+      this->slToXy(points[index].s, l, ptf);
+      ptf_right = (ptf_right + ptf) / 2;
+    }
     points_right << ptf_right;
   }
 
@@ -653,7 +666,7 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &bezier : beziers_left) {
     QPainterPath path(bezier.start);
     path.cubicTo(bezier.control, bezier.control2, bezier.end);
-    painter.drawPath(m_transform.map(path));
+//    painter.drawPath(m_transform.map(path));
   }
 
   // draw right bezier
@@ -666,11 +679,11 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &bezier : beziers_right) {
     QPainterPath path(bezier.start);
     path.cubicTo(bezier.control, bezier.control2, bezier.end);
-    painter.drawPath(m_transform.map(path));
+//    painter.drawPath(m_transform.map(path));
   }
 
   // draw point
-  /*QPolygonF pgf;
+  QPolygonF pgf;
   for (const auto &ptf : points_left) {
     pgf << ptf;
   }
@@ -680,7 +693,7 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   for (const auto &ptf : points_right) {
     pgf << ptf;
   }
-  painter.drawPolyline(m_transform.map(pgf));*/
+  painter.drawPolyline(m_transform.map(pgf));
 
   painter.restore();
 }
@@ -1574,6 +1587,30 @@ int QPlanningShowWidget::findReferenceIndex(const double s)
         index = i;
         break;
       }
+    }
+  }
+
+  return index;
+}
+
+/**
+ * @brief 查找最近的参考线点
+ * @param x
+ * @param y
+ * @return 参考点序号
+ */
+int QPlanningShowWidget::findReferenceIndex(const double x, const double y)
+{
+  int index = -1;
+  double distance = 100000;
+
+  const auto &points = m_planningData.reference_points;
+  const int size_pts = points.size();
+  for (int i = 0; i < size_pts; ++i) {
+    QLineF linef(x, y, points[i].x, points[i].y);
+    if (linef.length() < distance) {
+      distance = linef.length();
+      index = i;
     }
   }
 
