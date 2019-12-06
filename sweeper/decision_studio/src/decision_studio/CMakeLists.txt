@@ -64,6 +64,8 @@ add_executable(${PROJECT_NAME}_node
   src/qstateitem.cpp
   src/QBezierCurve.h
   src/QBezierCurve.cpp
+  src/qreplaywidget.h
+  src/qreplaywidget.cpp
   src/decision_studio.qrc
   )
 

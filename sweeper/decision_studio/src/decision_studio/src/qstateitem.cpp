@@ -22,7 +22,7 @@ void QStateItem::resizeEvent(QResizeEvent *)
   const int HEIGHT = this->height();
   const int SPACE = qMin<int>(HEIGHT * 0.05, 3);
 
-  const float SVG_H_PF = 0.67;
+  const float SVG_H_PF = 0.58;
   const int SVG_W = qMin<int>(HEIGHT * SVG_H_PF, WIDTH - 2 * SPACE);
   m_rectSvg = QRect((WIDTH - SVG_W) / 2, SPACE, SVG_W, SVG_W);
 

@@ -8,6 +8,8 @@ QStateWidget::QStateWidget(QWidget *parent)
   m_pWdgItem[StateFollow] = new QStateItem(QStringLiteral("跟车"), this);
   m_pWdgItem[StatePass] = new QStateItem(QStringLiteral("绕行"), this);
   m_pWdgItem[StateSafeStop] = new QStateItem(QStringLiteral("停车"), this);
+
+  m_pWdgItem[StateSafeStop]->setStateOn(true);
 }
 
 void QStateWidget::resizeEvent(QResizeEvent *)
@@ -30,5 +32,26 @@ void QStateWidget::resizeEvent(QResizeEvent *)
 
 void QStateWidget::setData(const decision_studio::ads_DecisionData4Debug &data)
 {
-
+  int index = -1;
+  switch (data.decision) {
+  case 0:
+    index = 0;
+    break;
+  case 1:
+    index = 1;
+    break;
+  case 2:
+    index = 2;
+    break;
+  case 3:
+    index = 3;
+    break;
+  default:
+    break;
+  }
+  if (index >= 0 && index < StateCount) {
+    for (int i = 0; i < StateCount; ++i) {
+      m_pWdgItem[i]->setStateOn(i == index);
+    }
+  }
 }
