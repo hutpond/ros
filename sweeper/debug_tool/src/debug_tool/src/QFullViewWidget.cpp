@@ -137,8 +137,8 @@ void QFullViewWidget::addVehicleLine(const debug_tool::ads_PlanningData4Debug &d
   QSharedPointer<MapPoint> vehicle;
   vehicle.reset(new MapPoint);
   vehicle->index = index;
-  vehicle->x = data.vehicle_x;
-  vehicle->y = data.vehicle_y;
+  vehicle->x = data.front_axle_center.x;
+  vehicle->y = data.front_axle_center.y;
 
   if (this->isIndexValid(m_listVehicleLine, index) == 1) {
     m_listVehicleLine.append(vehicle);
@@ -241,7 +241,7 @@ void QFullViewWidget::drawVehicleLine(QPainter &painter)
 
 void QFullViewWidget::drawVehicle(QPainter &painter)
 {
-  QPointF ptf = QPointF(m_planningData.vehicle_x, m_planningData.vehicle_y);
+  QPointF ptf = QPointF(m_planningData.front_axle_center.x, m_planningData.front_axle_center.y);
   ptf = m_transform.map(ptf);
   painter.save();
   QPen pen;

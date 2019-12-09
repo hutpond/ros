@@ -214,93 +214,164 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
 void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
                                          const debug_tool::ads_PlanningData4Debug &planningData)
 {
-  // car
-  Json::Value carStatus;
-  carStatus["LATITUDE"] = planningData.vehicle_latitude;
-  carStatus["LONGITUDE"] = planningData.vehicle_longitude;
-  carStatus["ALTITUDE"] = planningData.vehicle_altitude;
-  carStatus["ENU_X"] = planningData.vehicle_x;
-  carStatus["ENU_Y"] = planningData.vehicle_y;
-  carStatus["ENU_Z"] = planningData.vehicle_z;
-  carStatus["S"] = planningData.vehicle_s;
-  carStatus["L"] = planningData.vehicle_l;
-  carStatus["VEHICLE_WIDTH"] = planningData.vehicle_width;
-  carStatus["VEHICLE_LENGTH"] = planningData.vehicle_length;
-  carStatus["HEAD_DISTANCE"] = planningData.head_distance;
+  // vehicle
+  Json::Value carStatus, frontAxleCenter, rearAxleCenter, headPoint, rearPoint, hingePoint;
 
-  // radar 28 target
-  const auto &radar28Result = planningData.radar28f_results;
-  Json::Value radar28Trargets, radar28Trarget;
-  int sizeTarget28 = radar28Result.size();
-  radar28Trargets["OBJECT_COUNT"] = sizeTarget28;
-  for (int i = 0; i < sizeTarget28; ++i) {
+  frontAxleCenter["id"] = planningData.front_axle_center.id;
+  frontAxleCenter["x"] = planningData.front_axle_center.x;
+  frontAxleCenter["y"] = planningData.front_axle_center.y;
+  frontAxleCenter["enu_x"] = planningData.front_axle_center.enu_x;
+  frontAxleCenter["enu_y"] = planningData.front_axle_center.enu_y;
+  frontAxleCenter["s"] = planningData.front_axle_center.s;
+  frontAxleCenter["l"] = planningData.front_axle_center.l;
+  frontAxleCenter["left_road_width"] = planningData.front_axle_center.left_road_width;
+  frontAxleCenter["right_road_width"] = planningData.front_axle_center.right_road_width;
+
+  rearAxleCenter["id"] = planningData.rear_axle_center.id;
+  rearAxleCenter["x"] = planningData.rear_axle_center.x;
+  rearAxleCenter["y"] = planningData.rear_axle_center.y;
+  rearAxleCenter["enu_x"] = planningData.rear_axle_center.enu_x;
+  rearAxleCenter["enu_y"] = planningData.rear_axle_center.enu_y;
+  rearAxleCenter["s"] = planningData.rear_axle_center.s;
+  rearAxleCenter["l"] = planningData.rear_axle_center.l;
+  rearAxleCenter["left_road_width"] = planningData.rear_axle_center.left_road_width;
+  rearAxleCenter["right_road_width"] = planningData.rear_axle_center.right_road_width;
+
+  headPoint["id"] = planningData.head_point.id;
+  headPoint["x"] = planningData.head_point.x;
+  headPoint["y"] = planningData.head_point.y;
+  headPoint["enu_x"] = planningData.head_point.enu_x;
+  headPoint["enu_y"] = planningData.head_point.enu_y;
+  headPoint["s"] = planningData.head_point.s;
+  headPoint["l"] = planningData.head_point.l;
+  headPoint["left_road_width"] = planningData.head_point.left_road_width;
+  headPoint["right_road_width"] = planningData.head_point.right_road_width;
+
+  rearPoint["id"] = planningData.rear_point.id;
+  rearPoint["x"] = planningData.rear_point.x;
+  rearPoint["y"] = planningData.rear_point.y;
+  rearPoint["enu_x"] = planningData.rear_point.enu_x;
+  rearPoint["enu_y"] = planningData.rear_point.enu_y;
+  rearPoint["s"] = planningData.rear_point.s;
+  rearPoint["l"] = planningData.rear_point.l;
+  rearPoint["left_road_width"] = planningData.rear_point.left_road_width;
+  rearPoint["right_road_width"] = planningData.rear_point.right_road_width;
+
+  hingePoint["id"] = planningData.hinge_point.id;
+  hingePoint["x"] = planningData.hinge_point.x;
+  hingePoint["y"] = planningData.hinge_point.y;
+  hingePoint["enu_x"] = planningData.hinge_point.enu_x;
+  hingePoint["enu_y"] = planningData.hinge_point.enu_y;
+  hingePoint["s"] = planningData.hinge_point.s;
+  hingePoint["l"] = planningData.hinge_point.l;
+  hingePoint["left_road_width"] = planningData.hinge_point.left_road_width;
+  hingePoint["right_road_width"] = planningData.hinge_point.right_road_width;
+
+  carStatus["front_axle_center"] = frontAxleCenter;
+  carStatus["rear_axle_center"] = rearAxleCenter;
+  carStatus["head_point"] = headPoint;
+  carStatus["rear_point"] = rearPoint;
+  carStatus["hinge_point"] = hingePoint;
+  carStatus["front_vehicle_length"] = planningData.front_vehicle_length;
+  carStatus["front_vehicle_width"] = planningData.front_vehicle_width;
+  carStatus["rear_vehicle_length"] = planningData.rear_vehicle_length;
+  carStatus["rear_vehicle_width"] = planningData.rear_vehicle_width;
+  carStatus["steering_angle"] = planningData.steering_angle;
+
+  // referene
+  Json::Value referenceLine, referencePoints, referenceSplines;
+  for (const auto &point : planningData.reference_points) {
     Json::Value item;
-    const debug_tool::ads_RadarTarget &target = radar28Result[i];
-    item["ID"] = target.id;
-    item["RANGE"] = target.range;
-    item["RANGE_LAT"] = target.range_lat;
-    item["RANGE_LON"] = target.range_lon;
-    item["ANGLE"] = target.angle;
-    item["VEL"] = target.vel;
-    item["V_LAT"] = target.v_lat;
-    item["V_LON"] = target.v_lon;
-    item["STATUS"] = target.status;
-    item["W"] = target.w;
-    item["L"] = target.l;
-    item["DEVID"] = target.devid;
-
-    radar28Trarget.append(item);
+    item["id"] = point.id;
+    item["x"] = point.x;
+    item["y"] = point.y;
+    item["enu_x"] = point.enu_x;
+    item["enu_y"] = point.enu_y;
+    item["s"] = point.s;
+    item["l"] = point.l;
+    item["left_road_width"] = point.left_road_width;
+    item["right_road_width"] = point.right_road_width;
+    referencePoints.append(item);
   }
-  radar28Trargets["RADAR28_OBJECTS"] = radar28Trarget;
+  referenceLine["reference_points"] = referencePoints;
 
-  // radar 73 target
-  const auto &radar73Result = planningData.radar73f_results;
-  Json::Value radar73Trargets, radar73Trarget;
-  int sizeTarget73 = radar73Result.size();
-  radar73Trargets["OBJECT_COUNT"] = sizeTarget73;
-  for (int i = 0; i < sizeTarget73; ++i) {
+  for (const auto &spline : planningData.reference_splines) {
     Json::Value item;
-    const debug_tool::ads_RadarTarget &target = radar73Result[i];
-    item["ID"] = target.id;
-    item["RANGE"] = target.range;
-    item["RANGE_LAT"] = target.range_lat;
-    item["RANGE_LON"] = target.range_lon;
-    item["ANGLE"] = target.angle;
-    item["VEL"] = target.vel;
-    item["V_LAT"] = target.v_lat;
-    item["V_LON"] = target.v_lon;
-    item["STATUS"] = target.status;
-    item["W"] = target.w;
-    item["L"] = target.l;
-    item["DEVID"] = target.devid;
-
-    radar73Trarget.append(item);
+    item["XB_X"] = spline.xb.x;
+    item["XB_Y"] = spline.xb.y;
+    item["XB_Z"] = spline.xb.z;
+    item["XB_W"] = spline.xb.w;
+    item["YB_X"] = spline.yb.x;
+    item["YB_Y"] = spline.yb.y;
+    item["YB_Z"] = spline.yb.z;
+    item["YB_W"] = spline.yb.w;
+    referenceSplines.append(item);
   }
-  radar73Trargets["RADAR73_OBJECTS"] = radar73Trarget;
+  referenceLine["reference_splines"] = referenceSplines;
 
-  // UltraSonic
-  const auto &ultrasonicResult = planningData.ultrasonic_results;
-  Json::Value ultrasonicTrargets, ultrasonicTrarget;
-  int sizeTarget = ultrasonicResult.size();
-  ultrasonicTrargets["OBJECT_COUNT"] = static_cast<int>(sizeTarget);
-  for (int i = 0; i < sizeTarget; ++i) {
+  // radar
+  Json::Value radarData, radarPoint, radarResult;
+
+  radarPoint["id"] = planningData.radar_Point.id;
+  radarPoint["x"] = planningData.radar_Point.x;
+  radarPoint["y"] = planningData.radar_Point.y;
+  radarPoint["enu_x"] = planningData.radar_Point.enu_x;
+  radarPoint["enu_y"] = planningData.radar_Point.enu_y;
+  radarPoint["s"] = planningData.radar_Point.s;
+  radarPoint["l"] = planningData.radar_Point.l;
+  radarPoint["left_road_width"] = planningData.radar_Point.left_road_width;
+  radarPoint["right_road_width"] = planningData.radar_Point.right_road_width;
+
+  for (const auto &target : planningData.radar_results) {
     Json::Value item;
-    const debug_tool::ads_UltraSonicTarget &target = ultrasonicResult[i];
-
-    item["POS_ID"] = static_cast<int>(target.radar_pos_id);
-    item["DISTANCE"] = target.distance;
-    ultrasonicTrarget.append(item);
+    item["id"] = target.id;
+    item["range"] = target.range;
+    item["range_lat"] = target.range_lat;
+    item["range_lon"] = target.range_lon;
+    item["angle"] = target.angle;
+    item["vel"] = target.vel;
+    item["v_lat"] = target.v_lat;
+    item["v_lon"] = target.v_lon;
+    item["status"] = target.status;
+    item["w"] = target.w;
+    item["l"] = target.l;
+    item["devid"] = target.devid;
+    radarResult.append(item);
   }
-  ultrasonicTrargets["US_OBJECTS"] = ultrasonicTrarget;
 
-  // Track Target
-  const auto &trackResult = planningData.fusion_results;
-  Json::Value trackTrargets, trackTrarget;
-  sizeTarget = trackResult.size();
-  trackTrargets["OBJECT_COUNT"] = sizeTarget;
-  for (int i = 0; i < sizeTarget; ++i) {
+  radarData["radar_point"] = radarPoint;
+  radarData["radar_results"] = radarResult;
+
+  // ultrasonic
+  Json::Value ultrasonicData, ultrasonicPoint, ultrasonicResults;
+
+  for (const auto &point : planningData.ultrasonic_points) {
     Json::Value item;
-    const debug_tool::ads_TrackTarget &target = trackResult[i];
+    item["id"] = point.id;
+    item["x"] = point.x;
+    item["y"] = point.y;
+    item["enu_x"] = point.enu_x;
+    item["enu_y"] = point.enu_y;
+    item["s"] = point.s;
+    item["l"] = point.l;
+    item["left_road_width"] = point.left_road_width;
+    item["right_road_width"] = point.right_road_width;
+    ultrasonicPoint.append(item);
+  }
+
+  for (const auto &target : planningData.ultrasonic_results) {
+    Json::Value item;
+    item["radar_pos_id"] = static_cast<int>(target.radar_pos_id);
+    item["distance"] = target.distance;
+    ultrasonicResults.append(item);
+  }
+  ultrasonicData["ultrasonic_points"] = ultrasonicPoint;
+  ultrasonicData["ultrasonic_results"] = ultrasonicResults;
+
+  // track target
+  Json::Value fusionResults;
+  for (const auto &target : planningData.fusion_results) {
+    Json::Value item;
 
     item["TRACK_ID"] = static_cast<int32_t>(target.TRACK_ID);
     item["X"] = target.X;
@@ -314,258 +385,124 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["MOTION_STATUS"] = static_cast<int>(target.MOTION_STATUS);
     item["TARGET_TYPE"] = static_cast<int>(target.TARGET_TYPE);
 
-    Json::Value json_points;
+    Json::Value edgePoints;
     for (const auto &point : target.edge_points) {
-      Json::Value json_point;
-      json_point["POINT_X"] = point.x;
-      json_point["POINT_Y"] = point.y;
-      json_point["POINT_Z"] = point.z;
-      json_points.append(json_point);
+      Json::Value childItem;
+      childItem["x"] = point.x;
+      childItem["y"] = point.y;
+      childItem["z"] = point.z;
+      edgePoints.append(childItem);
     }
-    item["POINTS"] = json_points;
+    item["edge_points"] = edgePoints;
 
-    trackTrarget.append(item);
+    fusionResults.append(item);
   }
-  trackTrargets["TRACK_OBJECTS"] = trackTrarget;
 
-  // garbage
-  Json::Value garbage;
-  const auto &garbage_result = planningData.garbage_detection_results;
-  auto garbage_size = garbage_result.size();
-  using size_g = decltype (garbage_size);
-  for (size_g i = 0; i < garbage_size; ++i) {
+  // gargage
+  Json::Value garbageDetectionResults;
+  for (const auto &result : planningData.garbage_detection_results) {
     Json::Value item;
-    item["ID"] = garbage_result[i].id;
-    item["SIZE"] = garbage_result[i].size;
-    item["ANGLE"] = garbage_result[i].angle;
-    item["DISTANCE"] = garbage_result[i].distance;
-    item["LENGTH"] = garbage_result[i].length;
-    item["WIDTH"] = garbage_result[i].width;
-    garbage.append(item);
+    item["id"] = static_cast<int>(result.id);
+    item["size"] = result.size;
+    item["angle"] = result.angle;
+    item["distance"] = result.distance;
+    item["length"] = result.length;
+    item["width"] = result.width;
+    garbageDetectionResults.append(item);
   }
 
   // decision
   Json::Value decisionState;
-  decisionState["DECISION"] = static_cast<int>(planningData.decision);
-  decisionState["ULTRASONIC_DECISION"] = static_cast<int>(planningData.ultrasonic_decision);
-  decisionState["RADAR28_DECISION"] = static_cast<int>(planningData.radar28f_decision);
-  decisionState["RADAR73_DECISION"] = static_cast<int>(planningData.radar73f_decision);
-  decisionState["TRACK_TARGET_DECISION"] = static_cast<int>(planningData.track_target_decision);
+  decisionState["decision"] = static_cast<int>(planningData.decision);
+  decisionState["radar_decision"] = static_cast<int>(planningData.radar_decision);
+  decisionState["ultrasonic_decision"] = static_cast<int>(planningData.ultrasonic_decision);
+  decisionState["track_target_decision"] = static_cast<int>(planningData.track_target_decision);
 
-  Json::Value decision_targets;
-  for (int i = 0; i < 4; ++i) {
-    Json::Value item;
-    item["sensor_type"] = static_cast<int>(planningData.decision_targets[i].sensor_type);
-    item["x"] = planningData.decision_targets[i].x;
-    item["y"] = planningData.decision_targets[i].y;
-    item["angle"] = planningData.decision_targets[i].angle;
-    item["width"] = planningData.decision_targets[i].width;
-    item["length"] = planningData.decision_targets[i].length;
-    item["s"] = planningData.decision_targets[i].s;
-    item["l"] = planningData.decision_targets[i].l;
-    item["sl_width"] = planningData.decision_targets[i].sl_width;
-    item["sl_length"] = planningData.decision_targets[i].sl_length;
-    item["p1_x"] = planningData.decision_targets[i].p1_x;
-    item["p1_y"] = planningData.decision_targets[i].p1_y;
-    item["p2_x"] = planningData.decision_targets[i].p2_x;
-    item["p2_y"] = planningData.decision_targets[i].p2_y;
-    item["p3_x"] = planningData.decision_targets[i].p3_x;
-    item["p3_y"] = planningData.decision_targets[i].p3_y;
-    item["p4_x"] = planningData.decision_targets[i].p4_x;
-    item["p4_y"] = planningData.decision_targets[i].p4_y;
-    decision_targets.append(item);
-  }
-  decisionState["DECISION_TARGETS"] = decision_targets;
+  // cost
+  Json::Value costWeight;
+  costWeight["safety_cost_weight"] = planningData.safety_cost_weight;
+  costWeight["lateral_cost_weight"] = planningData.lateral_cost_weight;
+  costWeight["smoothness_cost_weight"] = planningData.smoothness_cost_weight;
+  costWeight["consistency_cost_weight"] = planningData.consistency_cost_weight;
+  costWeight["garbage_cost_weight"] = planningData.garbage_cost_weight;
 
-  // planning
-  Json::Value trajectory;
-  Json::Value planning_output;
-  planning_output["DECISION"] = planningData.planning_output.decision;
-  planning_output["VELOCITY"] = planningData.planning_output.velocity;
-  planning_output["POSE_POSITION_X"] = planningData.planning_output.pose.position.x;
-  planning_output["POSE_POSITION_Y"] = planningData.planning_output.pose.position.y;
-  trajectory["PLANNING_OUTPUT"] = planning_output;
+  // planning trajectory candidates
+  Json::Value planningTrajectoryCandidates;
+  for (const auto &trajectory : planningData.planning_trajectory_candidates) {
+    Json::Value item, itemSplines;
+    item["id"] = static_cast<int>(trajectory.id);
+    item["cost"] = trajectory.cost;
+    item["safety_cost"] = trajectory.safety_cost;
+    item["lateral_cost"] = trajectory.lateral_cost;
+    item["smoothness_cost"] = trajectory.smoothness_cost;
+    item["consistency_cost"] = trajectory.consistency_cost;
+    item["garbage_cost"] = trajectory.garbage_cost;
 
-  // planning cost weight
-  Json::Value planning_cost_weight;
-  planning_cost_weight["SAFETY_COST_WEIGHT"] = planningData.safety_cost_weight;
-  planning_cost_weight["LATERAL_COST_WEIGHT"] = planningData.lateral_cost_weight;
-  planning_cost_weight["SMOOTHNESS_COST_WEIGHT"] = planningData.smoothness_cost_weight;
-  planning_cost_weight["CONSISTENCY_COST_WEIGHT"] = planningData.consistency_cost_weight;
-  planning_cost_weight["GARBAGE_COST_WEIGHT"] = planningData.garbage_cost_weight;
-  trajectory["PLANNING_COST_WEIGHT"] = planning_cost_weight;
+    for (const auto &spline : trajectory.splines) {
+      Json::Value chile_item;
 
-  // planning candidate
-  Json::Value json_candidates;
-  const auto &val_candidates = planningData.planning_trajectory_candidates;
-  const int size_candidates = val_candidates.size();
-  for (int i = 0; i < size_candidates; ++i) {
-    Json::Value item, splines;
-    item["ID"] = static_cast<int>(val_candidates[i].id);
-    item["COST"] = val_candidates[i].cost;
-    item["SAFETY_COST"] = val_candidates[i].safety_cost;
-    item["LATERAL_COST"] = val_candidates[i].lateral_cost;
-    item["SMOOTHNESS_COST"] = val_candidates[i].smoothness_cost;
-    item["CONSISTENCY_COST"] = val_candidates[i].consistency_cost;
-    item["GARBAGE_COST"] = val_candidates[i].garbage_cost;
+      chile_item["xb_x"] = spline.xb.x;
+      chile_item["xb_y"] = spline.xb.y;
+      chile_item["xb_z"] = spline.xb.z;
+      chile_item["xb_w"] = spline.xb.w;
+      chile_item["yb_x"] = spline.yb.x;
+      chile_item["yb_y"] = spline.yb.y;
+      chile_item["yb_z"] = spline.yb.z;
+      chile_item["yb_w"] = spline.yb.w;
 
-    int size_candidates_splines = static_cast<int>(val_candidates[i].splines.size());
-    for (int j = 0; j < size_candidates_splines; ++ j) {
-      Json::Value spline;
-
-      const auto &val_candidates_spine = val_candidates[i].splines[j];
-      spline["XB_X"] = val_candidates_spine.xb.x;
-      spline["XB_Y"] = val_candidates_spine.xb.y;
-      spline["XB_Z"] = val_candidates_spine.xb.z;
-      spline["XB_W"] = val_candidates_spine.xb.w;
-      spline["YB_X"] = val_candidates_spine.yb.x;
-      spline["YB_Y"] = val_candidates_spine.yb.y;
-      spline["YB_Z"] = val_candidates_spine.yb.z;
-      spline["YB_W"] = val_candidates_spine.yb.w;
-
-      splines.append(spline);
+      itemSplines.append(chile_item);
     }
-    item["SPLINES"] = splines;
-    json_candidates.append(item);
+    item["splines"] = itemSplines;
+    planningTrajectoryCandidates.append(item);
   }
-  trajectory["TRAJECTORY_CANDIDATES"] = json_candidates;
 
   // planning trajectory
-  Json::Value json_trajectory, json_trajectory_splines;
-  const auto &val_trajectory = planningData.planning_trajectory;
-  json_trajectory["ID"] = static_cast<int>(val_trajectory.id);
-  json_trajectory["COST"] = val_trajectory.cost;
-  json_trajectory["SAFETY_COST"] = val_trajectory.safety_cost;
-  json_trajectory["LATERAL_COST"] = val_trajectory.lateral_cost;
-  json_trajectory["SMOOTHNESS_COST"] = val_trajectory.smoothness_cost;
-  json_trajectory["CONSISTENCY_COST"] = val_trajectory.consistency_cost;
-  json_trajectory["GARBAGE_COST"] = val_trajectory.garbage_cost;
-  int size_trajectory_splines = static_cast<int>(val_trajectory.splines.size());
-  for (int i = 0; i < size_trajectory_splines; ++ i) {
-    Json::Value spline;
+  Json::Value planningTrajectory, planningTrajectorySplines;
+  planningTrajectory["id"] = static_cast<int>(planningData.planning_trajectory.id);
+  planningTrajectory["cost"] = planningData.planning_trajectory.cost;
+  planningTrajectory["safety_cost"] = planningData.planning_trajectory.safety_cost;
+  planningTrajectory["lateral_cost"] = planningData.planning_trajectory.lateral_cost;
+  planningTrajectory["smoothness_cost"] = planningData.planning_trajectory.smoothness_cost;
+  planningTrajectory["consistency_cost"] = planningData.planning_trajectory.consistency_cost;
+  planningTrajectory["garbage_cost"] = planningData.planning_trajectory.garbage_cost;
 
-    spline["XB_X"] = val_trajectory.splines[i].xb.x;
-    spline["XB_Y"] = val_trajectory.splines[i].xb.y;
-    spline["XB_Z"] = val_trajectory.splines[i].xb.z;
-    spline["XB_W"] = val_trajectory.splines[i].xb.w;
-    spline["YB_X"] = val_trajectory.splines[i].yb.x;
-    spline["YB_Y"] = val_trajectory.splines[i].yb.y;
-    spline["YB_Z"] = val_trajectory.splines[i].yb.z;
-    spline["YB_W"] = val_trajectory.splines[i].yb.w;
-
-    json_trajectory_splines.append(spline);
-  }
-  json_trajectory["SPLINES"] = json_trajectory_splines;
-  trajectory["PLANNING_TRAJECTORY"] = json_trajectory;
-
-  // road info
-  Json::Value roadInfo;
-  roadInfo["LEFT_HALF_ROAD_WIDTH"] = planningData.left_road_width;
-  roadInfo["RIGHT_HALF_ROAD_WIDTH"] = planningData.right_road_width;
-  roadInfo["MIN_SAFE_DISTANCE"] = planningData.safe_dis1;
-  roadInfo["SAFE_DISTANCE"] = planningData.safe_dis2;
-  roadInfo["MAX_PLANNING_DISTANCE"] = planningData.max_planning_distance;
-  roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"] = planningData.left_road_boundary_available;
-  roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"] = planningData.right_road_boundary_available;
-  roadInfo["LEFT_ROAD_BOUNDARY_START_S"] = planningData.left_road_boundary_start_s;
-  roadInfo["LEFT_ROAD_BOUNDARY_END_S"] = planningData.left_road_boundary_end_s;
-  roadInfo["RIGHT_ROAD_BOUNDARY_START_S"] = planningData.right_road_boundary_start_s;
-  roadInfo["RIGHT_ROAD_BOUNDARY_END_S"] = planningData.right_road_boundary_end_s;
-
-  Json::Value ads_pubcurb;
-  ads_pubcurb["CURB_L_FOUND"] = planningData.curb.curb_L_FOUND;
-  ads_pubcurb["Point_L1_X"] = planningData.curb.Point_L1.x;
-  ads_pubcurb["Point_L1_Y"] = planningData.curb.Point_L1.y;
-  ads_pubcurb["Point_L2_X"] = planningData.curb.Point_L2.x;
-  ads_pubcurb["Point_L2_Y"] = planningData.curb.Point_L2.y;
-  ads_pubcurb["CURB_R_FOUND"] = planningData.curb.curb_R_FOUND;
-  ads_pubcurb["Point_R1_X"] = planningData.curb.Point_R1.x;
-  ads_pubcurb["Point_R1_Y"] = planningData.curb.Point_R1.y;
-  ads_pubcurb["Point_R2_X"] = planningData.curb.Point_R2.x;
-  ads_pubcurb["Point_R2_Y"] = planningData.curb.Point_R2.y;
-  roadInfo["ADS_PUBCURB"] = ads_pubcurb;
-
-  const int SIZE_LEFT_ROAD_SPLINES = planningData.left_road_boundary_splines.size();
-  roadInfo["NUM_LEFT_ROAD_BOUNDARY_SPLINES"] = SIZE_LEFT_ROAD_SPLINES;
-  Json::Value left_road_splines;
-  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
+  for (const auto &spline : planningData.planning_trajectory.splines) {
     Json::Value item;
-    item["XB_X"] = planningData.left_road_boundary_splines[i].xb.x;
-    item["XB_Y"] = planningData.left_road_boundary_splines[i].xb.y;
-    item["XB_Z"] = planningData.left_road_boundary_splines[i].xb.z;
-    item["XB_W"] = planningData.left_road_boundary_splines[i].xb.w;
-    item["YB_X"] = planningData.left_road_boundary_splines[i].yb.x;
-    item["YB_Y"] = planningData.left_road_boundary_splines[i].yb.y;
-    item["YB_Z"] = planningData.left_road_boundary_splines[i].yb.z;
-    item["YB_W"] = planningData.left_road_boundary_splines[i].yb.w;
-    left_road_splines.append(item);
-  }
-  roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"] = left_road_splines;
-  const int SIZE_RIGHT_ROAD_SPLINES = planningData.right_road_boundary_splines.size();
-  roadInfo["NUM_RIGHT_ROAD_BOUNDARY_SPLINES"] = SIZE_RIGHT_ROAD_SPLINES;
-  Json::Value right_road_splines;
-  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
-    Json::Value item;
-    item["XB_X"] = planningData.right_road_boundary_splines[i].xb.x;
-    item["XB_Y"] = planningData.right_road_boundary_splines[i].xb.y;
-    item["XB_Z"] = planningData.right_road_boundary_splines[i].xb.z;
-    item["XB_W"] = planningData.right_road_boundary_splines[i].xb.w;
-    item["YB_X"] = planningData.right_road_boundary_splines[i].yb.x;
-    item["YB_Y"] = planningData.right_road_boundary_splines[i].yb.y;
-    item["YB_Z"] = planningData.right_road_boundary_splines[i].yb.z;
-    item["YB_W"] = planningData.right_road_boundary_splines[i].yb.w;
-    right_road_splines.append(item);
-  }
-  roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"] = right_road_splines;
 
-  // referene
-  Json::Value referenceLine;
-  Json::Value referencePoints;
-  sizeTarget = planningData.reference_points.size();
-  referenceLine["NUM_REFERENCE_POINTS"] = sizeTarget;
-  for (int i = 0; i < sizeTarget; ++i) {
-    Json::Value item;
-    const debug_tool::ads_ReferencePoint &reference = planningData.reference_points[i];
-    item["ID"] = static_cast<int>(reference.id);
-    item["L"] = reference.l;
-    item["S"] = reference.s;
-    item["X"] = reference.x;
-    item["Y"] = reference.y;
-    item["LEFT_W"] = reference.left_road_width;
-    item["RIGHT_W"] = reference.right_road_width;
-    referencePoints.append(item);
-  }
-  referenceLine["REFERENCE_POINTS"] = referencePoints;
+    item["xb_x"] = spline.xb.x;
+    item["xb_y"] = spline.xb.y;
+    item["xb_z"] = spline.xb.z;
+    item["xb_w"] = spline.xb.w;
+    item["yb_x"] = spline.yb.x;
+    item["yb_y"] = spline.yb.y;
+    item["yb_z"] = spline.yb.z;
+    item["yb_w"] = spline.yb.w;
 
-  const int SIZE_REFERENCE_SPLINES = planningData.reference_splines.size();
-  referenceLine["NUM_REFERENCE_SPLINES"] = SIZE_REFERENCE_SPLINES;
-  Json::Value reference_splines;
-  for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
-    Json::Value item;
-    item["XB_X"] = planningData.reference_splines[i].xb.x;
-    item["XB_Y"] = planningData.reference_splines[i].xb.y;
-    item["XB_Z"] = planningData.reference_splines[i].xb.z;
-    item["XB_W"] = planningData.reference_splines[i].xb.w;
-    item["YB_X"] = planningData.reference_splines[i].yb.x;
-    item["YB_Y"] = planningData.reference_splines[i].yb.y;
-    item["YB_Z"] = planningData.reference_splines[i].yb.z;
-    item["YB_W"] = planningData.reference_splines[i].yb.w;
-    reference_splines.append(item);
+    planningTrajectorySplines.append(item);
   }
-  referenceLine["REFERENCE_SPLINES"] = reference_splines;
+  planningTrajectory["splines"] = planningTrajectorySplines;
 
+  // planning output
+  Json::Value planningOutput;
+  planningOutput["decision"] = static_cast<int>(planningData.planning_output.decision);
+  planningOutput["velocity"] = planningData.planning_output.velocity;
+  planningOutput["pose_position_x"] = planningData.planning_output.pose.position.x;
+  planningOutput["pose_position_y"] = planningData.planning_output.pose.position.y;
+
+  // all data
   Json::Value data;
-  data["CAR_STATUS"] = carStatus;
-  data["RADAR28_TRARGETS"] = radar28Trargets;
-  data["RADAR73_TRARGETS"] = radar73Trargets;
-  data["ULTRASONIC_TRARGETS"] = ultrasonicTrargets;
-  data["TRACK_TRARGETS"] = trackTrargets;
-  data["LITTERSENSOR_DATA"] = garbage;
-  data["DECISION_STATE"] = decisionState;
-  data["TRAJECTORY"] = trajectory;
-  data["ROAD_INFO"] = roadInfo;
-  data["REFERENCE_LINE"] = referenceLine;
-  data["DEBUG_INFO"] = planningData.debug_info;
+  data["car_status"] = carStatus;
+  data["reference_line"] = referenceLine;
+  data["radar_data"] = radarData;
+  data["ultrasonic_data"] = ultrasonicData;
+  data["fusion_results"] = fusionResults;
+  data["garbage_detection_results"] = garbageDetectionResults;
+  data["decision_state"] = decisionState;
+  data["cost_weight"] = costWeight;
+  data["planning_trajectory_candidates"] = planningTrajectoryCandidates;
+  data["planning_trajectory"] = planningTrajectory;
+  data["planning_output"] = planningOutput;
+  data["debug_info"] = planningData.debug_info;
 
   std::ofstream out(strFileName.c_str());
   Json::StreamWriterBuilder builder;
@@ -578,97 +515,189 @@ void QPlanningWidget::parseDataFromJson(
     const Json::Value &data,
     debug_tool::ads_PlanningData4Debug &planningData)
 {
-  Json::Value carStatus = data["CAR_STATUS"];
-  Json::Value radar28Trargets = data["RADAR28_TRARGETS"];
-  Json::Value radar73Trargets = data["RADAR73_TRARGETS"];
-  Json::Value ultrasonicTrargets = data["ULTRASONIC_TRARGETS"];
-  Json::Value trackTrargets = data["TRACK_TRARGETS"];
-  Json::Value garbage = data["LITTERSENSOR_DATA"];
-  Json::Value decisionState = data["DECISION_STATE"];
-  Json::Value trajectory = data["TRAJECTORY"];
-  Json::Value roadInfo = data["ROAD_INFO"];
-  Json::Value referenceLine = data["REFERENCE_LINE"];
 
-  // car
-  planningData.vehicle_latitude = carStatus["LATITUDE"].asDouble();
-  planningData.vehicle_longitude = carStatus["LONGITUDE"].asDouble();
-  planningData.vehicle_altitude = carStatus["ALTITUDE"].asDouble();
-  planningData.vehicle_x = carStatus["ENU_X"].asDouble();
-  planningData.vehicle_y = carStatus["ENU_Y"].asDouble();
-  planningData.vehicle_z = carStatus["ENU_Z"].asDouble();
-  planningData.vehicle_s = carStatus["S"].asDouble();
-  planningData.vehicle_l = carStatus["L"].asDouble();
-  planningData.vehicle_width = carStatus["VEHICLE_WIDTH"].asDouble();
-  planningData.vehicle_length = carStatus["VEHICLE_LENGTH"].asDouble();
-  planningData.head_distance = carStatus["HEAD_DISTANCE"].asDouble();
+  // all data
+  Json::Value carStatus = data["car_status"];
+  Json::Value referenceLine = data["reference_line"];
+  Json::Value radarData = data["radar_data"];
+  Json::Value ultrasonicData = data["ultrasonic_data"];
+  Json::Value fusionResults = data["fusion_results"];
+  Json::Value garbageDetectionResults = data["garbage_detection_results"];
+  Json::Value decisionState = data["decision_state"];
+  Json::Value costWeight = data["cost_weight"];
+  Json::Value planningTrajectoryCandidates = data["planning_trajectory_candidates"];
+  Json::Value planningTrajectory = data["planning_trajectory"];
+  Json::Value planningOutput = data["planning_output"];
+  planningData.debug_info = data["debug_info"].asString();
 
-  // radar 28 target
-  auto &radar28Result = planningData.radar28f_results;
-  Json::Value radar28Trarget = radar28Trargets["RADAR28_OBJECTS"];
-  int sizeTarget28 = radar28Trargets["OBJECT_COUNT"].asInt();
-  for (int i = 0; i < sizeTarget28; ++i) {
-    Json::Value item = radar28Trarget[i];
-    debug_tool::ads_RadarTarget target;
-    target.id = item["ID"].asInt();
-    target.range = item["RANGE"].asDouble();
-    target.range_lat = item["RANGE_LAT"].asDouble();
-    target.range_lon = item["RANGE_LON"].asDouble();
-    target.angle = item["ANGLE"].asDouble();
-    target.vel = item["VEL"].asDouble();
-    target.v_lat = item["V_LAT"].asDouble();
-    target.v_lon = item["V_LON"].asDouble();
-    target.status = item["STATUS"].asInt();
-    target.w = item["W"].asDouble();
-    target.l = item["L"].asDouble();
-    target.devid = item["DEVID"].asInt();
+  // vehicle
+  Json::Value frontAxleCenter = carStatus["front_axle_center"];
+  Json::Value rearAxleCenter = carStatus["rear_axle_center"];
+  Json::Value headPoint = carStatus["head_point"];
+  Json::Value rearPoint = carStatus["rear_point"];
+  Json::Value hingePoint = carStatus["hinge_point"];
+  planningData.front_vehicle_length = carStatus["front_vehicle_length"].asDouble();
+  planningData.front_vehicle_width = carStatus["front_vehicle_width"].asDouble();
+  planningData.rear_vehicle_length = carStatus["rear_vehicle_length"].asDouble();
+  planningData.rear_vehicle_width = carStatus["rear_vehicle_width"].asDouble();
+  planningData.steering_angle = carStatus["steering_angle"].asDouble();
 
-    radar28Result.push_back(target);
+  planningData.front_axle_center.id = frontAxleCenter["id"].asInt();
+  planningData.front_axle_center.x = frontAxleCenter["x"].asDouble();
+  planningData.front_axle_center.y = frontAxleCenter["y"].asDouble();
+  planningData.front_axle_center.enu_x = frontAxleCenter["enu_x"].asDouble();
+  planningData.front_axle_center.enu_y = frontAxleCenter["enu_y"].asDouble();
+  planningData.front_axle_center.s = frontAxleCenter["s"].asDouble();
+  planningData.front_axle_center.l = frontAxleCenter["l"].asDouble();
+  planningData.front_axle_center.left_road_width = frontAxleCenter["left_road_width"].asDouble();
+  planningData.front_axle_center.right_road_width = frontAxleCenter["right_road_width"].asDouble();
+
+  planningData.rear_axle_center.id = rearAxleCenter["id"].asInt();
+  planningData.rear_axle_center.x = rearAxleCenter["x"].asDouble();
+  planningData.rear_axle_center.y = rearAxleCenter["y"].asDouble();
+  planningData.rear_axle_center.enu_x = rearAxleCenter["enu_x"].asDouble();
+  planningData.rear_axle_center.enu_y = rearAxleCenter["enu_y"].asDouble();
+  planningData.rear_axle_center.s = rearAxleCenter["s"].asDouble();
+  planningData.rear_axle_center.l = rearAxleCenter["l"].asDouble();
+  planningData.rear_axle_center.left_road_width = rearAxleCenter["left_road_width"].asDouble();
+  planningData.rear_axle_center.right_road_width = rearAxleCenter["right_road_width"].asDouble();
+
+  planningData.head_point.id = headPoint["id"].asInt();
+  planningData.head_point.x = headPoint["x"].asDouble();
+  planningData.head_point.y = headPoint["y"].asDouble();
+  planningData.head_point.enu_x = headPoint["enu_x"].asDouble();
+  planningData.head_point.enu_y = headPoint["enu_y"].asDouble();
+  planningData.head_point.s = headPoint["s"].asDouble();
+  planningData.head_point.l = headPoint["l"].asDouble();
+  planningData.head_point.left_road_width = headPoint["left_road_width"].asDouble();
+  planningData.head_point.right_road_width = headPoint["right_road_width"].asDouble();
+
+  planningData.rear_point.id = rearPoint["id"].asInt();
+  planningData.rear_point.x = rearPoint["x"].asDouble();
+  planningData.rear_point.y = rearPoint["y"].asDouble();
+  planningData.rear_point.enu_x = rearPoint["enu_x"].asDouble();
+  planningData.rear_point.enu_y = rearPoint["enu_y"].asDouble();
+  planningData.rear_point.s = rearPoint["s"].asDouble();
+  planningData.rear_point.l = rearPoint["l"].asDouble();
+  planningData.rear_point.left_road_width = rearPoint["left_road_width"].asDouble();
+  planningData.rear_point.right_road_width = rearPoint["right_road_width"].asDouble();
+
+  planningData.hinge_point.id = hingePoint["id"].asInt();
+  planningData.hinge_point.x = hingePoint["x"].asDouble();
+  planningData.hinge_point.y = hingePoint["y"].asDouble();
+  planningData.hinge_point.enu_x = hingePoint["enu_x"].asDouble();
+  planningData.hinge_point.enu_y = hingePoint["enu_y"].asDouble();
+  planningData.hinge_point.s = hingePoint["s"].asDouble();
+  planningData.hinge_point.l = hingePoint["l"].asDouble();
+  planningData.hinge_point.left_road_width = hingePoint["left_road_width"].asDouble();
+  planningData.hinge_point.right_road_width = hingePoint["right_road_width"].asDouble();
+
+  // referene
+  Json::Value referencePoints = referenceLine["reference_points"];
+  const int size_reference_points = referencePoints.size();
+  planningData.reference_points.resize(size_reference_points);
+  for (int i = 0; i < size_reference_points; ++i) {
+    auto &point = planningData.reference_points[i];
+    Json::Value item = referencePoints[i];
+
+    point.id = item["id"].asInt();
+    point.x = item["x"].asDouble();
+    point.y = item["y"].asDouble();
+    point.enu_x = item["enu_x"].asDouble();
+    point.enu_y = item["enu_y"].asDouble();
+    point.s = item["s"].asDouble();
+    point.l = item["l"].asDouble();
+    point.left_road_width = item["left_road_width"].asDouble();
+    point.right_road_width = item["right_road_width"].asDouble();
   }
 
-  // radar 73 target
-  auto &radar73Result = planningData.radar73f_results;
-  int sizeTarget73 = radar73Trargets["OBJECT_COUNT"].asInt();
-  Json::Value radar73Trarget = radar73Trargets["RADAR73_OBJECTS"];
-  for (int i = 0; i < sizeTarget73; ++i) {
-    Json::Value item = radar73Trarget[i];
-    debug_tool::ads_RadarTarget target;
-    target.id = item["ID"].asInt();
-    target.range = item["RANGE"].asDouble();
-    target.range_lat = item["RANGE_LAT"].asDouble();
-    target.range_lon = item["RANGE_LON"].asDouble();
-    target.angle = item["ANGLE"].asDouble();
-    target.vel = item["VEL"].asDouble();
-    target.v_lat = item["V_LAT"].asDouble();
-    target.v_lon = item["V_LON"].asDouble();
-    target.status = item["STATUS"].asInt();
-    target.w = item["W"].asDouble();
-    target.l = item["L"].asDouble();
-    target.devid = item["DEVID"].asInt();
+  Json::Value referenceSplines = referenceLine["reference_splines"];
+  const int size_reference_splines = referenceSplines.size();
+  planningData.reference_splines.resize(size_reference_splines);
+  for (int i = 0; i < size_reference_splines; ++i) {
+    auto &spline = planningData.reference_splines[i];
+    Json::Value item = referenceSplines[i];
 
-    radar73Result.push_back(target);
+    spline.xb.x = item["XB_X"].asDouble();
+    spline.xb.y = item["XB_Y"].asDouble();
+    spline.xb.z = item["XB_Z"].asDouble();
+    spline.xb.w = item["XB_W"].asDouble();
+    spline.yb.x = item["YB_X"].asDouble();
+    spline.yb.y = item["YB_Y"].asDouble();
+    spline.yb.z = item["YB_Z"].asDouble();
+    spline.yb.w = item["YB_W"].asDouble();
   }
 
-  // UltraSonic
-  auto &ultrasonicResult = planningData.ultrasonic_results;
-  Json::Value ultrasonicTrarget = ultrasonicTrargets["US_OBJECTS"];
-  int sizeTarget = ultrasonicTrargets["OBJECT_COUNT"].asInt();
-  for (int i = 0; i < sizeTarget; ++i) {
-    Json::Value item = ultrasonicTrarget[i];
-    debug_tool::ads_UltraSonicTarget target;
+  // radar
+  Json::Value radarPoint = radarData["radar_point"];
+  Json::Value radarResult = radarData["radar_results"];
 
-    target.radar_pos_id = static_cast<int8_t>(item["POS_ID"].asInt());
-    target.distance = item["DISTANCE"].asFloat();
+  planningData.radar_Point.id = radarPoint["id"].asInt();
+  planningData.radar_Point.x = radarPoint["x"].asDouble();
+  planningData.radar_Point.y = radarPoint["y"].asDouble();
+  planningData.radar_Point.enu_x = radarPoint["enu_x"].asDouble();
+  planningData.radar_Point.enu_y = radarPoint["enu_y"].asDouble();
+  planningData.radar_Point.s = radarPoint["s"].asDouble();
+  planningData.radar_Point.l = radarPoint["l"].asDouble();
+  planningData.radar_Point.left_road_width = radarPoint["left_road_width"].asDouble();
+  planningData.radar_Point.right_road_width = radarPoint["right_road_width"].asDouble();
 
-    ultrasonicResult.push_back(target);
+  const int size_radar_result = radarResult.size();
+  planningData.radar_results.resize(size_radar_result);
+  for (int i = 0; i < size_radar_result; ++i) {
+    auto &target = planningData.radar_results[i];
+    Json::Value item = radarResult[i];
+
+    target.id = item["id"].asInt();
+    target.range = item["range"].asDouble();
+    target.range_lat = item["range_lat"].asDouble();
+    target.range_lon = item["range_lon"].asDouble();
+    target.angle = item["angle"].asDouble();
+    target.vel = item["vel"].asDouble();
+    target.v_lat = item["v_lat"].asDouble();
+    target.v_lon = item["v_lon"].asDouble();
+    target.status = item["status"].asInt();
+    target.w = item["w"].asDouble();
+    target.l = item["l"].asDouble();
+    target.devid = item["devid"].asInt();
   }
 
-  // Track Target
-  auto &trackResult = planningData.fusion_results;
-  Json::Value trackTrarget = trackTrargets["TRACK_OBJECTS"];
-  sizeTarget = trackTrargets["OBJECT_COUNT"].asInt();
-  for (int i = 0; i < sizeTarget; ++i) {
-    Json::Value item = trackTrarget[i];
-    debug_tool::ads_TrackTarget target;
+  // ultrasonic
+  Json::Value ultrasonicPoints = ultrasonicData["ultrasonic_points"];
+  Json::Value ultrasonicResults = ultrasonicData["ultrasonic_results"];
+
+  const int size_ultrasonic_points = qMin<int>(14, ultrasonicPoints.size());
+  for (int i = 0; i < size_ultrasonic_points; ++i) {
+    auto &point = planningData.ultrasonic_points[i];
+    Json::Value item = ultrasonicPoints[i];
+
+    point.id = item["id"].asInt();
+    point.x = item["x"].asDouble();
+    point.y = item["y"].asDouble();
+    point.enu_x = item["enu_x"].asDouble();
+    point.enu_y = item["enu_y"].asDouble();
+    point.s = item["s"].asDouble();
+    point.l = item["l"].asDouble();
+    point.left_road_width = item["left_road_width"].asDouble();
+    point.right_road_width = item["right_road_width"].asDouble();
+  }
+
+  const int size_ultrasonic_results = ultrasonicResults.size();
+  planningData.ultrasonic_results.resize(size_ultrasonic_results);
+  for (int i = 0; i < size_ultrasonic_results; ++i) {
+    auto &result = planningData.ultrasonic_results[i];
+    Json::Value item = ultrasonicResults[i];
+
+    result.radar_pos_id =  static_cast<int8_t>(item["radar_pos_id"].asInt());
+    result.distance = item["distance"].asDouble();
+  }
+
+  // track target
+  const int size_fusion_results = fusionResults.size();
+  planningData.fusion_results.resize(size_fusion_results);
+  for (int i = 0; i < size_fusion_results; ++i) {
+    auto &target = planningData.fusion_results[i];
+    Json::Value item = fusionResults[i];
 
     target.TRACK_ID = static_cast<int64_t>(item["TRACK_ID"].asInt());
     target.X = item["X"].asDouble();
@@ -682,243 +711,113 @@ void QPlanningWidget::parseDataFromJson(
     target.MOTION_STATUS = static_cast<int8_t>(item["MOTION_STATUS"].asInt());
     target.TARGET_TYPE = static_cast<int8_t>(item["TARGET_TYPE"].asInt());
 
-    const int size_point = item["POINTS"].size();
-    for (int j = 0; j < size_point; ++j) {
-      Json::Value json_point = item["POINTS"][j];
-      ::geometry_msgs::Point32_<std::allocator<void>> point;
-      point.x = json_point["POINT_X"].asDouble();
-      point.y = json_point["POINT_Y"].asDouble();
-      point.z = json_point["POINT_Z"].asDouble();
+    Json::Value edgePoints = item["edge_points"];
+    const int size_edge_points = edgePoints.size();
+    target.edge_points.resize(size_edge_points);
+    for (int j = 0; j < size_edge_points; ++j) {
+      auto &point = target.edge_points[j];
+      Json::Value childItem = edgePoints[j];
 
-      target.edge_points.push_back(point);
+      point.x = childItem["x"].asDouble();
+      point.y = childItem["y"].asDouble();
+      point.z = childItem["z"].asDouble();
     }
-
-    trackResult.push_back(target);
   }
 
-  // garbage
-  auto &garbage_result = planningData.garbage_detection_results;
-  garbage_result.resize(1);
-  auto gargage_item = garbage_result[0];
-  using garbage_type = decltype (gargage_item);
-  const int garbage_size = static_cast<int>(garbage.size());
-  garbage_result.clear();
-  for (int i = 0; i < garbage_size; ++i) {
-    Json::Value item = garbage[i];
-    garbage_type result;
-    result.id = static_cast<decltype(result.id)>(item["ID"].asInt());
-    result.size = item["SIZE"].asFloat();
-    result.angle = item["ANGLE"].asFloat();
-    result.distance = item["DISTANCE"].asFloat();
-    result.length = item["LENGTH"].asFloat();
-    result.width = item["WIDTH"].asFloat();
-    garbage_result.push_back(result);
+  // gargage
+  const int size_garbage_detection_results = garbageDetectionResults.size();
+  planningData.garbage_detection_results.resize(size_garbage_detection_results);
+  for (int i = 0; i < size_garbage_detection_results; ++i) {
+    auto &result = planningData.garbage_detection_results[i];
+    Json::Value item = garbageDetectionResults[i];
+
+    result.id = static_cast<uint8_t>(item["id"].asInt());
+    result.size = item["size"].asFloat();
+    result.angle = item["angle"].asFloat();
+    result.distance = item["distance"].asFloat();
+    result.length = item["length"].asFloat();
+    result.width = item["width"].asFloat();
   }
 
   // decision
-  planningData.decision = static_cast<int8_t>(decisionState["DECISION"].asInt());
-  planningData.ultrasonic_decision = static_cast<int8_t>(
-        decisionState["ULTRASONIC_DECISION"].asInt());
-  planningData.radar28f_decision = static_cast<int8_t>(decisionState["RADAR28_DECISION"].asInt());
-  planningData.radar73f_decision = static_cast<int8_t>(decisionState["RADAR73_DECISION"].asInt());
-  planningData.track_target_decision = static_cast<int8_t>(decisionState["TRACK_TARGET_DECISION"].asInt());
-  const int SIZE_DECISION =
-      qBound<int>(0, static_cast<int>(decisionState["DECISION_TARGETS"].size()), 4);
-  for (int i = 0; i < SIZE_DECISION; ++i) {
-    Json::Value item = decisionState["DECISION_TARGETS"][i];
-    planningData.decision_targets[i].sensor_type = static_cast<uint8_t>(item["sensor_type"].asInt());
-    planningData.decision_targets[i].x = item["x"].asDouble();
-    planningData.decision_targets[i].y = item["y"].asDouble();
-    planningData.decision_targets[i].angle = item["angle"].asDouble();
-    planningData.decision_targets[i].width = item["width"].asDouble();
-    planningData.decision_targets[i].length = item["length"].asDouble();
-    planningData.decision_targets[i].s = item["s"].asDouble();
-    planningData.decision_targets[i].l = item["l"].asDouble();
-    planningData.decision_targets[i].sl_width = item["sl_width"].asDouble();
-    planningData.decision_targets[i].sl_length = item["sl_length"].asDouble();
-    planningData.decision_targets[i].p1_x = item["p1_x"].asDouble();
-    planningData.decision_targets[i].p1_y = item["p1_y"].asDouble();
-    planningData.decision_targets[i].p2_x = item["p2_x"].asDouble();
-    planningData.decision_targets[i].p2_y = item["p2_y"].asDouble();
-    planningData.decision_targets[i].p3_x = item["p3_x"].asDouble();
-    planningData.decision_targets[i].p3_y = item["p3_y"].asDouble();
-    planningData.decision_targets[i].p4_x = item["p4_x"].asDouble();
-    planningData.decision_targets[i].p4_y = item["p4_y"].asDouble();
-  }
+  planningData.decision = static_cast<uint8_t>(decisionState["decision"].asInt());
+  planningData.radar_decision = static_cast<uint8_t>(decisionState["radar_decision"].asInt());
+  planningData.ultrasonic_decision = static_cast<uint8_t>(decisionState["ultrasonic_decision"].asInt());
+  planningData.track_target_decision = static_cast<uint8_t>(decisionState["track_target_decision"].asInt());
 
-  // planning
-  planningData.planning_output.decision = static_cast<uint8_t>(trajectory["PLANNING_OUTPUT"]["DECISION"].asInt());
-  planningData.planning_output.velocity = trajectory["PLANNING_OUTPUT"]["VELOCITY"].asFloat();
-  planningData.planning_output.pose.position.x = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_X"].asDouble();
-  planningData.planning_output.pose.position.y = trajectory["PLANNING_OUTPUT"]["POSE_POSITION_Y"].asDouble();
+  // cost
+  planningData.safety_cost_weight = costWeight["safety_cost_weight"].asDouble();
+  planningData.lateral_cost_weight = costWeight["lateral_cost_weight"].asDouble();
+  planningData.smoothness_cost_weight = costWeight["smoothness_cost_weight"].asDouble();
+  planningData.consistency_cost_weight = costWeight["consistency_cost_weight"].asDouble();
+  planningData.garbage_cost_weight = costWeight["garbage_cost_weight"].asDouble();
 
-  // planning cost weight
-  Json::Value planning_cost_weight = trajectory["PLANNING_COST_WEIGHT"];
-  planningData.safety_cost_weight = planning_cost_weight["SAFETY_COST_WEIGHT"].asDouble();
-  planningData.lateral_cost_weight = planning_cost_weight["LATERAL_COST_WEIGHT"].asDouble();
-  planningData.smoothness_cost_weight = planning_cost_weight["SMOOTHNESS_COST_WEIGHT"].asDouble();
-  planningData.consistency_cost_weight = planning_cost_weight["CONSISTENCY_COST_WEIGHT"].asDouble();
-  planningData.garbage_cost_weight = planning_cost_weight["GARBAGE_COST_WEIGHT"].asDouble();
+  // planning trajectory candidates
+  const int size_planning_trajectory_candidates = planningTrajectoryCandidates.size();
+  planningData.planning_trajectory_candidates.resize(size_planning_trajectory_candidates);
+  for (int i = 0; i < size_planning_trajectory_candidates; ++i) {
+    auto &trajectory = planningData.planning_trajectory_candidates[i];
+    Json::Value item = planningTrajectoryCandidates[i];
 
-  // planning candidate
-  auto &val_candidates = planningData.planning_trajectory_candidates;
-  val_candidates.clear();
-  const int size_candidates = trajectory["TRAJECTORY_CANDIDATES"].size();
-  for (int i = 0; i < size_candidates; ++i) {
-    debug_tool::ads_planning_trajectory_<std::allocator<void>> candidates;
-    Json::Value item = trajectory["TRAJECTORY_CANDIDATES"][i];
-    candidates.id = static_cast<uint8_t>(item["ID"].asInt());
-    candidates.cost = item["COST"].asDouble();
-    candidates.safety_cost = item["SAFETY_COST"].asDouble();
-    candidates.lateral_cost = item["LATERAL_COST"].asDouble();
-    candidates.smoothness_cost = item["SMOOTHNESS_COST"].asDouble();
-    candidates.consistency_cost = item["CONSISTENCY_COST"].asDouble();
-    candidates.garbage_cost = item["GARBAGE_COST"].asDouble();
+    trajectory.id = static_cast<uint8_t>(item["id"].asInt());
+    trajectory.cost = item["cost"].asDouble();
+    trajectory.safety_cost = item["safety_cost"].asDouble();
+    trajectory.lateral_cost = item["lateral_cost"].asDouble();
+    trajectory.smoothness_cost = item["smoothness_cost"].asDouble();
+    trajectory.consistency_cost = item["consistency_cost"].asDouble();
+    trajectory.garbage_cost = item["garbage_cost"].asDouble();
 
-    auto &val_candidates_spines = candidates.splines;
-    Json::Value json_splines = item["SPLINES"];
-    val_candidates_spines.clear();
-    int size_candidates_splines = static_cast<int>(json_splines.size());
-    for (int j = 0; j < size_candidates_splines; ++ j) {
-      debug_tool::ads_Spline_<std::allocator<void>> val_spine;
-      val_spine.xb.x = json_splines[j]["XB_X"].asDouble();
-      val_spine.xb.y = json_splines[j]["XB_Y"].asDouble();
-      val_spine.xb.z = json_splines[j]["XB_Z"].asDouble();
-      val_spine.xb.w = json_splines[j]["XB_W"].asDouble();
-      val_spine.yb.x = json_splines[j]["YB_X"].asDouble();
-      val_spine.yb.y = json_splines[j]["YB_Y"].asDouble();
-      val_spine.yb.z = json_splines[j]["YB_Z"].asDouble();
-      val_spine.yb.w = json_splines[j]["YB_W"].asDouble();
+    Json::Value itemSplines = item["splines"];
+    int size_trajectory_splines = itemSplines.size();
+    trajectory.splines.resize(size_trajectory_splines);
+    for (int j = 0; j < size_trajectory_splines; ++j) {
+      Json::Value chile_item = itemSplines[j];
+      auto &spline = trajectory.splines[j];
 
-      val_candidates_spines.push_back(val_spine);
+      spline.xb.x = chile_item["xb_x"].asDouble();
+      spline.xb.y = chile_item["xb_y"].asDouble();
+      spline.xb.z = chile_item["xb_z"].asDouble();
+      spline.xb.w = chile_item["xb_w"].asDouble();
+      spline.xb.x = chile_item["yb_x"].asDouble();
+      spline.xb.y = chile_item["yb_y"].asDouble();
+      spline.xb.z = chile_item["yb_z"].asDouble();
+      spline.xb.w = chile_item["yb_w"].asDouble();
     }
-    val_candidates.push_back(candidates);
   }
 
   // planning trajectory
-  auto &val_trajectory = planningData.planning_trajectory;
-  Json::Value json_trajectory = trajectory["PLANNING_TRAJECTORY"];
-  val_trajectory.id = static_cast<uint8_t>(json_trajectory["ID"].asInt());
-  val_trajectory.cost = json_trajectory["COST"].asDouble();
-  val_trajectory.safety_cost = json_trajectory["SAFETY_COST"].asDouble();
-  val_trajectory.lateral_cost = json_trajectory["LATERAL_COST"].asDouble();
-  val_trajectory.smoothness_cost = json_trajectory["SMOOTHNESS_COST"].asDouble();
-  val_trajectory.consistency_cost = json_trajectory["CONSISTENCY_COST"].asDouble();
-  val_trajectory.garbage_cost = json_trajectory["GARBAGE_COST"].asDouble();
+  auto &planning_trajectory = planningData.planning_trajectory;
 
-  auto &val_trajectory_spines = val_trajectory.splines;
-  Json::Value json_trajectory_spines = json_trajectory["SPLINES"];
-  val_trajectory_spines.clear();
-  int size_trajectory_splines = static_cast<int>(json_trajectory_spines.size());
-  for (int j = 0; j < size_trajectory_splines; ++ j) {
-    debug_tool::ads_Spline_<std::allocator<void>> val_spine;
-    val_spine.xb.x = json_trajectory_spines[j]["XB_X"].asDouble();
-    val_spine.xb.y = json_trajectory_spines[j]["XB_Y"].asDouble();
-    val_spine.xb.z = json_trajectory_spines[j]["XB_Z"].asDouble();
-    val_spine.xb.w = json_trajectory_spines[j]["XB_W"].asDouble();
-    val_spine.yb.x = json_trajectory_spines[j]["YB_X"].asDouble();
-    val_spine.yb.y = json_trajectory_spines[j]["YB_Y"].asDouble();
-    val_spine.yb.z = json_trajectory_spines[j]["YB_Z"].asDouble();
-    val_spine.yb.w = json_trajectory_spines[j]["YB_W"].asDouble();
+  planning_trajectory.id = static_cast<uint8_t>(planningTrajectory["id"].asInt());
+  planning_trajectory.cost = planningTrajectory["cost"].asDouble();
+  planning_trajectory.safety_cost = planningTrajectory["safety_cost"].asDouble();
+  planning_trajectory.lateral_cost = planningTrajectory["lateral_cost"].asDouble();
+  planning_trajectory.smoothness_cost = planningTrajectory["smoothness_cost"].asDouble();
+  planning_trajectory.consistency_cost = planningTrajectory["consistency_cost"].asDouble();
+  planning_trajectory.garbage_cost = planningTrajectory["garbage_cost"].asDouble();
 
-    val_trajectory_spines.push_back(val_spine);
+  Json::Value planningTrajectorySplines = planningTrajectory["splines"];
+  int size_planning_trajectory_splines = planningTrajectorySplines.size();
+  planning_trajectory.splines.resize(size_planning_trajectory_splines);
+  for (int j = 0; j < size_planning_trajectory_splines; ++j) {
+    Json::Value chile_item = planningTrajectorySplines[j];
+    auto &spline = planning_trajectory.splines[j];
+
+    spline.xb.x = chile_item["xb_x"].asDouble();
+    spline.xb.y = chile_item["xb_y"].asDouble();
+    spline.xb.z = chile_item["xb_z"].asDouble();
+    spline.xb.w = chile_item["xb_w"].asDouble();
+    spline.xb.x = chile_item["yb_x"].asDouble();
+    spline.xb.y = chile_item["yb_y"].asDouble();
+    spline.xb.z = chile_item["yb_z"].asDouble();
+    spline.xb.w = chile_item["yb_w"].asDouble();
   }
 
-  // road info
-  planningData.left_road_width = roadInfo["LEFT_HALF_ROAD_WIDTH"].asDouble();
-  planningData.right_road_width = roadInfo["RIGHT_HALF_ROAD_WIDTH"].asDouble();
-  planningData.safe_dis1 = roadInfo["MIN_SAFE_DISTANCE"].asDouble();
-  planningData.safe_dis2 = roadInfo["SAFE_DISTANCE"].asDouble();
-  planningData.max_planning_distance = roadInfo["MAX_PLANNING_DISTANCE"].asDouble();
-  planningData.left_road_boundary_available = roadInfo["LEFT_ROAD_BOUNDARY_AVAILABLE"].asBool();
-  planningData.right_road_boundary_available = roadInfo["RIGHT_ROAD_BOUNDARY_AVAILABLE"].asBool();
-  planningData.left_road_boundary_start_s = roadInfo["LEFT_ROAD_BOUNDARY_START_S"].asDouble();
-  planningData.left_road_boundary_end_s = roadInfo["LEFT_ROAD_BOUNDARY_END_S"].asDouble();
-  planningData.right_road_boundary_start_s = roadInfo["RIGHT_ROAD_BOUNDARY_START_S"].asDouble();
-  planningData.right_road_boundary_end_s = roadInfo["RIGHT_ROAD_BOUNDARY_END_S"].asDouble();
-
-  Json::Value ads_pubcurb = roadInfo["ADS_PUBCURB"];
-  planningData.curb.curb_L_FOUND = ads_pubcurb["CURB_L_FOUND"].asBool();
-  planningData.curb.Point_L1.x = ads_pubcurb["Point_L1_X"].asDouble();
-  planningData.curb.Point_L1.y = ads_pubcurb["Point_L1_Y"].asDouble();
-  planningData.curb.Point_L2.x = ads_pubcurb["Point_L2_X"].asDouble();
-  planningData.curb.Point_L2.y = ads_pubcurb["Point_L2_Y"].asDouble();
-  planningData.curb.curb_R_FOUND = ads_pubcurb["CURB_R_FOUND"].asBool();
-  planningData.curb.Point_R1.x = ads_pubcurb["Point_R1_X"].asDouble();
-  planningData.curb.Point_R1.y = ads_pubcurb["Point_R1_Y"].asDouble();
-  planningData.curb.Point_R2.x = ads_pubcurb["Point_R2_X"].asDouble();
-  planningData.curb.Point_R2.y = ads_pubcurb["Point_R2_Y"].asDouble();
-
-  const int SIZE_LEFT_ROAD_SPLINES = roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"].size();
-  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
-    Json::Value item = roadInfo["LEFT_ROAD_BOUNDARY_SPLINES"][i];
-    debug_tool::ads_Spline spline;
-    spline.xb.x = item["XB_X"].asDouble();
-    spline.xb.y = item["XB_Y"].asDouble();
-    spline.xb.z = item["XB_Z"].asDouble();
-    spline.xb.w = item["XB_W"].asDouble();
-    spline.yb.x = item["YB_X"].asDouble();
-    spline.yb.y = item["YB_Y"].asDouble();
-    spline.yb.z = item["YB_Z"].asDouble();
-    spline.yb.w = item["YB_W"].asDouble();
-
-    planningData.left_road_boundary_splines.push_back(spline);
-  }
-  const int SIZE_RIGHT_ROAD_SPLINES = roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"].size();
-  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
-    Json::Value item = roadInfo["RIGHT_ROAD_BOUNDARY_SPLINES"][i];
-    debug_tool::ads_Spline spline;
-
-    spline.xb.x = item["XB_X"].asDouble();
-    spline.xb.y = item["XB_Y"].asDouble();
-    spline.xb.z = item["XB_Z"].asDouble();
-    spline.xb.w = item["XB_W"].asDouble();
-    spline.yb.x = item["YB_X"].asDouble();
-    spline.yb.y = item["YB_Y"].asDouble();
-    spline.yb.z = item["YB_Z"].asDouble();
-    spline.yb.w = item["YB_W"].asDouble();
-
-    planningData.right_road_boundary_splines.push_back(spline);
-  }
-
-  // referene
-  Json::Value referencePoints = referenceLine["REFERENCE_POINTS"];
-  sizeTarget = referenceLine["REFERENCE_POINTS"].size();
-  for (int i = 0; i < sizeTarget; ++i) {
-    Json::Value item = referencePoints[i];
-    debug_tool::ads_ReferencePoint reference;
-    reference.id = static_cast<int8_t>(item["ID"].asInt());
-    reference.l = item["L"].asDouble();
-    reference.s = item["S"].asDouble();
-    reference.x = item["X"].asDouble();
-    reference.y = item["Y"].asDouble();
-    reference.left_road_width = item["LEFT_W"].asDouble();
-    reference.right_road_width = item["RIGHT_W"].asDouble();
-
-    planningData.reference_points.push_back(reference);
-  }
-
-  Json::Value reference_splines = referenceLine["REFERENCE_SPLINES"];
-  const int SIZE_REFERENCE_SPLINES = reference_splines.size();
-  for (int i = 0; i < SIZE_REFERENCE_SPLINES; ++ i) {
-    Json::Value item = reference_splines[i];
-    debug_tool::ads_Spline spline;
-
-    spline.xb.x = item["XB_X"].asDouble();
-    spline.xb.y = item["XB_Y"].asDouble();
-    spline.xb.z = item["XB_Z"].asDouble();
-    spline.xb.w = item["XB_W"].asDouble();
-    spline.yb.x = item["YB_X"].asDouble();
-    spline.yb.y = item["YB_Y"].asDouble();
-    spline.yb.z = item["YB_Z"].asDouble();
-    spline.yb.w = item["YB_W"].asDouble();
-
-    planningData.reference_splines.push_back(spline);
-  }
-
-  // debug info
-  Json::Value debugInfo = data["DEBUG_INFO"];
-  planningData.debug_info = debugInfo.asString();
+  // planning output
+  planningData.planning_output.decision = static_cast<uint8_t>(planningOutput["decision"].asInt());
+  planningData.planning_output.velocity = planningOutput["velocity"].asFloat();
+  planningData.planning_output.pose.position.x = planningOutput["pose_position_x"].asDouble();
+  planningData.planning_output.pose.position.y = planningOutput["pose_position_y"].asDouble();
 }
 
 void QPlanningWidget::sortTrackTargets(debug_tool::ads_PlanningData4Debug &data)
@@ -1029,9 +928,7 @@ void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug 
 
 bool QPlanningWidget::RoadBoundaryCheck(
     const debug_tool::ads_planning_trajectory &path,
-    const std::vector< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> > &references,
-    double left_road_width,
-    double right_road_width,
+    const std::vector<::debug_tool::ads_Point> &references,
     double vehicle_width,
     double tolerance)
 {
@@ -1039,6 +936,8 @@ bool QPlanningWidget::RoadBoundaryCheck(
 
   for (int i = 0; i < 21; i++)
   {
+    double left_road_width = references[i].left_road_width;
+    double right_road_width = references[i].right_road_width;
     double x1 = references[i].x;
     double y1 = references[i].y;
     double x2 = references[i + 1].x;
@@ -1114,16 +1013,14 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
     for (int j = 0; j < targets_count; ++j) {
       check = this->ObstacleCollisionCheck(
             candidates[i], targets[j],
-            planningData.head_distance, planningData.vehicle_width, 0.75
+            planningData.head_point.x, planningData.front_vehicle_width, 0.75
             );
       if (check) break;
     }
     if (check) continue;
     check = this->RoadBoundaryCheck(
           candidates[i], planningData.reference_points,
-          planningData.left_road_width,
-          planningData.right_road_width,
-          planningData.vehicle_width,
+          planningData.front_vehicle_width,
           0
           );
     if (!check) {

@@ -47,8 +47,8 @@ protected:
   bool ObstacleCollisionCheck(const debug_tool::ads_planning_trajectory &,
       const debug_tool::ads_TrackTarget &, double, double, double = 0.0);
   bool RoadBoundaryCheck(const debug_tool::ads_planning_trajectory &,
-      const std::vector< ::debug_tool::ads_ReferencePoint_<std::allocator<void>> > &,
-      double, double, double, double = 0.0);
+      const std::vector< ::debug_tool::ads_Point > &,
+      double, double = 0.0);
 
 protected slots:
   void onSetFrameIndexReplay(int);

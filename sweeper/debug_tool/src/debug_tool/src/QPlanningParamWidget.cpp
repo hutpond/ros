@@ -120,21 +120,12 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
     m_pLblDecisionValue[DecisionUltraSonic]->show();
   }
 
-  nIndex = static_cast<int>(data.radar28f_decision);
-  if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue[DecisionRadar28]->hide();
-  }
-  else {
-    m_pLblDecisionValue[DecisionRadar28]->setText(tr("毫米波28"));
-    m_pLblDecisionValue[DecisionRadar28]->show();
-  }
-
-  nIndex = static_cast<int>(data.radar73f_decision);
+  nIndex = static_cast<int>(data.radar_decision);
   if (nIndex >= 0 && nIndex < 4) {
     m_pLblDecisionValue[DecisionRadar73]->hide();
   }
   else {
-    m_pLblDecisionValue[DecisionRadar73]->setText(tr("毫米波73"));
+    m_pLblDecisionValue[DecisionRadar73]->setText(tr("雷达"));
     m_pLblDecisionValue[DecisionRadar73]->show();
   }
 

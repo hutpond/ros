@@ -31,6 +31,7 @@ void QDataDisplayWidget::resizeEvent(QResizeEvent *)
 void QDataDisplayWidget::setPlanningData(
     const debug_tool::ads_PlanningData4Debug &planningData)
 {
+#if 0
   m_pTreeWidget->clear();
   // car status
   QTreeWidgetItem *itemRoot = new QTreeWidgetItem(m_pTreeWidget);
@@ -477,6 +478,7 @@ void QDataDisplayWidget::setPlanningData(
                   arg(garbage_result[i].length).
                   arg(garbage_result[i].width));
   }
+#endif
 }
 
 void QDataDisplayWidget::setPlanningData(

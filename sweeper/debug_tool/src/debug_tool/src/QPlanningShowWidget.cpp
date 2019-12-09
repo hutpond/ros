@@ -109,22 +109,28 @@ void QPlanningShowWidget::setPlanningData(const debug_tool::ads_PlanningData4Deb
 void QPlanningShowWidget::calcMapRect()
 {
   const int size_reference_splines = m_planningData.reference_splines.size();
+  double left_road_width = 5;
+  double right_road_width = 3;
   if (size_reference_splines == 0) {
-    m_planningData.left_road_width = 5;
-    m_planningData.right_road_width = 3;
-    m_planningData.vehicle_length = 2.2;
+    left_road_width = 5;
+    right_road_width = 3;
+    m_planningData.front_vehicle_length = 2.2;
+  }
+  else {
+    left_road_width = m_planningData.reference_points[0].left_road_width;
+    right_road_width = m_planningData.reference_points[0].right_road_width;
   }
 
   // 计算显示区域物理范围，车体坐标系，X正向：上，Y正向：左，坐标原点：车中心
   // 显示范围，height（Y向）：路宽MAP_TO_ROAD_COEF倍，
   // width（X向）：根据显示区域比例计算，起点：车身后START_X_TO_CAR_TAIL米
-  const float VEH_HEAD = m_planningData.head_distance;
-  const float roadLeftWidth = m_planningData.left_road_width;
-  const float roadRightWidth = m_planningData.right_road_width;
+  const float VEH_HEAD = m_planningData.head_point.x;
+  const float roadLeftWidth = left_road_width;
+  const float roadRightWidth = right_road_width;
   const float roadWidth = roadLeftWidth + roadRightWidth;
   const float mapHeight = m_fDisplayRatio * roadWidth;
   const float mapWidth = mapHeight * m_rectPicture.height() / m_rectPicture.width();
-  const float mapX = -(m_planningData.vehicle_length - VEH_HEAD)
+  const float mapX = -(m_planningData.front_vehicle_length - VEH_HEAD)
       - m_ptfTranslate.x();
   const float mapY = -(roadRightWidth + roadWidth * (m_fDisplayRatio - 1.0) / 2.0)
       - m_ptfTranslate.y();
@@ -172,8 +178,6 @@ void QPlanningShowWidget::drawImage()
   }
   this->drawRoadSideFromWidth(painter);
   this->drawSweeper(painter);
-  //this->drawAreaLine(painter);
-  this->drawDecisionTargets(painter);
   this->drawTrackTargetWithPoints(painter);
   this->drawNewTarget(painter);
   this->drawPlanningPoint(painter);
@@ -193,10 +197,10 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
   painter.save();
   QPen pen;
 
-  // vehicle
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
+  // front of vehicle
+  const double VEH_W = m_planningData.front_vehicle_width;
+  const double VEH_L = m_planningData.front_vehicle_length;
+  const double VEH_HEAD = m_planningData.head_point.x;
 
   QRectF rectfSweeper = QRectF(-VEH_L + VEH_HEAD, -VEH_W / 2, VEH_L, VEH_W);
   QPolygonF pgfSweeper = m_transform.map(rectfSweeper);
@@ -204,8 +208,65 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
   painter.setPen(pen);
   painter.drawPolygon(pgfSweeper);
 
+  // front line
+  QLineF linef(m_planningData.front_axle_center.x, m_planningData.front_axle_center.y,
+               m_planningData.hinge_point.x, m_planningData.hinge_point.y);
+  linef = m_transform.map(linef);
+  pen.setColor(Qt::green);
+  pen.setWidth(2);
+  painter.setPen(pen);
+  painter.drawLine(linef);
+
+  // back line
+  linef = QLineF(m_planningData.hinge_point.x, m_planningData.hinge_point.y,
+                 m_planningData.rear_axle_center.x, m_planningData.rear_axle_center.y
+               );
+  linef = m_transform.map(linef);
+//  pen.setColor(Qt::green);
+//  painter.setPen(pen);
+  painter.drawLine(linef);
+
+  // point
+  painter.setBrush(Qt::green);
+  QPointF ptf = linef.p1();
+  painter.drawEllipse(ptf, 2, 2);
+
+  // back vehicle
+  linef = QLineF(m_planningData.hinge_point.x, m_planningData.hinge_point.y,
+                 m_planningData.rear_axle_center.x, m_planningData.rear_axle_center.y
+               );
+
+  QPolygonF pgf;
+  ptf = QPointF(m_planningData.rear_point.x, m_planningData.rear_point.y);
+  QLineF linef2;
+  linef2.setP1(ptf);
+  linef2.setLength(m_planningData.rear_vehicle_width / 2.0);
+  linef2.setAngle(linef.normalVector().angle());
+  pgf << linef2.p2();
+  QPointF ptfStart = linef2.p2();
+  linef2.setAngle(linef.normalVector().angle() + 180);
+  pgf << linef2.p2();
+
+  linef2 = QLineF(m_planningData.rear_point.x, m_planningData.rear_point.y,
+                 m_planningData.hinge_point.x, m_planningData.hinge_point.y
+               );
+  linef2.setLength(m_planningData.rear_vehicle_length);
+  ptf = linef2.p2();
+
+  linef2.setP2(QPointF(1000000.0, 0));
+  linef2.setP1(ptf);
+  linef2.setLength(m_planningData.rear_vehicle_width / 2.0);
+  linef2.setAngle(linef.normalVector().angle() + 180);
+  pgf << linef2.p2();
+  linef2.setAngle(linef.normalVector().angle());
+  pgf << linef2.p2();
+  pgf << ptfStart;
+
+  pgf = m_transform.map(pgf);
+  painter.drawPolyline(pgf);
+
   // stop line
-  const double STOP_DIS = 0.5;
+  /*const double STOP_DIS = 0.5;
   QPolygonF pgf;
   pgf << QPointF(-VEH_L + VEH_HEAD, VEH_W / 2 + STOP_DIS) <<
          QPointF(VEH_HEAD + STOP_DIS, VEH_W / 2 + STOP_DIS) <<
@@ -226,7 +287,7 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
   pgf = m_transform.map(pgf);
   pen.setColor(Qt::darkMagenta);
   painter.setPen(pen);
-  painter.drawPolygon(pgf);
+  painter.drawPolygon(pgf);*/
 
   painter.restore();
 
@@ -238,9 +299,9 @@ void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
 {
   painter.save();
 
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
+  const double VEH_W = m_planningData.front_vehicle_width;
+  const double VEH_L = m_planningData.front_vehicle_length;
+  const double VEH_HEAD = m_planningData.head_point.x;
 
   QPen pen;
   const int US_W = 13;
@@ -339,9 +400,9 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
 {
   painter.save();
 
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
+  const double VEH_W = m_planningData.front_vehicle_width;
+  const double VEH_L = m_planningData.front_vehicle_length;
+  const double VEH_HEAD = m_planningData.head_point.x;
 
   QPen pen;
   const int US_W = 11;
@@ -390,201 +451,6 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
   pen.setColor(Qt::white);
   painter.setPen(pen);
   painter.drawText(rectf, Qt::AlignCenter, "0");
-
-  painter.restore();
-}
-
-/*******************************************************
- * @brief 绘制路边沿、参考线，路边沿平行于参考线
- * @param painter: 画笔
-
- * @return
-********************************************************/
-void QPlanningShowWidget::drawRoadSide(QPainter &painter)
-{
-  const size_t SIZE = m_planningData.reference_points.size();
-  const auto &pts = m_planningData.reference_points;
-
-  const double leftWidth = m_planningData.left_road_width;
-  const double rightWidth = m_planningData.right_road_width;
-
-  const int SIZE_LEFT_ROAD_SPLINES = m_planningData.left_road_boundary_splines.size();
-  const int SIZE_RIGHT_ROAD_SPLINES = m_planningData.right_road_boundary_splines.size();
-
-  // start and end of road splines
-  double leftStart = 0;
-  double leftEnd = 0;
-  double rightStart = 0;
-  double rightEnd = 0;
-
-  // left
-  size_t indexLeft = 0, indexLeft2 = 0;
-  if (m_planningData.left_road_boundary_available) {
-    leftStart = m_planningData.left_road_boundary_splines[0].xb.x;
-    leftEnd = m_planningData.left_road_boundary_splines[SIZE_LEFT_ROAD_SPLINES - 1].xb.w;
-    for (size_t i = 1; i < SIZE; ++i) {
-      if (leftStart >= pts[i - 1].s && leftStart < pts[i].s) {
-        indexLeft = i;
-      }
-      if (leftEnd >= pts[i - 1].s && leftEnd < pts[i].s) {
-        indexLeft2 = i;
-      }
-    }
-  }
-  // right
-  size_t indexRight = 0, indexRight2 = 0;
-  if (m_planningData.right_road_boundary_available) {
-    rightStart = m_planningData.right_road_boundary_splines[0].xb.x;
-    rightEnd = m_planningData.right_road_boundary_splines[SIZE_RIGHT_ROAD_SPLINES - 1].xb.w;
-    for (size_t i = 1; i < SIZE; ++i) {
-      if (rightStart >= pts[i - 1].s && rightStart < pts[i].s) {
-        indexRight = i;
-      }
-      if (rightEnd >= pts[i - 1].s && rightEnd < pts[i].s) {
-        indexRight2 = i;
-      }
-    }
-  }
-
-  // left
-  QPolygonF pgfLeft, pgfLeft2;
-  for (size_t i = 0; i < indexLeft; ++ i) {
-    QPointF ptfLeft;
-    this->slToXy(pts[i].s, leftWidth, ptfLeft);
-    pgfLeft << ptfLeft;
-    m_ptfsLeftRoadSide[i] = ptfLeft;
-  }
-  for (size_t i = indexLeft; i < indexLeft2; ++ i) {
-    QPointF ptfLeft;
-    this->slToXy(pts[i].s, leftWidth, ptfLeft);
-    m_ptfsLeftRoadSide[i] = ptfLeft;
-  }
-  for (size_t i = indexLeft2; i < SIZE; ++ i) {
-    QPointF ptfLeft;
-    this->slToXy(pts[i].s, leftWidth, ptfLeft);
-    pgfLeft2 << ptfLeft;
-    m_ptfsLeftRoadSide[i] = ptfLeft;
-  }
-
-  // right
-  QPolygonF pgfRight, pgfRight2;
-  for (size_t i = 0; i < indexRight; ++ i) {
-    QPointF ptfRight;
-    this->slToXy(pts[i].s, - rightWidth, ptfRight);
-    pgfRight << ptfRight;
-    m_ptfsRightRoadSide[i] = ptfRight;
-  }
-  for (size_t i = indexRight; i < indexRight2; ++ i) {
-    QPointF ptfRight;
-    this->slToXy(pts[i].s, - rightWidth, ptfRight);
-    m_ptfsRightRoadSide[i] = ptfRight;
-  }
-  for (size_t i = indexRight2; i < SIZE; ++ i) {
-    QPointF ptfRight;
-    this->slToXy(pts[i].s, - rightWidth, ptfRight);
-    pgfRight2 << ptfRight;
-    m_ptfsRightRoadSide[i] = ptfRight;
-  }
-
-  painter.save();
-  QPen pen;
-
-  pen.setWidth(4);
-  pen.setColor(Qt::yellow);
-  painter.setPen(pen);
-  if (pgfLeft.size() > 0) {
-    painter.drawPolyline(m_transform.map(pgfLeft));
-  }
-  if (pgfRight.size() > 0) {
-    painter.drawPolyline(m_transform.map(pgfRight));
-  }
-  if (pgfLeft2.size() > 0) {
-    painter.drawPolyline(m_transform.map(pgfLeft2));
-  }
-  if (pgfRight2.size() > 0) {
-    painter.drawPolyline(m_transform.map(pgfRight2));
-  }
-
-  pen.setWidth(4);
-  pen.setColor(Qt::darkMagenta);
-  pen.setStyle(Qt::SolidLine);
-  painter.setPen(pen);
-  if (m_planningData.curb.curb_L_FOUND) {
-    QLineF linef_left(m_planningData.curb.Point_L1.x, m_planningData.curb.Point_L1.y,
-                 m_planningData.curb.Point_L2.x, m_planningData.curb.Point_L2.y);
-    painter.drawLine(m_transform.map(linef_left));
-  }
-  if (m_planningData.curb.curb_R_FOUND) {
-    QLineF linef_right(m_planningData.curb.Point_R1.x, m_planningData.curb.Point_R1.y,
-                 m_planningData.curb.Point_R2.x, m_planningData.curb.Point_R2.y);
-    painter.drawLine(m_transform.map(linef_right));
-  }
-
-  pen.setWidth(4);
-  pen.setColor(Qt::green);
-  pen.setStyle(Qt::SolidLine);
-  painter.setPen(pen);
-  for (int i = 0; i < SIZE_LEFT_ROAD_SPLINES; ++ i) {
-    QPointF ptfStart, ptfControl1, ptfControl2, ptfEnd;
-    this->slToXy(m_planningData.left_road_boundary_splines[i].xb.x,
-                 m_planningData.left_road_boundary_splines[i].yb.x, ptfStart);
-    this->slToXy(m_planningData.left_road_boundary_splines[i].xb.y,
-                 m_planningData.left_road_boundary_splines[i].yb.y, ptfControl1);
-    this->slToXy(m_planningData.left_road_boundary_splines[i].xb.z,
-                 m_planningData.left_road_boundary_splines[i].yb.z, ptfControl2);
-    this->slToXy(m_planningData.left_road_boundary_splines[i].xb.w,
-                 m_planningData.left_road_boundary_splines[i].yb.w, ptfEnd);
-
-    QPainterPath path(ptfStart);
-    path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
-    painter.drawPath(m_transform.map(path));
-  }
-  for (int i = 0; i < SIZE_RIGHT_ROAD_SPLINES; ++ i) {
-    QPointF ptfStart, ptfControl1, ptfControl2, ptfEnd;
-    this->slToXy(m_planningData.right_road_boundary_splines[i].xb.x,
-                 m_planningData.right_road_boundary_splines[i].yb.x, ptfStart);
-    this->slToXy(m_planningData.right_road_boundary_splines[i].xb.y,
-                 m_planningData.right_road_boundary_splines[i].yb.y, ptfControl1);
-    this->slToXy(m_planningData.right_road_boundary_splines[i].xb.z,
-                 m_planningData.right_road_boundary_splines[i].yb.z, ptfControl2);
-    this->slToXy(m_planningData.right_road_boundary_splines[i].xb.w,
-                 m_planningData.right_road_boundary_splines[i].yb.w, ptfEnd);
-
-    QPainterPath path(ptfStart);
-    path.cubicTo(ptfControl1, ptfControl2, ptfEnd);
-    painter.drawPath(m_transform.map(path));
-  }
-
-  // reference
-  pen.setWidth(1);
-  pen.setColor(Qt::black);
-  pen.setStyle(Qt::DashLine);
-  painter.setPen(pen);
-
-  //this->drawBezierLine(painter, m_planningData.reference_splines);
-  const int SIZE_REF = m_planningData.reference_splines.size();
-  for (int i = 0; i < SIZE_REF; ++ i) {
-    QPainterPath path(QPointF(m_planningData.reference_splines[i].xb.x,
-                      m_planningData.reference_splines[i].yb.x));
-    path.cubicTo(
-          m_planningData.reference_splines[i].xb.y,
-          m_planningData.reference_splines[i].yb.y,
-          m_planningData.reference_splines[i].xb.z,
-          m_planningData.reference_splines[i].yb.z,
-          m_planningData.reference_splines[i].xb.w,
-          m_planningData.reference_splines[i].yb.w
-          );
-    painter.drawPath(m_transform.map(path));
-  }
-
-//  pen.setColor(Qt::red);
-//  pen.setStyle(Qt::DashLine);
-//  painter.setPen(pen);
-//  QPolygonF pgfReference;
-//  for (size_t i = 0; i < SIZE; ++ i) {
-//    pgfReference << QPointF(pts[i].x, pts[i].y);
-//  }
-//  painter.drawPolyline(m_transform.map(pgfReference));
 
   painter.restore();
 }
@@ -695,50 +561,6 @@ void QPlanningShowWidget::drawRoadSideFromWidth(QPainter &painter)
   }
   painter.drawPolyline(m_transform.map(pgf));
 
-  painter.restore();
-}
-
-/*******************************************************
- * @brief 绘制区域分界线，分界线垂直于分界线
- * @param painter: 画笔
-
- * @return
-********************************************************/
-void QPlanningShowWidget::drawAreaLine(QPainter &painter)
-{
-  const double AREA_LINE[3] = {
-    m_planningData.safe_dis1,
-    m_planningData.safe_dis2,
-    m_planningData.max_planning_distance
-  };
-
-  // 计算分界线起始点、终点
-  QLineF linefArea[3];
-  const double fLeftWidth = m_planningData.left_road_width * 1.2;
-  const double fRightWidth = m_planningData.right_road_width * 1.2;
-  for (int i = 0; i < 3; ++i) {
-    QPointF ptfLeft, ptfRight;
-    this->slToXy(AREA_LINE[i] + m_planningData.head_distance, fLeftWidth, ptfLeft);
-    this->slToXy(AREA_LINE[i] + m_planningData.head_distance, -fRightWidth, ptfRight);
-    linefArea[i] = QLineF(ptfLeft, ptfRight);
-  }
-
-  // 绘制分界线
-  painter.save();
-  QPen pen;
-  pen.setStyle(Qt::DashLine);
-  pen.setColor(Qt::black);
-  painter.setFont(G_TEXT_SMALL_FONT);
-  painter.setPen(pen);
-
-  for (int i = 0; i < 3; ++i) {
-    QLineF linef = m_transform.map(linefArea[i]);
-    painter.drawLine(linef);
-    painter.drawText(
-          linef.p2() + QPoint(10, 5),
-          QString("%1").arg(AREA_LINE[i], 5, 'f', 2, QLatin1Char(' '))
-          );
-  }
   painter.restore();
 }
 
@@ -996,45 +818,15 @@ void QPlanningShowWidget::drawGarbageResults(QPainter &painter)
   painter.restore();
 }
 
-/*******************************************************
- * @brief 绘制障碍物
- * @param painter: 画笔
-
- * @return
-********************************************************/
-void QPlanningShowWidget::drawObstacleObject(QPainter &painter)
-{
-  painter.save();
-  QPen pen;
-  pen.setColor(Qt::red);
-  pen.setWidth(2);
-  painter.setPen(pen);
-  /*const debug_tool::TargetPoint &left = m_planningData.left_target_point;
-  if (left.width > 0) {
-    QPolygonF pgf = this->createSlPgf(
-          QPointF(left.s, left.l), left.width, left.length, true);
-    pgf = m_transform.map(pgf);
-    painter.drawPolygon(pgf);
-  }
-  const debug_tool::TargetPoint &right = m_planningData.right_target_point;
-  if (right.width > 0) {
-    QPolygonF pgf = this->createSlPgf(
-          QPointF(right.s, right.l), right.width, right.length, true);
-    pgf = m_transform.map(pgf);
-    painter.drawPolygon(pgf);
-  }*/
-  painter.restore();
-}
-
 void QPlanningShowWidget::drawUltrasonicTarget(QPainter &painter)
 {
   painter.save();
 
   const auto &ultrasonic = m_planningData.ultrasonic_results;
 
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
+  const double VEH_W = m_planningData.front_vehicle_width;
+  const double VEH_L = m_planningData.front_vehicle_length;
+  const double VEH_HEAD = m_planningData.head_point.x;
 
   const double STOP_DIS = 0.5;
   const double PASS_DIS = 1.1;
@@ -1095,76 +887,15 @@ void QPlanningShowWidget::drawUltrasonicTarget(QPainter &painter)
 
  * @return
 ********************************************************/
-void QPlanningShowWidget::drawRadar28Target(QPainter &painter)
+void QPlanningShowWidget::drawRadarTarget(QPainter &painter)
 {
   painter.save();
 
-  const auto &radar = m_planningData.radar28f_results;
+  const auto &radar = m_planningData.radar_results;
 
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
-
-  const double STOP_DIS = 0.5;
-  const double PASS_DIS = 1.1;
-  const int SIZE = static_cast<int>(radar.size());
-  for (int i = 0; i < SIZE; ++i) {
-    const int ID = static_cast<int>(radar[i].devid);
-    const double DIS_X = radar[i].range_lat;
-    const double DIS_Y = radar[i].range_lon;
-    if (ID < 10 || ID > 13) continue;
-
-    QPointF ptf;
-    switch (ID) {
-      case 10:
-        ptf = QPointF(VEH_HEAD - 0.7 - DIS_X, VEH_W / 2 + DIS_Y);
-        break;
-      case 11:
-        ptf = QPointF(VEH_HEAD - 0.7 - DIS_X, -VEH_W / 2 - DIS_Y);
-        break;
-      case 12:
-        ptf = QPointF(-VEH_L + VEH_HEAD + 0.7 - DIS_X, VEH_W / 2 - DIS_Y);
-        break;
-      case 13:
-        ptf = QPointF(-VEH_L + VEH_HEAD + 0.7 - DIS_X, VEH_W / 2 + DIS_Y);
-        break;
-    }
-
-    if ( ptf.x() < (-VEH_L + VEH_HEAD) || ptf.x() > VEH_HEAD + PASS_DIS ||
-         ptf.y() < (-VEH_W / 2 - PASS_DIS)  || ptf.y() > (VEH_W / 2 + PASS_DIS) ) {
-      continue;
-    }
-
-    if ( ptf.x() >= (-VEH_L + VEH_HEAD) && ptf.x() <= VEH_HEAD + STOP_DIS &&
-         ptf.y() >= (-VEH_W / 2 - STOP_DIS) && ptf.y() <= (VEH_W / 2 + STOP_DIS) ) {
-      painter.setPen(Qt::magenta);
-    }
-    else {
-      painter.setPen(Qt::blue);
-    }
-    QRect rect(0, 0, 12, 12);
-    rect.moveCenter(m_transform.map(ptf).toPoint());
-    painter.drawRect(rect);
-  }
-
-  painter.restore();
-}
-
-/*******************************************************
- * @brief 绘制雷达障碍物，路边沿以内
- * @param painter: 画笔
-
- * @return
-********************************************************/
-void QPlanningShowWidget::drawRadar73Target(QPainter &painter)
-{
-  painter.save();
-
-  const auto &radar = m_planningData.radar73f_results;
-
-  const double VEH_W = m_planningData.vehicle_width;
-  const double VEH_L = m_planningData.vehicle_length;
-  const double VEH_HEAD = m_planningData.head_distance;
+  const double VEH_W = m_planningData.front_vehicle_width;
+  const double VEH_L = m_planningData.front_vehicle_length;
+  const double VEH_HEAD = m_planningData.head_point.x;
 
   const double STOP_DIS = 0.5;
   const double PASS_DIS = 1.1;
@@ -1243,7 +974,7 @@ void QPlanningShowWidget::drawTrackTarget(QPainter &painter)
       int indexRight = -1;
 
       // find x range
-      const qreal x_max = m_planningData.max_planning_distance + m_planningData.head_distance;
+      const qreal x_max = 10.0 + m_planningData.head_point.x;
       for (int j = 0; j < SIZE_REF - 1; ++j) {
         if (indexLeft != -1 && indexRight != -1) {
           break;
@@ -1306,7 +1037,7 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
     }
 
     bool contains = m_bFlagShowAllTargets;
-    const qreal x_max = m_planningData.max_planning_distance + m_planningData.head_distance;
+    const qreal x_max = 10.0 + m_planningData.head_point.x;
     if (!m_bFlagShowAllTargets) {
       foreach (const QPointF &ptf, pgf) {
         int indexLeft = -1;
@@ -1358,152 +1089,6 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
     pgf = m_transform.map(pgf);
     painter.drawPolygon(pgf);
     painter.drawText(pgf.boundingRect(), Qt::AlignCenter, QString::number(i));
-  }
-
-  painter.restore();
-}
-
-void QPlanningShowWidget::drawDecisionTargets(QPainter &painter)
-{
-  painter.save();
-  for (int i = 0; i < 4; ++ i) {
-    debug_tool::ads_TargetPoint_<std::allocator<void>> &targets =
-        m_planningData.decision_targets[i];
-
-    switch (targets.sensor_type) {
-      case SENSOR_ULTRASONIC:
-        {
-          QPointF ptf = QPointF(targets.x, targets.y);
-          ptf = m_transform.map(ptf);
-          QRect rect = QRect(0, 0, 13, 13);
-          rect.moveCenter(ptf.toPoint());
-          QLine line(rect.topLeft(), rect.bottomRight());
-          QLine line2(rect.bottomLeft(), rect.topRight());
-
-          QPen pen;
-          pen.setColor(Qt::black);
-          pen.setWidth(2);
-          painter.setPen(pen);
-          painter.drawLine(line);
-          painter.drawLine(line2);
-        }
-        break;
-      case SENSOR_RADAR_28F:
-      case SENSER_RADAR_73F:
-        {
-          QPointF ptf = QPointF(targets.x, targets.y);
-          ptf = m_transform.map(ptf);
-          QRect rect = QRect(0, 0, 13, 13);
-          rect.moveCenter(ptf.toPoint());
-          QLine line(rect.topLeft(), rect.bottomRight());
-          QLine line2(rect.bottomLeft(), rect.topRight());
-
-          QPen pen;
-          pen.setColor(Qt::green);
-          pen.setWidth(2);
-          painter.setPen(pen);
-          painter.drawLine(line);
-          painter.drawLine(line2);
-        }
-        break;
-      case SENSOR_TRACK_TARGET:
-        {
-          QPolygonF pgf;
-          pgf << QPointF(targets.p1_x, targets.p1_y)
-              << QPointF(targets.p2_x, targets.p2_y)
-              << QPointF(targets.p3_x, targets.p3_y)
-              << QPointF(targets.p4_x, targets.p4_y);
-          pgf = m_transform.map(pgf);
-
-          QPen pen;
-          pen.setColor(Qt::darkCyan);
-          pen.setWidth(2);
-          painter.setPen(pen);
-          painter.drawPolygon(pgf);
-
-          this->drawDecisionTargetsSL(targets, painter);
-        }
-        break;
-      default:
-        break;
-    }
-  }
-  painter.restore();
-}
-
-void QPlanningShowWidget::drawDecisionTargetsSL(
-    const debug_tool::ads_TargetPoint_<std::allocator<void>> &targets,
-    QPainter &painter)
-{
-  painter.save();
-
-  QPointF ptf1, ptf2, ptf3, ptf4;
-  double s, l;
-
-  s = targets.s - targets.sl_length / 2;
-  l = targets.l - targets.sl_width / 2;
-  this->slToXy(s, l, ptf1);
-
-  s = targets.s - targets.sl_length / 2;
-  l = targets.l + targets.sl_width / 2;
-  this->slToXy(s, l, ptf2);
-
-  s = targets.s + targets.sl_length / 2;
-  l = targets.l + targets.sl_width / 2;
-  this->slToXy(s, l, ptf3);
-
-  s = targets.s + targets.sl_length / 2;
-  l = targets.l - targets.sl_width / 2;
-  this->slToXy(s, l, ptf4);
-
-  int indexStart = this->findReferenceIndex(targets.s - targets.sl_length / 2);
-  int indexEnd = this->findReferenceIndex(targets.s + targets.sl_length / 2);
-  QPointF ptfInter;
-  QLineF::IntersectType type = QLineF(ptf1, ptf2).intersect(QLineF(ptf3, ptf4), &ptfInter);
-  QPen pen;
-  pen.setColor("red");
-  pen.setWidth(2);
-  pen.setStyle(Qt::DotLine);
-  painter.setPen(pen);
-
-  const auto &REF_PTS = m_planningData.reference_points;
-  QPolygonF pgf, pgf2;
-  QPointF ptf;
-
-  if (type == QLineF::BoundedIntersection) {
-    painter.drawLine(m_transform.map(ptf1), m_transform.map(ptf3));
-    painter.drawLine(m_transform.map(ptf4), m_transform.map(ptf2));
-
-    pgf << m_transform.map(ptf2);
-    pgf2 << m_transform.map(ptf1);
-    for (int i = indexStart + 1; i < indexEnd; ++i) {
-      this->slToXy(REF_PTS[i].s, targets.l - targets.sl_width / 2, ptf);
-      pgf2 << m_transform.map(ptf);
-
-      this->slToXy(REF_PTS[i].s, targets.l + targets.sl_width / 2, ptf);
-      pgf << m_transform.map(ptf);
-    }
-    pgf << m_transform.map(ptf3);
-    pgf2 << m_transform.map(ptf4);
-    painter.drawPolyline(pgf);
-    painter.drawPolyline(pgf2);
-  }
-  else {
-    painter.drawLine(m_transform.map(ptf1), m_transform.map(ptf2));
-    painter.drawLine(m_transform.map(ptf3), m_transform.map(ptf4));
-
-    pgf << m_transform.map(ptf1);
-    pgf2 << m_transform.map(ptf2);
-    for (int i = indexStart + 1; i < indexEnd; ++i) {
-      this->slToXy(REF_PTS[i].s, targets.l - targets.sl_width / 2, ptf);
-      pgf << m_transform.map(ptf);
-      this->slToXy(REF_PTS[i].s, targets.l + targets.sl_width / 2, ptf);
-      pgf2 << m_transform.map(ptf);
-    }
-    pgf << m_transform.map(ptf4);
-    pgf2 << m_transform.map(ptf3);
-    painter.drawPolyline(pgf);
-    painter.drawPolyline(pgf2);
   }
 
   painter.restore();
