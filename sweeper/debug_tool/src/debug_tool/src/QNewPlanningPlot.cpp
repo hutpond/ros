@@ -1,7 +1,8 @@
+#include "QNewPlanningPlot.h"
+
 #include <QGridLayout>
 #include "qwt_plot.h"
 #include "qwt_plot_curve.h"
-#include "QNewPlanningPlot.h"
 #include "GlobalDefine.h"
 
 QNewPlanningPlot::QNewPlanningPlot(QWidget *parent) : QWidget(parent)

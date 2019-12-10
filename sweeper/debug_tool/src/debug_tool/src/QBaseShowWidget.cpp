@@ -5,10 +5,11 @@
  * Date: 2019/7/8
  * Description: 图像显示基类
 ********************************************************/
+#include "QBaseShowWidget.h"
+
 #include <cmath>
 #include <QMouseEvent>
 #include <QPainter>
-#include "QBaseShowWidget.h"
 #include "GlobalDefine.h"
 
 QBaseShowWidget::QBaseShowWidget(QWidget *parent)

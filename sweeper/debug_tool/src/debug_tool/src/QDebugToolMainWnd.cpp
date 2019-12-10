@@ -5,6 +5,8 @@
  * Date: 2019/6/19
  * Description: 主界面
 ********************************************************/
+#include "QDebugToolMainWnd.h"
+
 #include <QToolBar>
 #include <QStatusBar>
 #include <QMenu>
@@ -12,7 +14,6 @@
 #include <QFileDialog>
 #include <QTextBrowser>
 #include <QDockWidget>
-#include "QDebugToolMainWnd.h"
 #include "QPlanningWidget.h"
 #include "QDataDisplayWidget.h"
 #include "QPlanningCostWidget.h"
@@ -26,7 +27,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V4.0.2";
+static const char *WND_TITLE = "Debug Tool V4.0.3";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;

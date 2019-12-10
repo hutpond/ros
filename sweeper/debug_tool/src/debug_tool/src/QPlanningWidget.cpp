@@ -5,6 +5,8 @@
  * Date: 2019/6/21
  * Description: 路径规划主界面，可以实时显示和回放
 ********************************************************/
+#include "QPlanningWidget.h"
+
 #include <time.h>
 #include <iomanip>
 #include <sstream>
@@ -14,7 +16,6 @@
 #include <QTextBrowser>
 #include <QStatusBar>
 #include "boost/filesystem.hpp"
-#include "QPlanningWidget.h"
 #include "QPlanningShowWidget.h"
 #include "QPlanningParamWidget.h"
 #include "GlobalDefine.h"

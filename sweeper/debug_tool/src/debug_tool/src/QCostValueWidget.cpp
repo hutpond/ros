@@ -1,8 +1,9 @@
+#include "QCostValueWidget.h"
+
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
 #include <QGridLayout>
-#include "QCostValueWidget.h"
 
 int QCostValueWidget::s_nValue[QPlanningCostWidget::Count] = {20, 20, 20, 20, 20, 20};
 int QCostValueWidget::s_nOriginValue[QPlanningCostWidget::Count] = {20, 20, 20, 20, 20, 20};

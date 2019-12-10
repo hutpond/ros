@@ -1,5 +1,6 @@
-#include <QLineF>
 #include "QBezierCurve.h"
+
+#include <QLineF>
 
 QBezierCurve::QBezierCurve()
 {

@@ -1,9 +1,10 @@
+#include "QFullViewWidget.h"
+
 #include <fstream>
 #include <QtMath>
 #include <QPainter>
 #include <QPen>
 #include <QMouseEvent>
-#include "QFullViewWidget.h"
 
 struct MapPoint
 {

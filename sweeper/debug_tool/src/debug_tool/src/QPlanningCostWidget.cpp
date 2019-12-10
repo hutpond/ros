@@ -1,7 +1,8 @@
+#include "QPlanningCostWidget.h"
+
 #include <algorithm>
 #include <cmath>
 
-#include "QPlanningCostWidget.h"
 #include "QCostValueWidget.h"
 #include "GlobalDefine.h"
 

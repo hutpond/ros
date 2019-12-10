@@ -5,6 +5,8 @@
  * Date: 2019/6/21
  * Description: 路径规划参数子画面，显示相关参数和设定显示选项
 ********************************************************/
+#include "QPlanningParamWidget.h"
+
 #include <QLabel>
 #include <QGroupBox>
 #include <QCheckBox>
@@ -12,7 +14,6 @@
 #include <QGridLayout>
 #include <QSlider>
 #include <QTextBrowser>
-#include "QPlanningParamWidget.h"
 #include "QPlanningWidget.h"
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"

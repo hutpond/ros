@@ -5,8 +5,9 @@
  * Date: 2019/7/8
  * Description: 子模块基类
 ********************************************************/
-#include <sstream>
 #include "QBaseWidget.h"
+
+#include <sstream>
 #include "QPlanningParamWidget.h"
 #include "QFullViewWidget.h"
 #include "QReadDataManagerRos.h"

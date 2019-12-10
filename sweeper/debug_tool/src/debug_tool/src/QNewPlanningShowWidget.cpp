@@ -1,6 +1,7 @@
+#include "QNewPlanningShowWidget.h"
+
 #include <QPainter>
 #include <QMouseEvent>
-#include "QNewPlanningShowWidget.h"
 #include "QEditToolsWidget.h"
 #include "GlobalDefine.h"
 #include "QDebugToolMainWnd.h"

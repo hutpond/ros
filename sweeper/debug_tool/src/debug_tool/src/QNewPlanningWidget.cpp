@@ -1,7 +1,8 @@
+#include "QNewPlanningWidget.h"
+
 #include <fstream>
 #include <QTimerEvent>
 #include <QStatusBar>
-#include "QNewPlanningWidget.h"
 #include "QPlanningParamWidget.h"
 #include "GlobalDefine.h"
 #include "QFullViewWidget.h"

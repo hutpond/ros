@@ -1,5 +1,6 @@
-#include <QPushButton>
 #include "QEditToolsWidget.h"
+
+#include <QPushButton>
 
 static const char *SELECT_BKG = "background-color: rgb(114, 159, 207);";
 

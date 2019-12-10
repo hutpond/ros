@@ -5,13 +5,14 @@
  * Date: 2019/6/21
  * Description: 路径规划显示子画面，可以实时显示和回放
 ********************************************************/
+#include "QPlanningShowWidget.h"
+
 #include <cmath>
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
 #include <QThread>
 #include <QtMath>
-#include "QPlanningShowWidget.h"
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
 #include "QEditToolsWidget.h"
