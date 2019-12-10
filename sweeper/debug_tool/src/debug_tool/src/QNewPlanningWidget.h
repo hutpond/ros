@@ -9,12 +9,12 @@ class QNewPlanningWidget : public QBaseWidget
 public:
   explicit QNewPlanningWidget(QWidget *parent = Q_NULLPTR);
   void changeShowView() final;
+  void onParsePlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
 
 protected:
   void timerEvent(QTimerEvent *);
 
 protected slots:
-  void onParsePlanningData(const debug_ads_msgs::ads_msgs_planning_debug_frame &);
   void onSetFrameIndexReplay(int) {}
   void onCostValueChanged() {}
 

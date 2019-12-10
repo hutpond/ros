@@ -28,6 +28,7 @@ public:
   ~QPlanningWidget();
 
   void changeShowView() final;
+  void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
 
 public slots:
   void onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &);
@@ -52,7 +53,6 @@ protected:
 
 protected slots:
   void onSetFrameIndexReplay(int);
-  void onParsePlanningData(const debug_tool::ads_PlanningData4Debug &);
   void onCostValueChanged();
 
 private:

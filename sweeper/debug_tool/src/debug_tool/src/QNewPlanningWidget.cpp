@@ -58,9 +58,7 @@ QNewPlanningWidget::QNewPlanningWidget(QWidget *parent)
 
   m_fsPath /= time_str;
 
-  connect(QReadDataManagerRos::instance(), &QReadDataManagerRos::planningDataNew,
-          this, &QNewPlanningWidget::onParsePlanningData);
-
+  QReadDataManagerRos::instance()->setNewPlanningWidget(this);
   QReadDataManagerRos::instance()->start_subscribe();
 
   m_nReplaySpeedIndex = 1;

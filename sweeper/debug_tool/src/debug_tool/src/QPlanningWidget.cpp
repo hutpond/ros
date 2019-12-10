@@ -74,9 +74,7 @@ QPlanningWidget::QPlanningWidget(QWidget *parent)
 
   m_fsPath /= time_str;
 
-  connect(QReadDataManagerRos::instance(), SIGNAL(planningData(const debug_tool::ads_PlanningData4Debug &)),
-          this, SLOT(onParsePlanningData(const debug_tool::ads_PlanningData4Debug &)));
-
+  QReadDataManagerRos::instance()->setPlanningWidget(this);
   QReadDataManagerRos::instance()->start_subscribe();
 
   m_nReplaySpeedIndex = 1;
