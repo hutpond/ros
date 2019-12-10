@@ -6,6 +6,8 @@
 
 class QNewPlanningWidget : public QBaseWidget
 {
+  Q_OBJECT
+
 public:
   explicit QNewPlanningWidget(QWidget *parent = Q_NULLPTR);
   void changeShowView() final;

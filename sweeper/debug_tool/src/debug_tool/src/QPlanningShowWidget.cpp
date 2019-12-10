@@ -306,7 +306,6 @@ void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
 
   const auto points = m_planningData.ultrasonic_points;
   QPointF ptf;
-  const int RADIUS = 9;
 
   for (int i = 0; i < 14; ++i) {
     if (qAbs<double>(points[i].x) < 0.001) {
@@ -316,10 +315,9 @@ void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
     else {
       ptf = QPointF(points[i].x, points[i].y);
     }
-    ptf = m_transform.map(ptf);
-    //ptf += QPointF(0, - RADIUS);
     QPainterPath path;
-    path.addEllipse(ptf, RADIUS, RADIUS);
+    path.addEllipse(ptf, 0.08, 0.08);
+    path = m_transform.map(path);
 
     pen.setColor(Qt::darkRed);
     painter.setPen(pen);
@@ -345,18 +343,19 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
   else {
     ptf = QPointF(radar_point.x, radar_point.y);
   }
-  ptf = m_transform.map(ptf);
+  QRectF rectf(0, 0, 0.06, 0.12);
+  rectf.moveCenter(ptf);
 
   QPen pen;
   pen.setStyle(Qt::SolidLine);
+  pen.setColor(Qt::darkBlue);
+  painter.setPen(pen);
   painter.setBrush(Qt::darkBlue);
 
-  const int US_W = 21;
-  const int US_H = 10;
-  QRect rectf(0, 0, US_W, US_H);
-  //ptf += QPointF(0, - US_H / 2 - 1);
-  rectf.moveCenter(ptf.toPoint());
-  painter.drawRect(rectf);
+  QPolygonF pgf = m_transform.map(rectf);
+  QPainterPath path;
+  path.addPolygon(pgf);
+  painter.drawPath(path);
 
   painter.restore();
 }
