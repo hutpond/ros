@@ -4,7 +4,8 @@
 #include <QWidget>
 #include "debug_tool/ads_PlanningData4Debug.h"
 
-class QPlotWidget;
+class QwtPlot;
+class QwtPlotCurve;
 
 class QPlanningCostWidget : public QWidget
 {
@@ -27,15 +28,19 @@ public:
   void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
-  void resizeEvent(QResizeEvent *) final;
+  virtual void resizeEvent(QResizeEvent *) final;
+  virtual void showEvent(QShowEvent *) final;
 
 signals:
 
 public slots:
 
 private:
-  QPlotWidget *m_pWdgCostNew;
-  QPlotWidget *m_pWdgCost[Count];
+  QwtPlot *m_pWdgPlotCostNew;
+  QwtPlotCurve *m_pPlotCurveCostNew;
+
+  QwtPlot *m_pWdgPlotCost[Count];
+  QwtPlotCurve *m_pPlotCurveCost[Count];
 };
 
 #endif // QPLANNINGCOSTWIDGET_H

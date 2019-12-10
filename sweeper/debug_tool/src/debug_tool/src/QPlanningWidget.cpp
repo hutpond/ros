@@ -776,10 +776,10 @@ void QPlanningWidget::parseDataFromJson(
       spline.xb.y = chile_item["xb_y"].asDouble();
       spline.xb.z = chile_item["xb_z"].asDouble();
       spline.xb.w = chile_item["xb_w"].asDouble();
-      spline.xb.x = chile_item["yb_x"].asDouble();
-      spline.xb.y = chile_item["yb_y"].asDouble();
-      spline.xb.z = chile_item["yb_z"].asDouble();
-      spline.xb.w = chile_item["yb_w"].asDouble();
+      spline.yb.x = chile_item["yb_x"].asDouble();
+      spline.yb.y = chile_item["yb_y"].asDouble();
+      spline.yb.z = chile_item["yb_z"].asDouble();
+      spline.yb.w = chile_item["yb_w"].asDouble();
     }
   }
 
@@ -805,10 +805,10 @@ void QPlanningWidget::parseDataFromJson(
     spline.xb.y = chile_item["xb_y"].asDouble();
     spline.xb.z = chile_item["xb_z"].asDouble();
     spline.xb.w = chile_item["xb_w"].asDouble();
-    spline.xb.x = chile_item["yb_x"].asDouble();
-    spline.xb.y = chile_item["yb_y"].asDouble();
-    spline.xb.z = chile_item["yb_z"].asDouble();
-    spline.xb.w = chile_item["yb_w"].asDouble();
+    spline.yb.x = chile_item["yb_x"].asDouble();
+    spline.yb.y = chile_item["yb_y"].asDouble();
+    spline.yb.z = chile_item["yb_z"].asDouble();
+    spline.yb.w = chile_item["yb_w"].asDouble();
   }
 
   // planning output
