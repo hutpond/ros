@@ -292,107 +292,43 @@ void QPlanningShowWidget::drawSweeper(QPainter &painter)
 
   painter.restore();
 
-  //this->drawUltrasonic(painter);
-  //this->drawRadar(painter);
+  this->drawRadar(painter);
+  this->drawUltrasonic(painter);
 }
 
 void QPlanningShowWidget::drawUltrasonic(QPainter &painter)
 {
   painter.save();
-
-  const double VEH_W = m_planningData.front_vehicle_width;
-  const double VEH_L = m_planningData.front_vehicle_length;
-  const double VEH_HEAD = m_planningData.head_point.x;
-
   QPen pen;
-  const int US_W = 13;
-  QRect rectf(0, 0, US_W, US_W);
   pen.setStyle(Qt::SolidLine);
-  painter.setBrush(Qt::darkBlue);
+  painter.setBrush(Qt::darkRed);
   painter.setFont(QFont("Times", 10));
+
+  const auto points = m_planningData.ultrasonic_points;
   QPointF ptf;
+  const int RADIUS = 9;
 
-  ptf = QPointF(-VEH_L + VEH_HEAD + 0.13, VEH_W / 2);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "8");
+  for (int i = 0; i < 14; ++i) {
+    if (qAbs<double>(points[i].x) < 0.001) {
+      ptf = QPointF(m_planningData.head_point.x,
+                    m_planningData.front_vehicle_width * 0.3 * qPow(-1, i));
+    }
+    else {
+      ptf = QPointF(points[i].x, points[i].y);
+    }
+    ptf = m_transform.map(ptf);
+    //ptf += QPointF(0, - RADIUS);
+    QPainterPath path;
+    path.addEllipse(ptf, RADIUS, RADIUS);
 
-  ptf.setY(ptf.y() - VEH_W);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "12");
+    pen.setColor(Qt::darkRed);
+    painter.setPen(pen);
+    painter.drawPath(path);
 
-  ptf.setX(ptf.x() + 0.97);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "13");
-
-  ptf.setY(ptf.y() + VEH_W);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "9");
-
-  ptf.setX(ptf.x() + 0.98);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "10");
-
-  ptf.setY(ptf.y() - VEH_W);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "14");
-
-  ptf = QPointF(-VEH_L + VEH_HEAD + 0.13, VEH_W / 2);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "8");
-
-  const double HEAD_US = 0.05;
-  ptf = QPointF(VEH_HEAD + HEAD_US, VEH_W / 2 + HEAD_US);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "11");
-
-  ptf = QPointF(VEH_HEAD + HEAD_US, -VEH_W / 2 - HEAD_US);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawEllipse(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "15");
+    pen.setColor(Qt::white);
+    painter.setPen(pen);
+    painter.drawText(path.boundingRect(), Qt::AlignCenter, QString::number(i));
+  }
 
   painter.restore();
 }
@@ -401,57 +337,26 @@ void QPlanningShowWidget::drawRadar(QPainter &painter)
 {
   painter.save();
 
-  const double VEH_W = m_planningData.front_vehicle_width;
-  const double VEH_L = m_planningData.front_vehicle_length;
-  const double VEH_HEAD = m_planningData.head_point.x;
+  const auto radar_point = m_planningData.radar_Point;
+  QPointF ptf;
+  if (qAbs<double>(radar_point.x) < 0.001) {
+    ptf = QPointF(m_planningData.head_point.x, m_planningData.head_point.y);
+  }
+  else {
+    ptf = QPointF(radar_point.x, radar_point.y);
+  }
+  ptf = m_transform.map(ptf);
 
   QPen pen;
-  const int US_W = 11;
-  QRect rectf(0, 0, US_W, US_W * 2);
   pen.setStyle(Qt::SolidLine);
   painter.setBrush(Qt::darkBlue);
-  painter.setFont(QFont("Times", 10));
-  QPointF ptf;
 
-  ptf = QPointF(-VEH_L + VEH_HEAD + 0.7, VEH_W / 2);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  rectf.moveLeft(rectf.left() - US_W / 2);
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
+  const int US_W = 21;
+  const int US_H = 10;
+  QRect rectf(0, 0, US_W, US_H);
+  //ptf += QPointF(0, - US_H / 2 - 1);
+  rectf.moveCenter(ptf.toPoint());
   painter.drawRect(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "2");
-
-  ptf.setY(ptf.y() - VEH_W);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  rectf.moveLeft(rectf.left() + US_W / 2);
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawRect(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "3");
-
-  ptf.setX(ptf.x() + 0.8);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  rectf.moveLeft(rectf.left() + US_W / 2);
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawRect(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "1");
-
-  ptf.setY(ptf.y() + VEH_W);
-  rectf.moveCenter(m_transform.map(ptf).toPoint());
-  rectf.moveLeft(rectf.left() - US_W / 2);
-  pen.setColor(Qt::darkBlue);
-  painter.setPen(pen);
-  painter.drawRect(rectf);
-  pen.setColor(Qt::white);
-  painter.setPen(pen);
-  painter.drawText(rectf, Qt::AlignCenter, "0");
 
   painter.restore();
 }
