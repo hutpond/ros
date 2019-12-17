@@ -1,6 +1,7 @@
+#include "qstateitem.h"
+
 #include <QPainter>
 #include <QSvgRenderer>
-#include "qstateitem.h"
 
 QStateItem::QStateItem(const QString &name, QWidget *parent)
   : QWidget(parent)

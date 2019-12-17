@@ -1,5 +1,6 @@
-#include <QPainter>
 #include "qshowwidget.h"
+
+#include <QPainter>
 #include "QBezierCurve.h"
 
 QShowWidget::QShowWidget(QWidget *parent)

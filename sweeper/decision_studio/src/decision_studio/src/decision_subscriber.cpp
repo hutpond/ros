@@ -1,7 +1,8 @@
+#include "decision_subscriber.h"
+
 #include <fstream>
 #include <QTimer>
 
-#include "decision_subscriber.h"
 #include "qcentralwidget.h"
 #include "qreplaywidget.h"
 
@@ -63,6 +64,9 @@ void DecisionSubscriber::onReplay()
 
 void DecisionSubscriber::onSubscribeData(const decision_studio::ads_DecisionData4Debug &data)
 {
+  if (!boost::filesystem::exists(m_fsPath)) {
+    boost::filesystem::create_directories(m_fsPath);
+  }
   if (m_bFlagLiveing) {
     m_rWdgCentral.setData(data);
   }
@@ -97,7 +101,6 @@ void DecisionSubscriber::createSavePath(const boost::filesystem::path &path)
 {
   m_fsPath = path;
   m_fsPath /= this->timeToString(1);
-  boost::filesystem::create_directories(m_fsPath);
 }
 
 void DecisionSubscriber::setLiving(bool flag)

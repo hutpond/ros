@@ -1,6 +1,7 @@
+#include "qstudiowindow.h"
+
 #include <QMenuBar>
 #include <QFileDialog>
-#include "qstudiowindow.h"
 #include "qcentralwidget.h"
 
 QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)

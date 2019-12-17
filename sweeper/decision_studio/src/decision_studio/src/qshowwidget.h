@@ -6,6 +6,8 @@
 
 class QShowWidget : public QBaseShowWidget
 {
+  Q_OBJECT
+
 public:
   explicit QShowWidget(QWidget * = Q_NULLPTR);
   void setData(const decision_studio::ads_DecisionData4Debug &);

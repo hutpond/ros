@@ -1,6 +1,7 @@
+#include "qreplaywidget.h"
+
 #include <QPushButton>
 #include <QSlider>
-#include "qreplaywidget.h"
 
 QReplayWidget::QReplayWidget(QWidget *parent)
   : QWidget(parent)

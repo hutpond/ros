@@ -12,6 +12,8 @@ class QCentralWidget;
 
 class DecisionSubscriber : public QObject
 {
+  Q_OBJECT
+
 public:
   explicit DecisionSubscriber(QCentralWidget &, QObject * = Q_NULLPTR);
   ~DecisionSubscriber();
