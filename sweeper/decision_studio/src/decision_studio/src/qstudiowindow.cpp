@@ -4,6 +4,8 @@
 #include <QFileDialog>
 #include "qcentralwidget.h"
 
+static const char *WND_TITLE = "Decision Studio 1.0";
+
 QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
 {
   m_fsPath = getenv("HOME");
@@ -15,6 +17,10 @@ QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
   m_pWdgCentral = new QCentralWidget(this);
   m_pWdgCentral->createSavePath(m_fsPath);
   this->setCentralWidget(m_pWdgCentral);
+
+  connect(m_pWdgCentral, SIGNAL(replayFileName(const QString &)),
+          this, SLOT(onSetWindowTitle(const QString &)));
+  this->onSetWindowTitle();
 }
 
 void QStudioWindow::createMenu()
@@ -63,4 +69,22 @@ void QStudioWindow::onActionLiving()
 {
   bool checked = n_pActionLiving->isChecked();
   m_pWdgCentral->setLivingFlag(checked);
+
+  this->onSetWindowTitle();
+}
+
+void QStudioWindow::onSetWindowTitle(const QString &text)
+{
+  QString title = WND_TITLE;
+  if (n_pActionLiving->isChecked()) {
+    title += " - Liveing";
+  }
+  else {
+    title += " - Replay";
+  }
+  if (!text.isEmpty()) {
+    title += " - ";
+    title += text;
+  }
+  this->setWindowTitle(title);
 }

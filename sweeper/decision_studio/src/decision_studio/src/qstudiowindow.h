@@ -23,6 +23,8 @@ protected slots:
   void onActionFileSaveData();
   void onActionLiving();
 
+  void onSetWindowTitle(const QString & = "");
+
 private:
   QCentralWidget *m_pWdgCentral;
 

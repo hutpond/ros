@@ -26,6 +26,7 @@ protected:
   virtual void resizeEvent(QResizeEvent *) final;
 
 signals:
+  void replayFileName(const QString &);
 
 public slots:
 

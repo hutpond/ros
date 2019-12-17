@@ -15,6 +15,9 @@ QCentralWidget::QCentralWidget(QWidget *parent)
 
   connect(m_pWdgReplay, &QReplayWidget::clicked,
           m_pObjSubscriber, &DecisionSubscriber::onPlayClicked);
+
+  connect(m_pObjSubscriber, SIGNAL(replayFileName(const QString &)),
+          this, SIGNAL(replayFileName(const QString &)));
 }
 
 void QCentralWidget::resizeEvent(QResizeEvent *)

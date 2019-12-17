@@ -43,6 +43,9 @@ protected slots:
 public slots:
   void onPlayClicked(int, int);
 
+signals:
+  void replayFileName(const QString &);
+
 private:
   ros::NodeHandle m_nodeHandle;
   ros::Subscriber m_subscriber;
