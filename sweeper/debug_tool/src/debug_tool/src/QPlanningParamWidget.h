@@ -69,6 +69,8 @@ private:
   QLabel *m_pLblDecisionName;
   QLabel *m_pLblDecisionValue[DecisionCount];
 
+  QLabel *m_pLblScenarioType;
+
   QPushButton *m_pBtnPause;
   QPushButton *m_pBtnResume;
   QPushButton *m_pBtnBack;

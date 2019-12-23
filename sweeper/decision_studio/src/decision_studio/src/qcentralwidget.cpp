@@ -18,6 +18,8 @@ QCentralWidget::QCentralWidget(QWidget *parent)
 
   connect(m_pObjSubscriber, SIGNAL(replayFileName(const QString &)),
           this, SIGNAL(replayFileName(const QString &)));
+  connect(m_pObjSubscriber, SIGNAL(replayNextIndex()),
+           m_pWdgReplay, SLOT(onSliderNextStep()));
 }
 
 void QCentralWidget::resizeEvent(QResizeEvent *)

@@ -45,6 +45,7 @@ public slots:
 
 signals:
   void replayFileName(const QString &);
+  void replayNextIndex();
 
 private:
   ros::NodeHandle m_nodeHandle;

@@ -7,7 +7,7 @@
 #include "qcentralwidget.h"
 #include "qreplaywidget.h"
 
-constexpr int REPLAY_INTERVAL[] = {10, 50, 250, 500};
+constexpr int REPLAY_INTERVAL[] = {500, 250, 50, 10};
 
 DecisionSubscriber::DecisionSubscriber(QCentralWidget &widget, QObject *parent)
   : m_rWdgCentral(widget)
@@ -18,7 +18,7 @@ DecisionSubscriber::DecisionSubscriber(QCentralWidget &widget, QObject *parent)
   , m_bFlagReplayPause(false)
 {
   m_subscriber = m_nodeHandle.subscribe(
-        "topic_point_cloud", 10,
+        "decision_debug_data", 10,
         &DecisionSubscriber::onSubscribeData, this);
 
   m_pTimerSubscribe = new QTimer(this);
@@ -60,6 +60,8 @@ void DecisionSubscriber::onReplay()
   if (!m_bFlagLiveing && !m_bFlagReplayPause && m_itFile != m_listPlanningFiles.end()) {
     this->readDataFromFile(*m_itFile);
     ++ m_itFile;
+
+    emit replayNextIndex();
   }
 }
 
@@ -216,12 +218,13 @@ void DecisionSubscriber::readDataFromFile(const std::string &name)
     return;
   }
   delete buffer;
+  emit replayFileName(QString::fromStdString(name));
 
   // parse json
   decision_studio::ads_DecisionData4Debug data;
 
   // vehicle
-  Json::Value vehicle = root["vehicle"].asDouble();
+  Json::Value vehicle = root["vehicle"];
   data.vehicle_latitude = vehicle["vehicle_latitude"].asDouble();
   data.vehicle_longitude = vehicle["vehicle_longitude"].asDouble();
   data.vehicle_altitude = vehicle["vehicle_altitude"].asDouble();

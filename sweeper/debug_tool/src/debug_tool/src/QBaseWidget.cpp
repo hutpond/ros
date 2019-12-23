@@ -253,3 +253,5 @@ std::string QBaseWidget::dataFileName()
   strFileName += ".txt";
   return strFileName;
 }
+
+#include "moc_QBaseWidget.cpp"

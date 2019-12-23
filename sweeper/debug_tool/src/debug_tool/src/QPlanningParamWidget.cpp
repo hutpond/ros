@@ -32,6 +32,8 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
     m_pLblDecisionValue[i]->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
   }
 
+  m_pLblScenarioType = new QLabel(tr("Scenario"), this);
+
   m_pBtnPause = new QPushButton(tr("暂停"), this);
   connect(m_pBtnPause, &QPushButton::clicked, this, &QPlanningParamWidget::onBtnClicked);
 
@@ -139,6 +141,9 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
     m_pLblDecisionValue[DecisionTrack]->show();
   }
 
+  m_pLblScenarioType->setText(
+        data.scenario_type == 0 ? "Scenario: Normal" : "Scenario: Yield"
+        );
   // data
   //m_pTextBrowser->setText(this->createTrajectoryString(data, data_cost));
 }
@@ -287,6 +292,10 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
     yPos += ITEM_H + SPACE_Y;
     m_pLblDecisionValue[i]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
   }
+
+  xPos = SPACE_X;
+  yPos += ITEM_H + SPACE_Y;
+  m_pLblScenarioType->setGeometry(xPos, yPos, ITEM_NAME_W + ITEM_VALUE_W, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;

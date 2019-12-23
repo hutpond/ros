@@ -117,6 +117,14 @@ void QReplayWidget::onSliderValueChanged(int value)
   emit clicked(BtnCount, value);
 }
 
+void QReplayWidget::onSliderNextStep()
+{
+  int index = m_pSliderPlay->value();
+  if (++ index < m_pSliderPlay->maximum()) {
+    m_pSliderPlay->setValue(index);
+  }
+}
+
 void QReplayWidget::setPlayState(bool flag)
 {
   m_pBtnPlay[BtnPlayPause]->setIcon(

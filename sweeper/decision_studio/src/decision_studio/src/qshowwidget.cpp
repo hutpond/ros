@@ -23,6 +23,10 @@ void QShowWidget::drawImage()
 
   QBaseShowWidget::drawAxis(painter);
   QBaseShowWidget::drawMapBorder(painter);
+
+  this->drawRoadSideFromWidth(painter);
+  this->drawSweeper(painter);
+  this->drawTrackTargetWithPoints(painter);
 }
 
 void QShowWidget::calcMapRect()
@@ -107,6 +111,7 @@ void QShowWidget::drawRoadSideFromWidth(QPainter &painter)
   const auto &points = m_decisionData.reference_points;
   const int size_ref_points = points.size();
   if (size_ref_points == 0) {
+    painter.restore();
     return;
   }
 

@@ -36,6 +36,7 @@ signals:
 protected slots:
   void onBtnClicked();
   void onSliderValueChanged(int);
+  void onSliderNextStep();
 
 private:
   QSlider *m_pSliderPlay;

@@ -501,6 +501,7 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   data["planning_trajectory_candidates"] = planningTrajectoryCandidates;
   data["planning_trajectory"] = planningTrajectory;
   data["planning_output"] = planningOutput;
+  data["scenario_type"] = static_cast<int>(planningData.scenario_type);
   data["debug_info"] = planningData.debug_info;
 
   std::ofstream out(strFileName.c_str());
@@ -527,6 +528,7 @@ void QPlanningWidget::parseDataFromJson(
   Json::Value planningTrajectoryCandidates = data["planning_trajectory_candidates"];
   Json::Value planningTrajectory = data["planning_trajectory"];
   Json::Value planningOutput = data["planning_output"];
+  planningData.scenario_type = static_cast<uint8_t>(data["scenario_type"].asInt());
   planningData.debug_info = data["debug_info"].asString();
 
   // vehicle

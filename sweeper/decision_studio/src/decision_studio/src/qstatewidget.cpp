@@ -6,7 +6,7 @@ QStateWidget::QStateWidget(QWidget *parent)
 {
   m_pWdgItem[StateForward] = new QStateItem(QStringLiteral("前进"), this);
   m_pWdgItem[StateFollow] = new QStateItem(QStringLiteral("跟车"), this);
-  m_pWdgItem[StatePass] = new QStateItem(QStringLiteral("绕行"), this);
+  m_pWdgItem[StatePass] = new QStateItem(QStringLiteral("等待"), this);
   m_pWdgItem[StateSafeStop] = new QStateItem(QStringLiteral("停车"), this);
 
   m_pWdgItem[StateSafeStop]->setStateOn(true);

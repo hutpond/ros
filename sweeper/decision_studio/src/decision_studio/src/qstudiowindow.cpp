@@ -84,7 +84,8 @@ void QStudioWindow::onSetWindowTitle(const QString &text)
   }
   if (!text.isEmpty()) {
     title += " - ";
-    title += text;
+    int index = text.lastIndexOf('/');
+    title += text.mid(index + 1);
   }
   this->setWindowTitle(title);
 }
