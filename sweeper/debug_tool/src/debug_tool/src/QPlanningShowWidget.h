@@ -52,6 +52,7 @@ protected:
   void drawTrackTarget(QPainter &);
   void drawTrackTargetWithPoints(QPainter &);
   void drawPlanningSplines(QPainter &);
+  void drawPlanningPoints(QPainter &);
   void drawPlanningCandidatesSplines(QPainter &);
   void drawGarbageResults(QPainter &);
   void drawBezierLine(QPainter &, const std::vector< ::debug_tool::ads_Spline_<std::allocator<void>>> &);

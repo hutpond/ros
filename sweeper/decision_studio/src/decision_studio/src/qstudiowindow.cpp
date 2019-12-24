@@ -4,7 +4,7 @@
 #include <QFileDialog>
 #include "qcentralwidget.h"
 
-static const char *WND_TITLE = "Decision Studio 1.0";
+static const char *WND_TITLE = "Decision Studio 1.1";
 
 QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
 {

@@ -428,7 +428,7 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   // planning trajectory candidates
   Json::Value planningTrajectoryCandidates;
   for (const auto &trajectory : planningData.planning_trajectory_candidates) {
-    Json::Value item, itemSplines;
+    Json::Value item, itemSplines, itemPoints;
     item["id"] = static_cast<int>(trajectory.id);
     item["cost"] = trajectory.cost;
     item["safety_cost"] = trajectory.safety_cost;
@@ -452,11 +452,29 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
       itemSplines.append(chile_item);
     }
     item["splines"] = itemSplines;
+
+    for (const auto &point : trajectory.points) {
+      Json::Value chile_item;
+
+      chile_item["id"] = point.id;
+      chile_item["x"] = point.x;
+      chile_item["y"] = point.y;
+      chile_item["enu_x"] = point.enu_x;
+      chile_item["enu_y"] = point.enu_y;
+      chile_item["s"] = point.s;
+      chile_item["l"] = point.l;
+      chile_item["left_road_width"] = point.left_road_width;
+      chile_item["right_road_width"] = point.right_road_width;
+
+      itemPoints.append(chile_item);
+    }
+    item["points"] = itemPoints;
+
     planningTrajectoryCandidates.append(item);
   }
 
   // planning trajectory
-  Json::Value planningTrajectory, planningTrajectorySplines;
+  Json::Value planningTrajectory, planningTrajectorySplines, planningTrajectoryPoints;
   planningTrajectory["id"] = static_cast<int>(planningData.planning_trajectory.id);
   planningTrajectory["cost"] = planningData.planning_trajectory.cost;
   planningTrajectory["safety_cost"] = planningData.planning_trajectory.safety_cost;
@@ -480,6 +498,23 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     planningTrajectorySplines.append(item);
   }
   planningTrajectory["splines"] = planningTrajectorySplines;
+
+  for (const auto &point : planningData.planning_trajectory.points) {
+    Json::Value item;
+
+    item["id"] = point.id;
+    item["x"] = point.x;
+    item["y"] = point.y;
+    item["enu_x"] = point.enu_x;
+    item["enu_y"] = point.enu_y;
+    item["s"] = point.s;
+    item["l"] = point.l;
+    item["left_road_width"] = point.left_road_width;
+    item["right_road_width"] = point.right_road_width;
+
+    planningTrajectoryPoints.append(item);
+  }
+  planningTrajectory["points"] = planningTrajectoryPoints;
 
   // planning output
   Json::Value planningOutput;
@@ -784,6 +819,24 @@ void QPlanningWidget::parseDataFromJson(
       spline.yb.z = chile_item["yb_z"].asDouble();
       spline.yb.w = chile_item["yb_w"].asDouble();
     }
+
+    Json::Value itemPoints = item["points"];
+    int size_trajectory_points = itemPoints.size();
+    trajectory.points.resize(size_trajectory_points);
+    for (int j = 0; j < size_trajectory_points; ++j) {
+      Json::Value chile_item = itemPoints[j];
+      auto &point = trajectory.points[j];
+
+      point.id = chile_item["id"].asInt();
+      point.x = chile_item["x"].asDouble();
+      point.y = chile_item["y"].asDouble();
+      point.enu_x = chile_item["enu_x"].asDouble();
+      point.enu_y = chile_item["enu_y"].asDouble();
+      point.s = chile_item["s"].asDouble();
+      point.l = chile_item["l"].asDouble();
+      point.left_road_width = chile_item["left_road_width"].asDouble();
+      point.right_road_width = chile_item["right_road_width"].asDouble();
+    }
   }
 
   // planning trajectory
@@ -812,6 +865,24 @@ void QPlanningWidget::parseDataFromJson(
     spline.yb.y = chile_item["yb_y"].asDouble();
     spline.yb.z = chile_item["yb_z"].asDouble();
     spline.yb.w = chile_item["yb_w"].asDouble();
+  }
+
+  Json::Value planningTrajectoryPoints = planningTrajectory["points"];
+  int size_planning_trajectory_points = planningTrajectoryPoints.size();
+  planning_trajectory.points.resize(size_planning_trajectory_points);
+  for (int j = 0; j < size_planning_trajectory_points; ++j) {
+    Json::Value chile_item = planningTrajectoryPoints[j];
+    auto &point = planning_trajectory.points[j];
+
+    point.id = chile_item["id"].asInt();
+    point.x = chile_item["x"].asDouble();
+    point.y = chile_item["y"].asDouble();
+    point.enu_x = chile_item["enu_x"].asDouble();
+    point.enu_y = chile_item["enu_y"].asDouble();
+    point.s = chile_item["s"].asDouble();
+    point.l = chile_item["l"].asDouble();
+    point.left_road_width = chile_item["left_road_width"].asDouble();
+    point.right_road_width = chile_item["right_road_width"].asDouble();
   }
 
   // planning output

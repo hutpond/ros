@@ -182,7 +182,7 @@ void QPlanningShowWidget::drawImage()
   this->drawTrackTargetWithPoints(painter);
   this->drawNewTarget(painter);
   this->drawPlanningPoint(painter);
-  this->drawPlanningSplines(painter);
+  this->drawPlanningPoints(painter);
   this->drawGarbageResults(painter);
   this->drawText(painter);
 }
@@ -615,6 +615,37 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
     QPointF ptf(val_planning_splines[size_splines - 1].xb.w,
         val_planning_splines[size_splines - 1].yb.w);
     painter.drawText(m_transform.map(ptf), QString::number(m_planningData.planning_trajectory.id));
+
+    painter.restore();
+  }
+}
+
+void QPlanningShowWidget::drawPlanningPoints(QPainter &painter)
+{
+  QPolygonF pgf;
+  for (const auto &point : m_planningData.planning_trajectory.points) {
+    pgf << QPointF(point.x, point.y);
+  }
+  if (pgf.size() > 0) {
+    pgf = m_transform.map(pgf);
+
+    painter.save();
+
+    QPen pen;
+    pen.setWidth(2);
+    pen.setBrush(Qt::blue);
+    painter.setPen(pen);
+    painter.drawPolyline(pgf);
+
+    pen.setWidth(1);
+    pen.setColor(Qt::black);
+    painter.setFont(QFont("Times", 12));
+    painter.setPen(pen);
+
+    const auto &points = m_planningData.planning_trajectory.points;
+    QPointF ptf(points[points.size() - 1].x, points[points.size() - 1].y);
+    painter.drawText(m_transform.map(ptf),
+                     QString::number(m_planningData.planning_trajectory.id));
 
     painter.restore();
   }

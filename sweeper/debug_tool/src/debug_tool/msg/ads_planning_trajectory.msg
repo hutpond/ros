@@ -1,5 +1,6 @@
 uint8 id
 ads_Spline[] splines
+ads_Point[] points
 float64 cost
 float64 safety_cost
 float64 lateral_cost
