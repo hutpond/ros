@@ -2,9 +2,11 @@
 
 #include <QMenuBar>
 #include <QFileDialog>
+#include <QDockWidget>
+#include <QTextBrowser>
 #include "qcentralwidget.h"
 
-static const char *WND_TITLE = "Decision Studio 1.1";
+static const char *WND_TITLE = "Decision Studio 1.2";
 
 QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -16,11 +18,26 @@ QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
 
   m_pWdgCentral = new QCentralWidget(this);
   m_pWdgCentral->createSavePath(m_fsPath);
+  m_pWdgCentral->setFunciton(std::bind(&QStudioWindow::setData, this, std::placeholders::_1));
   this->setCentralWidget(m_pWdgCentral);
 
   connect(m_pWdgCentral, SIGNAL(replayFileName(const QString &)),
           this, SLOT(onSetWindowTitle(const QString &)));
   this->onSetWindowTitle();
+
+  QDockWidget *pDockWdg = new QDockWidget("", this);
+  pDockWdg->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  QWidget *pDockTitle = new QWidget;
+  pDockTitle->setStyleSheet("background-color: rgb(114, 159, 207);");
+  pDockWdg->setTitleBarWidget(pDockTitle);
+  this->addDockWidget(Qt::BottomDockWidgetArea, pDockWdg);
+
+  QTabWidget *pTabWidget = new QTabWidget(this);
+  pDockWdg->setWidget(pTabWidget);
+  m_pTextBrowserDebug = new QTextBrowser(this);
+  pTabWidget->addTab(m_pTextBrowserDebug, QStringLiteral("Debug"));
+
+  this->statusBar();
 }
 
 void QStudioWindow::createMenu()
@@ -88,4 +105,9 @@ void QStudioWindow::onSetWindowTitle(const QString &text)
     title += text.mid(index + 1);
   }
   this->setWindowTitle(title);
+}
+
+void QStudioWindow::setData(const decision_studio::ads_DecisionData4Debug &data)
+{
+  m_pTextBrowserDebug->setPlainText(QString::fromStdString(data.debug_info));
 }

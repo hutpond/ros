@@ -48,6 +48,13 @@ void QCentralWidget::setData(const decision_studio::ads_DecisionData4Debug &data
 {
   m_pWdgShow->setData(data);
   m_pWdgState->setData(data);
+  m_funciton(data);
+}
+
+void QCentralWidget::setFunciton(
+    std::function<void(const decision_studio::ads_DecisionData4Debug &)> function)
+{
+  m_funciton = function;
 }
 
 void QCentralWidget::openReplayDir(const QString &path)

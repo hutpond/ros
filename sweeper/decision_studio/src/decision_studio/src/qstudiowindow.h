@@ -3,8 +3,10 @@
 
 #include <QMainWindow>
 #include <boost/filesystem.hpp>
+#include "decision_studio/ads_DecisionData4Debug.h"
 
 class QCentralWidget;
+class QTextBrowser;
 
 class QStudioWindow : public QMainWindow
 {
@@ -15,6 +17,8 @@ public:
 protected:
   void createMenu();
   void createToolBar();
+
+  void setData(const decision_studio::ads_DecisionData4Debug &);
 
 signals:
 
@@ -27,6 +31,7 @@ protected slots:
 
 private:
   QCentralWidget *m_pWdgCentral;
+  QTextBrowser *m_pTextBrowserDebug;
 
   QAction *n_pActionSaveData;
   QAction *n_pActionLiving;

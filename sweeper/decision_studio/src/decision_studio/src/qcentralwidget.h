@@ -1,6 +1,7 @@
 #ifndef QCENTRALWIDGET_H
 #define QCENTRALWIDGET_H
 
+#include <functional>
 #include <QWidget>
 #include <boost/filesystem.hpp>
 #include "decision_studio/ads_DecisionData4Debug.h"
@@ -16,6 +17,7 @@ class QCentralWidget : public QWidget
 public:
   explicit QCentralWidget(QWidget *parent = nullptr);
   void setData(const decision_studio::ads_DecisionData4Debug &);
+  void setFunciton(std::function<void(const decision_studio::ads_DecisionData4Debug &)>);
 
   void openReplayDir(const QString &);
   void setSaveDataFlag(bool);
@@ -35,6 +37,8 @@ private:
   QStateWidget *m_pWdgState;
   QReplayWidget *m_pWdgReplay;
   DecisionSubscriber *m_pObjSubscriber;
+
+  std::function<void(const decision_studio::ads_DecisionData4Debug &)> m_funciton;
 };
 
 #endif // QCENTRALWIDGET_H
