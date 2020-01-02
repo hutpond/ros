@@ -10,63 +10,89 @@ add_message_files(
    ads_Vec4f.msg
    ads_Spline.msg
    ads_ins_data.msg
+   
+   ads_module_report_item.msg
+   ads_module_report.msg
+   
+   ads_ad_command.msg
+   ads_ad_report.msg
+   
+   ads_planning_output.msg
+   ads_ReferencePoint.msg
+   ads_TargetPoint.msg
+   ads_planning_trajectory.msg
+   ads_planningv1_status.msg
+   ads_planningv1_trajectory.msg
+   ads_planningv2_pathpoint.msg
+   ads_planningv2_trajectory.msg
+   ads_planningv2_decision.msg
+   
+   ads_control_brakecmd.msg
+   ads_control_brakereport.msg
+   ads_control_fuel_level_report.msg
+   ads_control_light.msg
+   ads_control_steeringcmd.msg
+   ads_control_steering_report.msg
+   ads_control_sweep.msg
+   ads_control_systemmode.msg
+   ads_control_throttlecmd.msg
+   ads_control_throttle_report.msg
+   ads_control_WheelPositionReport.msg
+   
+   ads_garbage_detection.msg
+   ads_littersensor_data.msg
+   
+   ads_trafficlight_item.msg
+   ads_trafficlight_data.msg
+   
+   ads_msfl_output.msg
+   
+   ads_boxInfo.msg
+   ads_CameraTarget.msg
+   ads_CameraTargetAll.msg
+   ads_CameraCIPX.msg
+   ads_CameraCurb.msg
+   ads_CameraCurbsLanes.msg
+   ads_CameraLane.msg
+   ads_CameraPedTarget.msg
+   ads_CameraVehTarget.msg
+   ads_CameraTrafficLight.msg
+   ads_CameraTrafficSign.msg
+   ads_obsBoxes.msg
+   ads_pubcurb.msg
+   ads_Radar28fTargetColl.msg
+   ads_Radar73fTargetColl.msg
+   ads_RadarTarget.msg
+   ads_TrackTarget.msg
+   ads_TrackTargetColl.msg
+   ads_TrackTargetCollDbg.msg
+   ads_UltraSonicTarget.msg
+   ads_UltraSonicTargetColl.msg
+   ads_VehicleLocation.msg
+   ads_lidar_front.msg
+   ads_PlanningData4Debug.msg
+   
+   ads_site_data_path.msg
+   
+   ads_camera_detected_item.msg
+   ads_camera_detected_data.msg
 
-  ads_module_report_item.msg
-  ads_module_report.msg
+   ads_decision_output.msg
+   ads_DecisionData4Debug.msg
 
-  ads_ad_command.msg
-  ads_ad_report.msg
+   ads_sweeper_control_id.msg
 
-  ads_planning_output.msg
-  ads_ReferencePoint.msg
-  ads_TargetPoint.msg
-  ads_planning_trajectory.msg
-  ads_planningv1_status.msg
-  ads_planningv1_trajectory.msg
-  ads_planningv2_pathpoint.msg
-  ads_planningv2_trajectory.msg
-  ads_planningv2_decision.msg
+   Status.msg
+   Command.msg
 
-  ads_control_brakecmd.msg
-  ads_control_brakereport.msg
-  ads_control_fuel_level_report.msg
-  ads_control_light.msg
-  ads_control_steeringcmd.msg
-  ads_control_steering_report.msg
-  ads_control_sweep.msg
-  ads_control_systemmode.msg
-  ads_control_throttlecmd.msg
-  ads_control_throttle_report.msg
-  ads_control_WheelPositionReport.msg
-  
-  ads_garbage_detection.msg
-  ads_littersensor_data.msg
-  
-  ads_msfl_output.msg
+   ads_str_array.msg
 
-  ads_boxInfo.msg
-  ads_CameraTarget.msg
-  ads_CameraTargetAll.msg
-  ads_CameraCIPX.msg
-  ads_CameraCurb.msg
-  ads_CameraCurbsLanes.msg
-  ads_CameraLane.msg
-  ads_CameraPedTarget.msg
-  ads_CameraTargetColl.msg
-  ads_CameraVehTarget.msg
-  ads_obsBoxes.msg
-  ads_pubcurb.msg
-  ads_Radar28fTargetColl.msg
-  ads_Radar73fTargetColl.msg
-  ads_RadarTarget.msg
-  ads_TrackTarget.msg
-  ads_TrackTargetColl.msg
-  ads_TrackTargetCollDbg.msg
-  ads_UltraSonicTarget.msg
-  ads_UltraSonicTargetColl.msg
-  ads_VehicleLocation.msg
-  ads_lidar_front.msg
-  ads_PlanningData4Debug.msg
+   ads_str2str_data.msg
+   ads_str2str_item.msg
+
+   ads_int2int_data.msg
+   ads_int2int_item.msg
+   ads_Point.msg
 )
 
 generate_messages(

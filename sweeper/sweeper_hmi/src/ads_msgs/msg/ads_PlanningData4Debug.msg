@@ -1,54 +1,38 @@
-float64 vehicle_latitude
-float64 vehicle_longitude
-float64 vehicle_altitude
-float64 vehicle_x
-float64 vehicle_y
-float64 vehicle_z
-float64 vehicle_s
-float64 vehicle_l
-float64 vehicle_width
-float64 vehicle_length
-float64 head_distance
+Header header
 
-ads_Radar28fTargetColl radar28f_results
-ads_Radar73fTargetColl radar73f_results
-ads_UltraSonicTargetColl ultrasonic_results
-ads_TrackTargetColl fusion_results
-ads_littersensor_data garbage_detection_results
+ads_Point front_axle_center
+ads_Point rear_axle_center
+ads_Point head_point
+ads_Point rear_point
+ads_Point hinge_point
+float64 front_vehicle_length
+float64 front_vehicle_width
+float64 rear_vehicle_length
+float64 rear_vehicle_width
+float64 steering_angle
 
-ads_planning_trajectory[10] planning_trajectory_candidates
-ads_planning_trajectory planning_trajectory
-ads_planning_output planning_output
+ads_Point[] reference_points
+ads_Spline[] reference_splines
 
-float64 safe_dis1
-float64 safe_dis2
-float64 max_planning_distance
-ads_pubcurb curb
-bool left_road_boundary_available
-bool right_road_boundary_available
-float64[5] left_road_boundary
-float64[5] right_road_boundary
-uint8 num_left_road_boundary_splines
-ads_Spline[100] left_road_boundary_splines
-uint8 num_right_road_boundary_splines
-ads_Spline[100] right_road_boundary_splines
-float64 left_road_boundary_start_s
-float64 left_road_boundary_end_s
-float64 right_road_boundary_start_s
-float64 right_road_boundary_end_s
-float64 left_half_road_width
-float64 right_half_road_width
-
-uint8 num_reference_points
-ads_ReferencePoint[100] reference_points
-uint8 num_reference_splines
-ads_Spline[100] reference_splines
+ads_Point radar_Point
+ads_RadarTarget[] radar_results
+ads_Point[14] ultrasonic_points
+ads_UltraSonicTarget[] ultrasonic_results
+ads_TrackTarget[] fusion_results
+ads_garbage_detection[] garbage_detection_results
 
 uint8 decision
+uint8 radar_decision
 uint8 ultrasonic_decision
-uint8 radar28f_decision
-uint8 radar73f_decision
 uint8 track_target_decision
-ads_TargetPoint[4] decision_targets
+
+float64 safety_cost_weight
+float64 lateral_cost_weight
+float64 smoothness_cost_weight
+float64 consistency_cost_weight
+float64 garbage_cost_weight
+ads_planning_trajectory[] planning_trajectory_candidates
+ads_planning_trajectory planning_trajectory
+ads_planning_output planning_output
 
 string debug_info

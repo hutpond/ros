@@ -16,12 +16,11 @@
 uint8 moduleID_Perception_    = 1
 uint8 moduleID_Localization   = 2
 uint8 moduleID_Planning       = 3
-uint8 moduleID_Control        = 4
-uint8 moduleID_Software       = 5
-uint8 moduleID_MCU            = 6
-uint8 moduleID_EPS            = 7
-uint8 moduleID_BMS            = 8
-uint8 moduleID_COUNT          = 8
+uint8 moduleID_Software       = 4
+uint8 moduleID_MCU            = 5
+uint8 moduleID_EPS            = 6
+uint8 moduleID_BMS            = 7
+uint8 moduleID_COUNT          = 7
 
 uint8 moduleStatus_OK           = 0
 uint8 moduleStatus_Critical     = 1

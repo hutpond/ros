@@ -7,18 +7,14 @@
         <file>subframes/TaskSelect.qml</file>
         <file>subframes/UserPage.qml</file>
         <file>subframes/AutoPilot.qml</file>
-        <file>subframes/Debug.qml</file>
-        <file>subframes/ErrorMessage.qml</file>
         <file>subframes/TaskReport.qml</file>
-        <file>subframes/UserLogin.qml</file>
-        <file>basic/Header.qml</file>
+        <file>subframes/Header.qml</file>
         <file>basic/CarLocation.qml</file>
         <file>basic/CarLocationState.qml</file>
         <file>basic/CarDisplayZoom.qml</file>
         <file>basic/AutoPilotPanel.qml</file>
         <file>image/map_1.png</file>
         <file>basic/DashBoard.qml</file>
-        <file>basic/PerceptionData.qml</file>
         <file>basic/Gears.qml</file>
         <file>basic/Camera.qml</file>
         <file>basic/VehicleState.qml</file>
@@ -57,5 +53,21 @@
         <file>svg/zoomIn.svg</file>
         <file>svg/direction.svg</file>
         <file>fault_code.xls</file>
+        <file>svg/warning.svg</file>
+        <file>subframes/VehicleErrMessage.qml</file>
+        <file>svg/brake_off.svg</file>
+        <file>svg/spout_off.svg</file>
+        <file>svg/rightSignalLight_off.svg</file>
+        <file>svg/positionLamp_off.svg</file>
+        <file>svg/pallet_off.svg</file>
+        <file>svg/lowBeam_off.svg</file>
+        <file>svg/leftSignalLight_off.svg</file>
+        <file>svg/highBeam_off.svg</file>
+        <file>basic/TaskDispaly.qml</file>
+        <file>basic/TaskReportPannel.qml</file>
+        <file>svg/task_water.svg</file>
+        <file>svg/task_power.svg</file>
+        <file>svg/task_garbage.svg</file>
+        <file>basic/PerceptionData.qml</file>
     </qresource>
 </RCC>

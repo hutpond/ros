@@ -2,15 +2,9 @@
 #define CHOSTAPI4HMI_H
 
 #include "ads_msgs/ads_ad_command.h"
-
-#include "ads_msgs/ads_module_report.h"
-#include "ads_msgs/ads_control_WheelPositionReport.h"
-#include "ads_msgs/ads_control_brakereport.h"
-#include "ads_msgs/ads_control_fuel_level_report.h"
-#include "ads_msgs/ads_control_steering_report.h"
-#include "ads_msgs/ads_control_throttle_report.h"
+#include "ads_msgs/ads_site_data_path.h"
 #include "ads_msgs/ads_ad_report.h"
-
+#include "ads_msgs/ads_module_report.h"
 #include "dbAdsApi4HMI.h"
 
 class CHostApi4HMI : public dbAds::IHostApi4HMI
@@ -19,7 +13,10 @@ public:
   CHostApi4HMI();
 
   virtual void getNodeHandle(std::vector<ros::NodeHandle*> &) override;
-  void OnMsg_ads_ad_command(const ads_msgs::ads_ad_command &);
+
+  void OnMsg_ads_ad_command(const ads_msgs::ads_ad_command& msg);
+  void OnMsg_ads_site_data_path(const ads_msgs::ads_site_data_path& msg);
+
   void run();
 
   dbAds::IApi4HMI* m_lpApi = nullptr;

@@ -11,11 +11,17 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/config.txt)
+    include(config.txt)
+endif()
+
 #set(CMAKE_C_COMPILER gcc-7)
 #set(CMAKE_CXX_COMPILER g++-7)
 
-set(Qt5_DIR /opt/Qt5.12.5/5.12.5/gcc_64/lib/cmake/Qt5)
+set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Core Gui Qml Quick REQUIRED)
+
+find_package(jsoncpp REQUIRED)
 
 # ros
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs ads_msgs)
@@ -34,6 +40,7 @@ set(SOURCES
   src/QDataManager.cpp
   src/dbAdsApi4HMI.cpp
   src/CHostApi4HMI.cpp
+  src/CSunTime.cpp
   )
 set(RESOURCES
   src/sweeper_hmi.qrc
@@ -41,15 +48,23 @@ set(RESOURCES
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${RESOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:include>
+  ${jsoncpp_INCLUDE_DIRS}
+)
 
 add_dependencies(${PROJECT_NAME} ads_msgs_gencpp)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick)
 target_link_libraries(${PROJECT_NAME} xlsreader)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} -ljsoncpp)
 
 install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
+
+install(FILES
+  src/fault_code.xls
+  src/dbAdsApi4HMI.json
+  DESTINATION lib/${PROJECT_NAME}
+)

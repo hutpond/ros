@@ -7,6 +7,7 @@ Item {
   property double space: 10
   signal auto()
   signal stopAuto()
+  signal stopAutoBack()
   signal manul()
 
   Rectangle {
@@ -15,22 +16,13 @@ Item {
     color: "#0A0A0A"
   }
 
-  Basic.Header {
-    id: headerAutoPilot
-    title: "AI智能扫地机"
-
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: parent.top
-    height: parent.height * 87 / 768.0
-  }
-
   Basic.CarLocationState {
     id: locationState
 
     anchors.left: parent.left
     anchors.leftMargin: space
-    anchors.top: headerAutoPilot.bottom
+    anchors.top: parent.top
+    anchors.topMargin: 35
     anchors.bottom: parent.bottom
 
     width: parent.width * 0.65
@@ -44,7 +36,8 @@ Item {
     anchors.right: parent.right
     anchors.rightMargin: space * 2
 
-    anchors.top: headerAutoPilot.bottom
+    anchors.top: parent.top
+    anchors.topMargin: 35
     anchors.bottom: parent.bottom
 
     onAuto: {
@@ -59,6 +52,9 @@ Item {
     }
     onStopAuto: {
       itemAutoPilot.stopAuto()
+    }
+    onStopAutoBack: {
+      itemAutoPilot.stopAutoBack()
     }
 
     onVisibleChanged: {

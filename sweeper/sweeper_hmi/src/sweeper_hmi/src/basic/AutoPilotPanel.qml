@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.3
+import Sweeper.DataManager 1.0
 
 Item {
 
@@ -7,6 +8,9 @@ Item {
   signal auto()
   signal manul()
   signal stopAuto()
+  signal stopAutoBack()
+
+  property bool pause: false
 
   Image {
     id: mapAutoPilotPanel
@@ -97,6 +101,42 @@ Item {
     }
   }
 
+  Item {
+    id: buttonStopBySide
+
+    anchors.fill: buttonAuto
+    visible: false
+
+    Image {
+      anchors.fill: parent
+      source: "qrc:/svg/button.svg"
+    }
+    Text {
+      id: btnText
+      text: qsTr("靠边停车")
+      font.family: "SimHei"
+      font.pointSize: 26
+      anchors.centerIn: parent
+      color: "white"
+    }
+
+    MouseArea {
+      anchors.fill: parent
+      hoverEnabled: true
+
+      onClicked: {
+        if (pause) {
+          DataManager.resume()
+          btnText.text = qsTr("靠边停车")
+        }
+        else {
+          DataManager.pause()
+          btnText.text = qsTr("恢复")
+        }
+        pause = !pause
+      }
+    }
+  }
 
   Item {
     id: buttonStopAuto
@@ -130,6 +170,26 @@ Item {
     }
   }
 
+  Timer {
+    id: timer
+    interval: 200; running: false; repeat: true
+    onTriggered: {
+      var autoIsReady = DataManager.autoIsReady()
+      if (buttonAuto.visible && autoPilot.enabled !== autoIsReady) {
+        buttonAuto.enabled = autoIsReady
+      }
+      var autoIsQuit = DataManager.autoIsQuit()
+      if (!buttonAuto.visible && autoIsQuit) {
+        changeToAutoRun(false)
+        autoPilotPanel.stopAutoBack()
+      }
+    }
+  }
+
+  onVisibleChanged: {
+    timer.running = visible
+  }
+
   function setButtonEnable(enabled) {
     buttonAuto.enabled = enabled
     buttonManul.enabled = enabled
@@ -138,6 +198,7 @@ Item {
   function changeToAutoRun(flag) {
     buttonAuto.visible = !flag
     buttonManul.visible = !flag
+    buttonStopBySide.visible = flag
     buttonStopAuto.visible = flag
   }
 }

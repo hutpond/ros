@@ -1,2 +1,2 @@
-int32              object_count
-ads_TrackTarget[250]   track_objects
+Header   header
+ads_TrackTarget[]   track_objects

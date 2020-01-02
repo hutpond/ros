@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <functional> 
+#include <memory>
 
 #include "boost/any.hpp" 
 #include "boost/signals2.hpp"
@@ -11,9 +12,6 @@
 #include "ros/node_handle.h"
 
 #include "sensor_msgs/PointCloud2.h"
-#include "ads_msgs/ads_ad_command.h"
-
-using namespace ads_msgs;
 
 namespace dbAds
 {
@@ -28,7 +26,7 @@ namespace dbAds
             Algorithm,
         };
 
-        enum e_result
+         enum e_result
         {
             Pass,
             Failure,
@@ -53,74 +51,78 @@ namespace dbAds
     class IApi4HMI
     {
     public:
-#define DECLARE_STATE_ITEM(name)   static const std::string Item_##name
-        DECLARE_STATE_ITEM(shou_sha);
-        DECLARE_STATE_ITEM(shikuo_light);
-        DECLARE_STATE_ITEM(jinguang_light);
-        DECLARE_STATE_ITEM(yuanguang_light);
-        DECLARE_STATE_ITEM(yingji_light);
-        DECLARE_STATE_ITEM(checliang_fault);
-        DECLARE_STATE_ITEM(saopan);
-        DECLARE_STATE_ITEM(penshui);
+#define DECLARE_SWEEPER_CONTROL_DATA(name)   static const std::string Item_##name;
+        #include "ISweeperControlData.h"
+#undef DECLARE_SWEEPER_CONTROL_DATA
 
-        DECLARE_STATE_ITEM(dang_wei);
-        DECLARE_STATE_ITEM(shui_liang);
-
-        DECLARE_STATE_ITEM(car_state);
-        DECLARE_STATE_ITEM(module_state);
-
-#undef DECLARE_STATE_ITEM
-
-        class CFault
+        class CFaultInfo
         {
         public:
+            std::string szCategory;
             std::string szCode;
             std::string szName;
             std::string szCondition;
             std::string szHandle;
             std::string szAction;
+            friend std::ostream& operator <<(std::ostream&out, CFaultInfo& fault);
         };
-
-        friend inline std::ostream& operator <<(std::ostream&out, CFault& fault)
-        {
-            return out << "fault.szCode:" << fault.szCode << std::endl
-                << "fault.szName:" << fault.szName << std::endl
-                << "fault.szCondition:" << fault.szCondition << std::endl
-                << "fault.szHandle:" << fault.szHandle << std::endl
-                << "fault.szAction:" << fault.szAction << std::endl
-                << std::endl;
-        }
 
         class CEventReport
         {
         public:
             std::string m_ItemName;
             boost::any m_value;
+            friend std::ostream& operator <<(std::ostream&out, CEventReport& report);
         };
 
         virtual ~IApi4HMI(){}
 
-        //The result must not be freed; it is statically allocated.
-        virtual ISelfCheck* GetSelfCheck(ISelfCheck::e_type type) = 0;
-        virtual bool GetFaultList(std::vector<CFault>& faults) = 0;
+        virtual std::shared_ptr<ISelfCheck> GetSelfCheck(ISelfCheck::e_type type) = 0;
 
-        virtual std::map<std::string, boost::any> GetProperty(const std::vector<std::string>& items) = 0;
+        virtual bool GetFaultList(std::vector<CFaultInfo>& faults) = 0;
 
-        virtual boost::signals2::connection ConnectPointCloud(const std::string& szName,
-                                                              std::function<void(const sensor_msgs::PointCloud2&)> callback) = 0;
+        virtual std::map<std::string, boost::any> GetProperty(const std::vector<std::string>& properties) = 0;
+        virtual boost::any GetProperty(const std::string& property) = 0;
 
-        virtual bool UpdateMapInfo(const std::string& strMapPath) = 0;
+        virtual bool SetProperty(const std::map<std::string, boost::any>& propValues) = 0;
+        virtual bool SetProperty(const std::string& property, const boost::any& value) = 0;
 
-        virtual bool StartAutoDrive(unsigned int action = ads_ad_command::action_SweepTo,
-                                    double x = 0.0, double y = 0.0, double z = 0.0) = 0;
+        virtual boost::signals2::connection ConnectPointCloud(const std::string& szName, std::function<void(const sensor_msgs::PointCloud2&)> callback) = 0;
 
-        virtual bool StopAutoDrive() = 0;
+        //自动驾驶，移动到指定位置，全0.0意味着循环
+        virtual bool MoveTo(double x = 0.0, double y = 0.0, double z = 0.0) = 0;
+  
+        //自动驾驶，清扫到指定位置。全0.0意味着循环
+        virtual bool SweepTo(double x = 0.0, double y = 0.0, double z = 0.0) = 0;
 
-        virtual boost::signals2::connection InstallEventCallback(std::function<int(CEventReport&)> callback,
-                                                                 const std::vector<std::string>& property) = 0;
+        //退出自动驾驶
+        virtual bool Stop() = 0;
 
-        //When szFaultDataBaseFile.empty(), "./fault_code.xls" will be used.
-        virtual bool StartWithHost(IHostApi4HMI* host, const std::string& szFaultDataBaseFile, int iDebug = 0) = 0;
+        //出库
+        virtual bool MoveTo(int path) = 0; 
+
+        //路边停车
+        virtual bool Pause() = 0;
+
+        //取消路边停车，继续自动驾驶
+        virtual bool Resume() = 0;
+
+        //选择清扫场景
+        virtual bool SetTask(const std::string& strSiteName, const std::string& strJobName) = 0;
+
+        //停车入库
+        virtual bool ParkTo(int path) = 0; 
+
+        //是否能进入自动驾驶
+        virtual bool AdIsReady(int) = 0;
+
+        //是否有critical fault发生，应该退出自动驾驶
+        virtual bool AdNeedQuit(void) = 0;
+
+        virtual boost::signals2::connection InstallEventCallback(
+            std::function<int(CEventReport&)> callback, const std::vector<std::string>& cared_property) = 0;
+
+        virtual bool StartWithHost(IHostApi4HMI* host) = 0;
     };
 
     IApi4HMI* getApi4HMI();

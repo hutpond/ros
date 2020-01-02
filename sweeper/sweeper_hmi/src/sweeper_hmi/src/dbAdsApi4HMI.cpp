@@ -2,24 +2,27 @@
 
 #include <memory>
 #include <iostream>
+#include <fstream>
+		
 #include <chrono>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <regex>
+
+#include "jsoncpp/json/json.h"
 
 #include "std_msgs/String.h"
+
 #include "ads_msgs/ads_ad_command.h"
+#include "ads_msgs/ads_site_data_path.h"
 #include "ads_msgs/ads_ad_report.h"
 #include "ads_msgs/ads_module_report.h"
-
-#include "ads_msgs/ads_control_WheelPositionReport.h"
-#include "ads_msgs/ads_control_brakereport.h"
-#include "ads_msgs/ads_control_fuel_level_report.h"
-#include "ads_msgs/ads_control_steering_report.h"
-#include "ads_msgs/ads_control_throttle_report.h"
-#include "ads_msgs/ads_control_light.h"
-#include "ads_msgs/ads_control_sweep.h"
-#include "ads_msgs/ads_control_systemmode.h"
+#include "ads_msgs/ads_str_array.h"
+#include "ads_msgs/ads_int2int_data.h"
+#include "ads_msgs/ads_sweeper_control_id.h"
+#include "ads_msgs/Status.h"
+#include "ads_msgs/ads_ins_data.h"
 
 #include "sweep_msgs/ThrottleReport.h"
 #include "sweep_msgs/BrakeReport.h"
@@ -29,48 +32,167 @@
 #include "sweep_msgs/FuelLevelReport.h"
 
 #include <xls.h>
+
 using namespace xls;
 using namespace dbAds;
+using namespace ads_msgs;
 
-namespace{
-    class CSelfCheckChassis : public ISelfCheck
+static bool g_bEnableFaultHandle = (nullptr != getenv("ENABLE_FAULT_HANDLE"));
+
+#define _CREATE_FAULT_SH_
+#define _TEST_ENABLE_SELF_CHECK_
+//#define _TEST_ENABLE_GETPROPERTY_
+
+namespace {
+    struct 
+    {
+        std::set<std::string> m_ignore_fault_list;
+        bool m_charge_fault = true;
+        std::string m_fault_code_file{"./fault_code.xls"};
+        int m_debug = 0;
+    } s_my_config;
+
+    inline int GetIntKey(int ID, int STATUS, int TYPE, int DEVICE = 0)
+    {
+        return ((ID << 24) | (STATUS << 16) | (TYPE << 8) | DEVICE);
+    }
+
+    class IFaultProvider
+    {
+    public:
+       enum e_type
+        {
+            None,
+            Chassis,
+            System,
+            Sensor,
+            Algorithm,
+            DisableAd,
+            StopAd,
+        };
+
+         virtual bool QueryFaultAmount(e_type type, int& iCritical, int& iWarning) = 0;
+         virtual ~IFaultProvider(){}
+    };
+
+    class CModule_report_item_Comp
+    {
+    public:
+        bool operator()(const ads_msgs::ads_module_report_item& left, const ads_msgs::ads_module_report_item& right)
+        {
+            if(left.moduleID != right.moduleID)
+            {
+                return left.moduleID < right.moduleID;
+            } 
+
+            if(left.moduleStatus != right.moduleStatus)
+            {
+                return left.moduleStatus < right.moduleStatus;
+            }
+
+            if(left.moduleSubtype != right.moduleSubtype)
+            {
+                return left.moduleSubtype < right.moduleSubtype;
+            }
+
+            return left.deviceID < right.deviceID;
+        }
+    };
+
+    class CSelfCheckImp : public ISelfCheck
     {
     private:
         std::thread m_th;
         int m_progress = 0;
         ISelfCheck::e_result m_result = ISelfCheck::Unknown;
-        int m_bStop = false;
+        bool m_bStop = true;
+        IFaultProvider* m_lpProvider = nullptr;
+        ISelfCheck::e_type m_type;
+        int m_FaultAmountInit[2] = {0 , 0};
 
     public:
+        explicit CSelfCheckImp(IFaultProvider* lpProvider, ISelfCheck::e_type type)
+        {
+            m_lpProvider = lpProvider;
+            m_type = type;
+        }
+
         virtual bool Start() override
         {
-            m_result = ISelfCheck::Processing;
+            if (!m_bStop) return true;
             m_bStop = false;
 
-            m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
+            static std::map<ISelfCheck::e_type, IFaultProvider::e_type> type_map =
+            {
+                {ISelfCheck::Sensor,    IFaultProvider::Sensor},
+                {ISelfCheck::Chassis,   IFaultProvider::Chassis},
+                {ISelfCheck::Algorithm, IFaultProvider::Algorithm},
+                {ISelfCheck::System,    IFaultProvider::System},
+            };
+
+            if(type_map.find(m_type) == type_map.end()) 
+            {
+                m_result = ISelfCheck::Failure;
+                return false;
+            }
+
+            m_lpProvider->QueryFaultAmount(type_map[m_type], m_FaultAmountInit[0], m_FaultAmountInit[1]);
+            if ((m_FaultAmountInit[0] + m_FaultAmountInit[1]) == 0)
+            {
+                m_progress = 100;
+                m_result = ISelfCheck::Pass;
+                return true;
+            }
+
+            m_result = ISelfCheck::Processing;
+
+            m_th = std::thread([this](IFaultProvider::e_type type) 
+            {
+                int iFaultAmount[2] = { 0 , 0 };
+                for (m_progress = 0; m_progress < 100; m_progress += 10)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    if(m_bStop) break;
+                    if(g_bEnableFaultHandle)
+                    {
+                        m_lpProvider->QueryFaultAmount(type, iFaultAmount[0], iFaultAmount[1]);
+                        if((iFaultAmount[0] + iFaultAmount[1]) == 0)
+                        {
+                            m_result = ISelfCheck::Pass;
+                            break;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                    }
+                    else
+                    {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    }
+                    if (m_bStop) break;
                 }
 
-                if(m_bStop)
+                if(!g_bEnableFaultHandle)
+                {
+                    m_result = ISelfCheck::Pass;
+                }
+
+                if (m_bStop)
                 {
                     m_result = ISelfCheck::Unknown;
                 }
-                else
+                else if(m_result != ISelfCheck::Pass)
                 {
-                    m_progress = 100;
-                    m_result = ISelfCheck::Pass;
+                    m_result = ISelfCheck::Failure;
                 }
-            });
+            }, type_map[m_type]);
+            
             return true;
         }
 
         virtual bool Stop() override
         {
             m_bStop = true;
-            m_th.join();
+            if (m_th.joinable())
+            {
+                m_th.join();
+            }
             return true;
         }
 
@@ -84,508 +206,392 @@ namespace{
             return m_result;
         }
     };
-
-    class CSelfCheckSystem : public ISelfCheck
+ 
+    class CFaultItemCategoryInfo
     {
-    private:
-        std::thread m_th;
-        int m_progress = 0;
-        ISelfCheck::e_result m_result = ISelfCheck::Unknown;
-        int m_bStop = false;
-
     public:
-        virtual bool Start() override
+        CFaultItemCategoryInfo(int post, int ad_init, int ad)
+            : m_category_post(post), m_category_ad_init(ad_init), m_category_ad(ad)
         {
-            m_result = ISelfCheck::Processing;
-            m_bStop = false;
 
-            m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    if(m_bStop) break;
-                }
-
-                if(m_bStop)
-                {
-                    m_result = ISelfCheck::Unknown;
-                }
-                else
-                {
-                    m_progress = 100;
-                    m_result = ISelfCheck::Pass;
-                }
-            });
-            return true;
         }
-
-        virtual bool Stop() override
-        {
-            m_bStop = true;
-            m_th.join();
-            return true;
-        }
-
-        virtual int GetProgress() override
-        {
-            return m_progress;
-        }
-
-        virtual e_result GetResult() override
-        {
-            return m_result;
-        }
+    public:
+        int m_category_post; //1:IFaultProvider::Chassis, 2:System, 3:Sensor, 4:Algorithm
+        int m_category_ad_init;
+        int m_category_ad;
     };
 
-    class CSelfCheckAlgorithm : public ISelfCheck
+    class CFaultDataBase
     {
     private:
-        std::thread m_th;
-        int m_progress = 0;
-        ISelfCheck::e_result m_result = ISelfCheck::Unknown;
-        int m_bStop = false;
-
-    public:
-        virtual bool Start() override
-        {
-            m_result = ISelfCheck::Processing;
-            m_bStop = false;
-
-            m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    if(m_bStop) break;
-                }
-
-                if(m_bStop)
-                {
-                    m_result = ISelfCheck::Unknown;
-                }
-                else
-                {
-                    m_progress = 100;
-                    m_result = ISelfCheck::Pass;
-                }
-            });
-            return true;
-        }
-
-        virtual bool Stop() override
-        {
-            m_bStop = true;
-            m_th.join();
-            return true;
-        }
-
-        virtual int GetProgress() override
-        {
-            return m_progress;
-        }
-
-        virtual e_result GetResult() override
-        {
-            return m_result;
-        }
-    };
-
-    class CSelfCheckSensor : public ISelfCheck
-    {
-    private:
-        std::thread m_th;
-        int m_progress = 0;
-        ISelfCheck::e_result m_result = ISelfCheck::Unknown;
-        int m_bStop = false;
-
-    public:
-        virtual bool Start() override
-        {
-            m_result = ISelfCheck::Processing;
-            m_bStop = false;
-
-            m_th = std::thread([this](){
-                for(m_progress = 0; m_progress < 100; m_progress += 10)
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    if(m_bStop) break;
-                }
-
-                if(m_bStop)
-                {
-                    m_result = ISelfCheck::Unknown;
-                }
-                else
-                {
-                    m_progress = 100;
-                    m_result = ISelfCheck::Pass;
-                }
-            });
-            return true;
-        }
-
-        virtual bool Stop() override
-        {
-            m_bStop = true;
-            m_th.join();
-            return true;
-        }
-
-        virtual int GetProgress() override
-        {
-            return m_progress;
-        }
-
-        virtual e_result GetResult() override
-        {
-            return m_result;
-        }
-    };
-
-    class CApi4HMI : public dbAds::IApi4HMI
-    {
-    private:
-        int m_bDebug = 0;
-        bool m_bRunning = false;
-        std::vector<std::string> m_cared_property;
-		
-        std::string m_fault_code_file;
-        std::unique_ptr<ISelfCheck> m_check_System;
-        std::unique_ptr<ISelfCheck> m_check_Sensor;
-        std::unique_ptr<ISelfCheck> m_check_Algorithm;
-        std::unique_ptr<ISelfCheck> m_check_Chassis;
-
-        boost::signals2::signal<int(CEventReport&)> m_eventSignal;
-        boost::signals2::signal<void(const sensor_msgs::PointCloud2&)> m_CloudPointSignal;
-
-        std::vector<ros::NodeHandle*> s_nodeHandles;
-
-        std::map<std::string, ros::Subscriber> m_Subs;
-        std::map<std::string, ros::Publisher> m_Pubs;
-
-        IHostApi4HMI* m_hostApi = nullptr;
         xlsWorkBook* m_pWorkBook = nullptr;
         xlsWorkSheet* m_pWorkSheet = nullptr;
 
-        std:: recursive_mutex  m_mutex;
-        std::condition_variable m_cv;
-        //Below member is protected
-        ads_msgs::ads_control_WheelPositionReport m_msg_ads_control_WheelPositionReport;
-        ads_msgs::ads_control_brakereport m_msg_ads_control_brakereport;
-        ads_msgs::ads_control_fuel_level_report m_msg_ads_control_fuel_level_report;
-        ads_msgs::ads_control_steering_report m_msg_ads_control_steering_report;
-        ads_msgs::ads_control_throttle_report m_msg_ads_control_throttle_report;
-        ads_msgs::ads_control_light m_msg_ads_control_light;
-        ads_msgs::ads_control_sweep m_msg_ads_control_sweep;
-        ads_msgs::ads_control_systemmode m_msg_ads_control_systemmode;
+        int m_colFaultModule = 0;
+        int m_colFaultCode = 1;
+        int m_colCategoryPost = 2;
+        int m_colCategoryAdInit = 3;
+        int m_colCategoryAd = 4;
+        int m_colIDAmount = 5;
+        int m_colFaultName = 6;
+        int m_colCondition = 7;
+        int m_colHandle = 8;
+        int m_colAction = 9;
 
-        sweep_msgs::ThrottleReport m_ThrottleReport;
-        sweep_msgs::BrakeReport m_BrakeReport;
-        sweep_msgs::SteeringReport m_SteeringReport;
-        sweep_msgs::SystemMode m_SystemMode;
-        sweep_msgs::Light m_Light;
-        sweep_msgs::FuelLevelReport m_FuelLevelReport;
+        std::map<int, CFaultItemCategoryInfo> m_CategoryInfors;
+        std::string m_fault_code_file;
 
-        ads_msgs::ads_ad_report m_msg_ads_ad_report;
-
-        std::map<int , std::chrono::system_clock::time_point> m_module_beat;
-        std::map<std::string, ads_msgs::ads_module_report_item> m_module_reprots;
-
-    private:
-        void OnMsg_ads_module_report(const ads_msgs::ads_module_report& msgs)
+    public:
+        CFaultDataBase(const std::string& file)
         {
-            std::string szCritical, szWarning;
-            {
-                std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-                for(auto& msg : msgs.reports)
-                {
-                    std::string szKey;
-                    {
-                        m_module_beat[msg.moduleID] = std::chrono::system_clock::now();
-
-                        szKey = std::to_string(msg.moduleID)
-                            + "-" + std::to_string(msg.moduleStatus)
-                            + "-" + std::to_string(msg.moduleSubtype);
-
-                        if (msg.deviceID > 0)
-                        {
-                            szKey = szKey + "-" + std::to_string(msg.deviceID);
-                        }
-
-                        switch (msg.moduleStatus)
-                        {
-                        case ads_msgs::ads_module_report_item::moduleStatus_Info_Online:
-                        default:
-                            continue;
-
-                        case ads_msgs::ads_module_report_item::moduleStatus_OK:
-                            {
-                                for (auto it = m_module_reprots.begin(); it != m_module_reprots.end(); it++)
-                                {
-                                    if (msg.moduleID == it->second.moduleID)
-                                    {
-                                        if (msg.moduleSubtype == 0)
-                                        {
-                                            m_module_reprots.erase(it);
-                                        }
-                                        else if (msg.moduleSubtype == it->second.moduleSubtype)
-                                        {
-                                            if (msg.deviceID == 0)
-                                            {
-                                                m_module_reprots.erase(it);
-                                            }
-                                            else if (msg.deviceID == it->second.deviceID)
-                                            {
-                                                m_module_reprots.erase(it);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-
-                        case ads_msgs::ads_module_report_item::moduleStatus_Critical:
-                            szCritical = szKey;
-                            m_module_reprots[szKey] = msg;
-                            break;
-
-                        case ads_msgs::ads_module_report_item::moduleStatus_Warning:
-                            szWarning = szKey;
-                            m_module_reprots[szKey] = msg;
-                            break;
-                        }
-                    }
-                }
-
-                if(m_bDebug)
-                {
-                    std::cout << "m_module_reprots" << std::endl;
-                    for(auto it = m_module_reprots.begin(); it!=m_module_reprots.end();it++)
-                    {
-                        std::cout << "\t" << it->first << std::endl;
-                    }
-                }
-            }
-
-            CEventReport report;
-            report.m_ItemName = Item_module_state;
-
-            if (!szCritical.empty())
-            {
-                report.m_value = szCritical;
-
-                ads_msgs::ads_ad_command msg_cmd;
-                msg_cmd.action = ads_msgs::ads_ad_command::action_Stop;
-                m_Pubs["/ads_ad_command"].publish(msg_cmd);
-                ros::spinOnce();
-            }
-            else if (!szWarning.empty())
-            {
-                report.m_value = szWarning;
-            }
-
-            if(!report.m_value.empty())
-            {
-                m_eventSignal(report);
-            }
-        }
-
-        void OnMsg_ads_control_WheelPositionReport(const ads_msgs::ads_control_WheelPositionReport& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_WheelPositionReport = msg;
-        }
-
-        void OnMsg_ads_control_brakereport(const ads_msgs::ads_control_brakereport& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_brakereport = msg;
-        }
-
-
-        void OnMsg_ads_control_fuel_level_report(const ads_msgs::ads_control_fuel_level_report& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_fuel_level_report = msg;
-        }
-
-
-        void OnMsg_ads_control_steering_report(const ads_msgs::ads_control_steering_report& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_steering_report = msg;
-        }
-
-        void OnMsg_ads_control_throttle_report(const ads_msgs::ads_control_throttle_report& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_throttle_report = msg;
-        }
-
-        void OnMsg_ads_ad_report(const ads_msgs::ads_ad_report& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_ad_report = msg;
-        }
-
-        void OnMsg_ads_control_light(const ads_msgs::ads_control_light& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_light = msg;
-        }
-
-        void OnMsg_ads_control_sweep(const ads_msgs::ads_control_sweep& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_sweep = msg;
-        }
-
-        void OnMsg_ads_control_systemmode(const ads_msgs::ads_control_systemmode& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            m_msg_ads_control_systemmode = msg;
-        }
-
-        void OnMsg_report_ThrottleInfo(const sweep_msgs::ThrottleReport & msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::ThrottleReport m_ThrottleReport = msg;
-        }
-
-        void OnMsg_report_BrakeInfo(const sweep_msgs::BrakeReport& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::BrakeReport m_BrakeReport = msg;
-        }
-        void OnMsg_report_SteerInfo(const sweep_msgs::SteeringReport& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::SteeringReport m_SteeringReport = msg;
-        }
-        void OnMsg_report_ModeInfo(const sweep_msgs::SystemMode& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::SystemMode m_SystemMode = msg;
-        }
-        void OnMsg_report_LightInfo(const sweep_msgs::Light& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::Light m_Light = msg;
-        }
-        void OnMsg_report_BmsInfo(const sweep_msgs::FuelLevelReport& msg)
-        {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            sweep_msgs::FuelLevelReport m_FuelLevelReport = msg;
-        }
-
-        xlsRow* getFaultRow(std::string szKey)
-        {
-            if (!m_pWorkBook)
+            m_fault_code_file = file;
+            if (nullptr == m_pWorkBook)
             {
                 m_pWorkBook = xls_open(m_fault_code_file.c_str(), "UTF-8");
                 if (nullptr == m_pWorkBook)
                 {
                     std::cerr << "file is not excel" << std::endl;
-                    return nullptr;
                 }
-
-                m_pWorkSheet = xls_getWorkSheet(m_pWorkBook, 2);
-                if (nullptr == m_pWorkSheet)
+                else
                 {
-                    std::cerr << "WorkSheet is not excel" << std::endl;
-                    return nullptr;
+                    auto index = 0;
+                    for (; index < m_pWorkBook->sheets.count; index++)
+                    {
+                        auto lpSheet = m_pWorkBook->sheets.sheet + index;
+                        if (std::strcmp("故障代码定义", reinterpret_cast<char*>(lpSheet->name)) == 0)
+                        {
+                            m_pWorkSheet = xls_getWorkSheet(m_pWorkBook, index);
+                            xls_parseWorkSheet(m_pWorkSheet);
+                            break;
+                        }
+                    }
                 }
-
-                xls_parseWorkSheet(m_pWorkSheet);
             }
 
-            for (int r = 1; r <= m_pWorkSheet->rows.lastrow; r++)
+            if (nullptr != m_pWorkSheet)
             {
-                xlsRow* row = &m_pWorkSheet->rows.row[r];
-                BYTE* pCurCellInfo = (BYTE *)(row->cells.cell[1].str);
-                if (!pCurCellInfo)
+                std::map<std::string, int*> name2col =
                 {
-                    break;
-                }
+                    {"系统部件",            &m_colFaultModule},
+                    {"故障代码",            &m_colFaultCode},
+                    {"开机自检",            &m_colCategoryPost},
+                    {"自动驾驶前置条件",     &m_colCategoryAdInit},
+                    {"自动驾驶模式",         &m_colCategoryAd},
+                    {"ID数量",              &m_colIDAmount},
+                    {"故障名称",            &m_colFaultName},
+                    {"故障判定条件",        &m_colCondition},
+                    {"处理方式",            &m_colHandle},
+                    {"故障对策",            &m_colAction},
+                };
 
-                if (szKey.compare(reinterpret_cast<char*>(pCurCellInfo)) == 0)
+                for (auto& it : name2col)
                 {
-                    return row;
+                    *(it.second) = -1;
+                    for (int col = 0; col < name2col.size(); col++)
+                    {
+                        xlsCell* cell = xls_cell(m_pWorkSheet, 0, col);
+                        if ((nullptr != cell) && (nullptr != cell->str))
+                        {
+                            if (it.first.compare(reinterpret_cast<char*>(cell->str)) == 0)
+                            {
+                                *(it.second) = col;
+                                std::cout << it.first << ":" << *(it.second) << std::endl;
+                            }
+                        }
+                    }
+                    if (-1 == *(it.second))
+                    {
+                        std::cout << it.first << " can not be found!" << std::endl;
+                    }
                 }
             }
-            std::cout << "Did not find information for \"" << szKey << "\"" << std::endl;
+
+            if(nullptr != m_pWorkSheet)
+            {
+                for (int index = 1; ; index++)
+                {
+                    xlsCell* cell = xls_cell(m_pWorkSheet, index, m_colFaultCode);
+
+                    if (nullptr == cell) break;
+                    if (nullptr == cell->str) break;
+
+                    int moduleID, moduleStatus, moduleSubtype, devices;
+                    auto result = std::sscanf(reinterpret_cast<char*>(cell->str), "%d-%d-%d-%d",
+                        &moduleID, &moduleStatus, &moduleSubtype, &devices);
+                    switch (result)
+                    {
+                    default:
+                        std::cout << "wrong fault code:" << reinterpret_cast<char*>(cell->str) << std::endl;
+                        break;
+
+                    case 3:
+                    case 4:
+                    {
+                        if(m_colCategoryPost > 0)
+                        {
+                            CFaultItemCategoryInfo info(IFaultProvider::None, 0, 0);
+                            char* lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, index, m_colCategoryPost)->str);
+                            if(lp)
+                            {
+                                if(std::string("System") == lp)
+                                {
+                                    info.m_category_post = IFaultProvider::System;
+                                }
+                                else if(std::string("Chassis") == lp)
+                                {
+                                    info.m_category_post = IFaultProvider::Chassis;
+                                }
+                                else if(std::string("Sensor") == lp)
+                                {
+                                    info.m_category_post = IFaultProvider::Sensor;
+                                }
+                                else if(std::string("Algorithm") == lp)
+                                {
+                                    info.m_category_post = IFaultProvider::Algorithm;
+                                }
+                                else 
+                                {
+                                    info.m_category_post = IFaultProvider::None;
+                                }
+                            }
+
+                            lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, index, m_colCategoryAdInit)->str);
+                            if(lp)
+                            {
+                                info.m_category_ad_init = std::strtol(lp, nullptr, 0);
+                            }
+
+                            lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, index, m_colCategoryAd)->str);
+                            if(lp)
+                            {
+                                info.m_category_ad = std::strtol(lp, nullptr, 0);
+                            }
+
+                            m_CategoryInfors.emplace(GetIntKey(moduleID, moduleStatus, moduleSubtype), 
+                                CFaultItemCategoryInfo(info.m_category_post, info.m_category_ad_init, info.m_category_ad)
+                                );
+                        }
+                    }
+                    break;
+                    }
+                }
+            }
+        }
+
+        CFaultItemCategoryInfo* GetItemCategory(int moduleID, int moduleStatus, int moduleSubtype)
+        {
+            auto it = m_CategoryInfors.find(GetIntKey(moduleID, moduleStatus, moduleSubtype));
+            if(it != m_CategoryInfors.end())
+            {
+                return &(it->second);
+            }
+
             return nullptr;
         }
 
-        bool Init(void)
+        bool FillCFaultInfo(const ads_module_report_item& item, IApi4HMI::CFaultInfo& fault)
         {
-            if(m_bRunning) return false;
+            std::string szKey = std::string("^")
+                + std::to_string(item.moduleID)
+                + "-" + std::to_string(item.moduleStatus)
+                + "-" + std::to_string(item.moduleSubtype)
+                + "(-id){0,1}";
+            if (m_pWorkSheet)
+            {
+                std::regex self_regex(szKey);
 
-            m_bRunning = true;
+                for (int r = 1; r <= m_pWorkSheet->rows.lastrow; r++)
+                {
+                    xlsCell* cell = xls_cell(m_pWorkSheet, r, m_colFaultCode);
+                    if (nullptr == cell) break;
+                    if (nullptr == cell->str) break;
+                    if (std::regex_match(reinterpret_cast<char*>(cell->str), self_regex))
+                    {
+                        auto lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colFaultCode)->str);
+                        if(lp)
+                        {
+                            fault.szCode = std::to_string(item.moduleID)
+                                            + "-" + std::to_string(item.moduleStatus)
+                                            + "-" + std::to_string(item.moduleSubtype);
+                            if(item.deviceID > 0)
+                            {
+                                fault.szCode = fault.szCode + "-" + std::to_string(item.deviceID);
+                            }
+                        }
 
-            m_hostApi->getNodeHandle(this->s_nodeHandles);
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colFaultName)->str);
+                        if(lp)
+                        {
+                            fault.szName = lp;
+                            if(item.deviceID > 0)
+                            {
+                                fault.szName = fault.szName + "(" + std::to_string(item.deviceID) + ")";
+                            }
+                        }
 
-            std::string topic = "/ads_ad_command";
-            m_Pubs[topic] = s_nodeHandles[0]->advertise<ads_msgs::ads_ad_command>(topic, 2);
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colCondition)->str);
+                        if(lp)
+                        {
+                            fault.szCondition = lp;
+                        }
 
-            //ros::message_traits::definition<ads_msgs::ads_ad_command>();
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colHandle)->str);
+                        if(lp)
+                        {
+                            fault.szHandle = lp;
+                        }
 
-            topic = "/ads_module_report";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_module_report, this);
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colAction)->str);
+                        if(lp)
+                        {
+                            fault.szAction = lp;
+                        }
 
-            topic = "/ads_control_WheelPositionRepor";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_WheelPositionReport, this);
 
-            topic = "/ads_control_brakereport";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_brakereport, this);
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colCategoryPost)->str);
+                        if(lp)
+                        {
+                            fault.szCategory = fault.szCategory + ":" + lp;
+                        }
 
-            topic = "/ads_control_fuel_level_report";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_fuel_level_report, this);
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colCategoryAdInit)->str);
+                        if(lp)
+                        {
+                            fault.szCategory = fault.szCategory + "," + lp;
+                        }
+                        lp = reinterpret_cast<char*>(xls_cell(m_pWorkSheet, r, m_colCategoryAd)->str);
+                        if(lp)
+                        {
+                            fault.szCategory = fault.szCategory + "," + lp;
+                        }
 
-            topic = "/ads_control_steering_report";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_steering_report, this);
+                        return true;
+                    }
+                }
+            }
+            std::cout << "Did not find information for \"" << szKey << "\"" << std::endl;
+            return false;
+        }
 
-            topic = "/ads_control_throttle_report";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_throttle_report, this);
+        bool GetDefaultFaultList(std::set<ads_module_report_item, CModule_report_item_Comp>& list)
+        {
+            if (nullptr == m_pWorkSheet) return false;
 
-            topic = "/ads_ad_report";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_ad_report, this);
+#ifdef _CREATE_FAULT_SH_
+            std::string s = R"(rostopic pub -1 /ads_module_report ads_msgs/ads_module_report "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+reports:
+- moduleID: %d
+  moduleStatus: %d
+  moduleSubtype: %d
+  deviceID: %d"
 
-            topic = "/ads_control_light";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_light, this);
+sleep 2s
 
-            topic = "/ads_control_sweep";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_sweep, this);
+            )";
+            //'{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
-            topic = "/ads_control_systemmode";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_ads_control_systemmode, this);
+            std::ofstream of("fault.sh", std::ios::trunc);
+            of << "#!/bin/bash" << std::endl;
 
-            topic = "/report/ThrottleInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_ThrottleInfo, this);
+            char szBuffer[1000];
+#endif
 
-            topic = "/report/BrakeInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_BrakeInfo, this);
+            for (int r = 1; r <= m_pWorkSheet->rows.lastrow; r++)
+            {
+                xlsCell* cell = xls_cell(m_pWorkSheet, r, m_colFaultCode);
+                if (nullptr == cell) break;
+                if (nullptr == cell->str) break;
 
-            topic = "/report/SteerInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_SteerInfo, this);
+                int moduleID, moduleStatus, moduleSubtype;
+                auto result = std::sscanf(reinterpret_cast<char*>(cell->str), "%d-%d-%d", &moduleID, &moduleStatus, &moduleSubtype);
+                if(3 != result)
+                {
+                    std::cout << "Wrong fault code format:" << reinterpret_cast<char*>(cell->str) << std::endl;
+                }
+                else
+                {
+                    int devices = 0;
+                    if(m_colIDAmount >= 0)
+                    {
+                        xlsCell* cellAmount = xls_cell(m_pWorkSheet, r, m_colIDAmount);
+                        if ((nullptr != cellAmount) && (nullptr != cellAmount->str))
+                        {
+                            devices = std::strtol(reinterpret_cast<char*>(cellAmount->str), nullptr, 10);
+                        }
+                    }
 
-            topic = "/report/ModeInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_ModeInfo, this);
+                    
+                    if(devices > 0)
+                    {
+                        for (int device = 1; device <= devices; device++)
+                        {
+                            ads_module_report_item item;
+                            item.moduleStatus = moduleStatus;
+                            item.moduleID = moduleID;
+                            item.moduleSubtype = moduleSubtype;
+                            item.deviceID = device;
 
-            topic = "/report/LightInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_LightInfo, this);
+                            std::string szOut;
+                            szOut = std::to_string(item.moduleID)
+                                + "-" + std::to_string(item.moduleStatus)
+                                + "-" + std::to_string(item.moduleSubtype);
 
-            topic = "/report/BmsInfo";
-            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_report_BmsInfo, this);
- 
+                            if (item.deviceID > 0)
+                            {
+                                szOut = szOut + "-" + std::to_string(item.deviceID);
+                            }
+
+                            if(s_my_config.m_ignore_fault_list.find(szOut) == s_my_config.m_ignore_fault_list.end())
+                            {
+                                list.insert(item);
+#ifdef _CREATE_FAULT_SH_
+                                sprintf(szBuffer, s.c_str(), item.moduleID, ads_module_report_item::moduleStatus_OK, item.moduleSubtype, item.deviceID);
+                                of << szBuffer << std::endl;
+#endif                            
+                            } 
+                        }
+                    }
+                    else
+                    {
+                            ads_module_report_item item;
+                            item.moduleStatus = moduleStatus;
+                            item.moduleID = moduleID;
+                            item.moduleSubtype = moduleSubtype;
+                            item.deviceID = 0;
+
+                            std::string szOut;
+                            szOut = std::to_string(item.moduleID)
+                                + "-" + std::to_string(item.moduleStatus)
+                                + "-" + std::to_string(item.moduleSubtype);
+
+                            if (item.deviceID > 0)
+                            {
+                                szOut = szOut + "-" + std::to_string(item.deviceID);
+                            }
+
+                            if(s_my_config.m_ignore_fault_list.find(szOut) == s_my_config.m_ignore_fault_list.end())
+                            {
+                                list.insert(item);
+#ifdef _CREATE_FAULT_SH_
+                                sprintf(szBuffer, s.c_str(), item.moduleID, ads_module_report_item::moduleStatus_OK, item.moduleSubtype, item.deviceID);
+                                of << szBuffer << std::endl;
+#endif
+                            }
+                    }
+                    
+                }
+            }
 
             return true;
         }
 
-        bool DeInit(void)
+        ~CFaultDataBase()
         {
-            if(!m_bRunning) return false;
-            m_bRunning = false;
-
             if (m_pWorkSheet)
             {
                 xls_close_WS(m_pWorkSheet);
@@ -597,101 +603,452 @@ namespace{
                 xls_close_WB(m_pWorkBook);
                 m_pWorkBook = nullptr;
             }
+        }
+    };
+
+    class CApi4HMI : public dbAds::IApi4HMI, public IFaultProvider
+    {
+    private:
+        bool m_bRunning = false;
+        std::vector<std::string> m_cared_property;
+
+        std::map<ISelfCheck::e_type, std::shared_ptr<ISelfCheck>> m_SelfCheckPool;
+
+        std::unique_ptr<CFaultDataBase> m_lpFaultDataBase;
+
+        boost::signals2::signal<int(CEventReport&)> m_eventSignal;
+        boost::signals2::signal<void(const sensor_msgs::PointCloud2&)> m_CloudPointSignal;
+
+        std::vector<ros::NodeHandle*> s_nodeHandles;
+
+        std::map<std::string, ros::Subscriber> m_Subs;
+        std::map<std::string, ros::Publisher> m_Pubs;
+
+        IHostApi4HMI* m_hostApi = nullptr;
+
+        std::recursive_mutex  m_mutex;
+        std::condition_variable m_cv;
+
+        //Below member is protected by m_mutex
+        sweep_msgs::ThrottleReport m_ThrottleReport;
+        sweep_msgs::BrakeReport m_BrakeReport;
+        sweep_msgs::SteeringReport m_SteeringReport;
+        sweep_msgs::SystemMode m_SystemMode;
+        sweep_msgs::Light m_Light;
+        sweep_msgs::FuelLevelReport m_FuelLevelReport;
+        ads_msgs::ads_ad_report m_msg_ads_ad_report;
+        ads_msgs::Status m_chasiss_status;
+
+        //std::map<int, std::chrono::system_clock::time_point> m_module_beat;
+        std::set<ads_msgs::ads_module_report_item, CModule_report_item_Comp> m_module_reports;
+
+        //---------------------------------------------------
+
+    private:
+
+        void OnMsg_StringCallback(const std_msgs::String& msg)
+        {
+            std::cout << __FUNCTION__ << "(\"" << msg.data << "\")" << std::endl;
+            if(msg.data == "dump_fault")
+            {
+                std::vector<dbAds::IApi4HMI::CFaultInfo> faults;
+                GetFaultList(faults);
+                for (auto it = faults.begin(); it != faults.end(); it++)
+                {
+                    std::cout << *it << std::endl;
+                }
+            }
+            else if(msg.data == "clear_fault")
+            {
+                std::lock_guard<std::recursive_mutex> lock(m_mutex);
+                m_module_reports.clear();
+            }
+        }
+
+        void OnMsg_ads_module_report(const ads_msgs::ads_module_report& msgs)
+        {
+            if(!g_bEnableFaultHandle) 
+            {
+                return;
+            }
+            bool bChanged = false;
+            uint32_t _count  = 0;
+            std::string szCritical, szWarning;
+            {
+                std::lock_guard<std::recursive_mutex> lock(m_mutex);
+                for (auto& msg : msgs.reports)
+                {
+                    //m_module_beat[msg.moduleID] = std::chrono::system_clock::now();
+
+                    std::string szOut;
+                    szOut = std::to_string(msg.moduleID)
+                        + "-" + std::to_string(msg.moduleStatus)
+                        + "-" + std::to_string(msg.moduleSubtype);
+
+                    if (msg.deviceID > 0)
+                    {
+                        szOut = szOut + "-" + std::to_string(msg.deviceID);
+                    }
+
+                    if(s_my_config.m_ignore_fault_list.find(szOut) != s_my_config.m_ignore_fault_list.end())
+                    {
+                        continue;
+                    } 
+
+                    switch (msg.moduleStatus)
+                    {
+                    default:
+                        continue;
+
+                    case ads_msgs::ads_module_report_item::moduleStatus_Info_Online:
+                    /*
+                    {
+                        for (auto it = m_module_reports.begin(); it != m_module_reports.end(); it++)
+                        {
+                            if (msg.moduleID == it->moduleID)
+                            {
+                                //m_module_reports.erase(it);
+                            }
+                        }
+                    }
+                    break;
+                    */
+
+                    case ads_msgs::ads_module_report_item::moduleStatus_OK:
+                    {
+                        if(!bChanged) {_count = m_module_reports.size();}
+                        for (auto it = m_module_reports.begin(); it != m_module_reports.end(); it++)
+                        {
+                            if (msg.moduleID == it->moduleID)
+                            {
+                                if (msg.moduleSubtype == 0)
+                                {
+                                    m_module_reports.erase(it);
+                                }
+                                else if (msg.moduleSubtype == it->moduleSubtype)
+                                {
+                                    if (msg.deviceID == 0)
+                                    {
+                                        m_module_reports.erase(it);
+                                    }
+                                    else if (msg.deviceID == it->deviceID)
+                                    {
+                                        m_module_reports.erase(it);
+                                    }
+                                }
+                            }
+                        }
+                        if(!bChanged) {bChanged = (_count != m_module_reports.size());}
+                    }
+                    break;
+
+                    case ads_msgs::ads_module_report_item::moduleStatus_Critical:
+                        {
+                            if(!bChanged) {_count = m_module_reports.size();}
+                            szCritical = szOut;
+                            m_module_reports.insert(msg);
+                            if(!bChanged) {bChanged = (_count != m_module_reports.size());}
+                        }
+                    break;
+
+                    case ads_msgs::ads_module_report_item::moduleStatus_Warning:
+                        {
+                            if(!bChanged) {_count = m_module_reports.size();}
+                            szWarning = szOut;
+                            m_module_reports.insert(msg);
+                            if(!bChanged) {bChanged = (_count != m_module_reports.size());}
+                        }
+                    break;
+                    }
+                }
+                
+                if(!bChanged) return;
+
+                {
+                    if (s_my_config.m_debug & 0x01)
+                    {
+                        std::cout << "m_module_reports:" << m_module_reports.size() << std::endl;
+                    }
+                    
+                    ads_str_array faultArray;
+                    if(m_module_reports.size() > 0)
+                    {
+                        for (auto it = m_module_reports.begin(); it != m_module_reports.end(); it++)
+                        {
+                            std::ostringstream result;
+                            result << (int)it->moduleID
+                                << "-" << (int)it->moduleStatus
+                                << "-" << (int)it->moduleSubtype;
+                            if (0 != it->deviceID)
+                            {
+                                result  << "-" << (int)it->deviceID;
+                            }
+
+                            faultArray.items.push_back(result.str());
+
+                            if (s_my_config.m_debug & 0x01)
+                            {
+                                std::cout << "\t" << result.str() << std::endl;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        faultArray.items.push_back("0-0-0");
+                    }
+                    m_Pubs["/ads_fault_list"].publish(faultArray);
+                }
+            }
+
+            CEventReport report;
+            report.m_ItemName = Item_module_state_changed;
+
+            if (!szCritical.empty())
+            {
+                report.m_value = szCritical;
+                if(s_my_config.m_charge_fault)
+                {
+                    int value[2] = {0, 0};
+                    QueryFaultAmount(IFaultProvider::StopAd, value[0], value[1]);
+                    if(value[0] > 0)
+                    {
+                        ads_msgs::ads_ad_command msg_cmd;
+                        msg_cmd.action = ads_msgs::ads_ad_command::action_Stop;
+                        m_Pubs["/ads_ad_command"].publish(msg_cmd);
+                        ros::spinOnce();
+                    }
+                }
+            }
+            else if (!szWarning.empty())
+            {
+                report.m_value = szWarning;
+            }
+
+            if (report.m_value.empty())
+            {
+                report.m_value = std::string("0-0-0");
+            }
+
+            //std::cout << __FUNCTION__ << std::endl;
+            
+            m_eventSignal(report);
+        }
+
+        void OnMsg_ads_ad_report(const ads_msgs::ads_ad_report& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            m_msg_ads_ad_report = msg;
+        }
+
+        void OnMsg_report_ThrottleInfo(const sweep_msgs::ThrottleReport & msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::ThrottleReport m_ThrottleReport = msg;
+        }
+
+        void OnMsg_report_BrakeInfo(const sweep_msgs::BrakeReport& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::BrakeReport m_BrakeReport = msg;
+        }
+        void OnMsg_report_SteerInfo(const sweep_msgs::SteeringReport& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::SteeringReport m_SteeringReport = msg;
+        }
+        void OnMsg_report_ModeInfo(const sweep_msgs::SystemMode& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::SystemMode m_SystemMode = msg;
+        }
+        void OnMsg_report_LightInfo(const sweep_msgs::Light& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::Light m_Light = msg;
+        }
+        void OnMsg_report_BmsInfo(const sweep_msgs::FuelLevelReport& msg)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            sweep_msgs::FuelLevelReport m_FuelLevelReport = msg;
+        }
+
+        void OnMsg_ads_chasiss_status(const ads_msgs::Status& msg)
+        {
+            m_chasiss_status = msg;
+        }
+
+        void OnMsg_ads_ins_data(const ads_msgs::ads_ins_data& msg)
+        {
+            msg.lat;
+            msg.lon;
+            msg.yaw;
+        }
+
+        bool Init(void)
+        {
+            if (m_bRunning) return false;
+            m_bRunning = true;
+
+            m_hostApi->getNodeHandle(this->s_nodeHandles);
+
+            m_lpFaultDataBase.reset(new CFaultDataBase(s_my_config.m_fault_code_file));
+            this->m_module_reports.clear();
+            if(g_bEnableFaultHandle)
+            {
+                m_lpFaultDataBase->GetDefaultFaultList(this->m_module_reports);
+            }
+
+            std::string topic = "/ads_ad_command";
+            m_Pubs[topic] = s_nodeHandles[0]->advertise<ads_msgs::ads_ad_command>(topic, 1);
+
+            topic = "/ads_site_data_path";
+            m_Pubs[topic] = s_nodeHandles[0]->advertise<ads_msgs::ads_site_data_path>(topic, 1);
+
+            topic = "/ads_fault_list";
+            m_Pubs[topic] = s_nodeHandles[0]->advertise<ads_msgs::ads_str_array>(topic, 1);
+
+            topic = "/ads_sweeper_control_i";
+            m_Pubs[topic] = s_nodeHandles[0]->advertise<ads_msgs::ads_int2int_data>(topic, 1);
+
+            //ros::message_traits::definition<ads_msgs::ads_ad_command>();
+
+            topic = "/ads_module_report";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 100, &CApi4HMI::OnMsg_ads_module_report, this);
+
+            topic = "/ads_ad_report";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_ad_report, this);
+
+            if (nullptr != getenv("ADS_CHASISS_VENDER_NAME"))
+            {
+                std::string vender(getenv("ADS_CHASISS_VENDER_NAME"));
+                if(vender == "haide")
+                {
+                    
+                }
+            }
+
+            topic = "/report/ThrottleInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_ThrottleInfo, this);
+
+            topic = "/report/BrakeInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_BrakeInfo, this);
+
+            topic = "/report/SteerInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_SteerInfo, this);
+
+            topic = "/report/ModeInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_ModeInfo, this);
+
+            topic = "/report/LightInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_LightInfo, this);
+
+            topic = "/report/BmsInfo";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_report_BmsInfo, this);
+
+            topic = "/ads_string_command";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 10, &CApi4HMI::OnMsg_StringCallback, this);
+
+            topic = "/status";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_chasiss_status, this);
+
+            // std::string topic = "/ads_imu_data";
+            // m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_ins_data, this);
+
+            return true;
+        }
+
+        bool DeInit(void)
+        {
+            if (!m_bRunning) return false;
+            m_bRunning = false;
+
+            m_lpFaultDataBase.reset();
+            m_Subs.clear();
+            m_Pubs.clear();
+
             return true;
         }
 
     public:
-        CApi4HMI()
+        CApi4HMI(const std::string& json_file)
         {
-            m_fault_code_file = "./fault_code.xls";
+            s_my_config.m_fault_code_file = json_file;
+
+            {
+                std::ifstream is;  
+                is.open (json_file, std::ios::binary);    
+                if(is.is_open())
+                {
+                    Json::Reader reader;
+                    Json::Value root;
+                    if (reader.parse(is, root, false))
+                    {
+                        auto& node = root["ignore_fault_list"];
+                        if(!node.isNull())
+                        {
+                            for(int i = 0; i < node.size(); i++)
+                            {
+                                s_my_config.m_ignore_fault_list.insert(node[i].asString());
+                            }
+                        }
+
+                        node = root["charge_fault"];
+                        if(!node.isNull())
+                        {
+                            s_my_config.m_charge_fault = node.asInt();
+                        }
+
+                        node = root["fault_code_file"];
+                        if(!node.isNull())
+                        {
+                            s_my_config.m_fault_code_file = node.asString();
+                        }
+
+                        node = root["debug"];
+                        if(!node.isNull())
+                        {
+                            s_my_config.m_debug = node.asInt();
+                        }
+                        
+                    }
+                }
+            }
         }
 
-        virtual ISelfCheck* GetSelfCheck(ISelfCheck::e_type type) override
+        virtual std::shared_ptr<ISelfCheck> GetSelfCheck(ISelfCheck::e_type type) override
         {
             switch (type)
             {
-            case ISelfCheck::e_type::System:
+            case ISelfCheck::System:
+            case ISelfCheck::Sensor:
+            case ISelfCheck::Algorithm:
+            case ISelfCheck::Chassis:
             {
-                if(!m_check_System)
+                if(m_SelfCheckPool.find(type) == m_SelfCheckPool.end())
                 {
-                    m_check_System.reset(new CSelfCheckSystem());
+                    m_SelfCheckPool[type] = std::make_shared<CSelfCheckImp>(this, type);
                 }
-                return m_check_System.get();
+                return m_SelfCheckPool[type];
             }
             break;
-
-            case ISelfCheck::e_type::Sensor:
-            {
-                if(!m_check_Sensor)
-                {
-                    m_check_Sensor.reset(new CSelfCheckSensor());
-                }
-                return m_check_Sensor.get();
-            }
-            break;
-
-            case ISelfCheck::e_type::Algorithm:
-            {
-                if(!m_check_Algorithm)
-                {
-                    m_check_Algorithm.reset(new CSelfCheckAlgorithm());
-                }
-                return m_check_Algorithm.get();
-            }
-            case ISelfCheck::e_type::Chassis:
-            {
-                if(!m_check_Chassis)
-                {
-                    m_check_Chassis.reset(new CSelfCheckChassis());
-                }
-                return m_check_Chassis.get();
-            }
-
             default:
                 return nullptr;
             }
         }
 
-        virtual bool GetFaultList(std::vector<CFault>& faults) override
+        virtual bool GetFaultList(std::vector<CFaultInfo>& faults) override
         {
-            std::lock_guard<std:: recursive_mutex> lock(m_mutex);
-            for (auto it = this->m_module_reprots.begin(); it != this->m_module_reprots.end(); it++)
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            for (auto it = m_module_reports.begin(); it != m_module_reports.end(); it++)
             {
-                if (it->second.moduleStatus != ads_msgs::ads_module_report_item::moduleStatus_OK)
+                if (it->moduleStatus != ads_msgs::ads_module_report_item::moduleStatus_OK)
                 {
-                    CFault fault;
-
-                    std::string szKey;
-                    szKey = std::to_string(it->second.moduleID)
-                        + "-" + std::to_string(it->second.moduleStatus)
-                        + "-" + std::to_string(it->second.moduleSubtype);
-
-                    if (it->second.deviceID > 0)
-                    {
-                        szKey = szKey + "-id";
-                    }
-
-                    auto row = getFaultRow(szKey);
-                    if (row)
-                    {
-                        fault.szCode = it->first;
-                        fault.szName = reinterpret_cast<char*>(row->cells.cell[2].str);
-                        if (it->second.deviceID > 0)
-                        {
-                            fault.szName = fault.szName + ",id=" + std::to_string(it->second.deviceID);
-                        }
-                        fault.szCondition = reinterpret_cast<char*>(row->cells.cell[3].str);
-                        fault.szHandle = reinterpret_cast<char*>(row->cells.cell[4].str);
-                        fault.szAction = reinterpret_cast<char*>(row->cells.cell[5].str);
-                    }
-                    else
-                    {
-                        fault.szCode = it->first;
-                    }
+                    CFaultInfo fault;
+                    this->m_lpFaultDataBase->FillCFaultInfo(*it, fault);
                     faults.push_back(fault);
                 }
             }
-            if(m_bDebug)
+            if (s_my_config.m_debug & 0x02)
             {
                 std::cout << "Total faults=" << faults.size() << std::endl;
             }
@@ -700,74 +1057,95 @@ namespace{
 
         virtual std::map<std::string, boost::any> GetProperty(const std::vector<std::string>& items) override
         {
-/*
-            ads_msgs::ads_control_WheelPositionReport m_msg_ads_control_WheelPositionReport;
-            ads_msgs::ads_control_brakereport m_msg_ads_control_brakereport;
-            ads_msgs::ads_control_fuel_level_report m_msg_ads_control_fuel_level_report;
-            ads_msgs::ads_control_steering_report m_msg_ads_control_steering_report;
-            ads_msgs::ads_control_throttle_report m_msg_ads_control_throttle_report;
-            ads_msgs::ads_ad_report m_msg_ads_ad_report;
-            ads_msgs::ads_control_light m_msg_ads_control_light;
-
-            m_msg_ads_control_light.LeftTurnLight   #light for turn
-            m_msg_ads_control_light.RightTurnLight
-            m_msg_ads_control_light.LowBeamLight    #light for lighting
-            m_msg_ads_control_light.HighBeamLight
-            m_msg_ads_control_fuel_level_report.rsoc //dian liang%
-*/
+            //ads_msgs::ads_ad_report m_msg_ads_ad_report;
 
             std::map<std::string, boost::any> values;
             for (auto it = items.begin(); it != items.end(); it++)
             {
-                if (it->compare(IApi4HMI::Item_penshui) == 0)
+                if (it->compare(IApi4HMI::Item_spout_water) == 0)
                 {
-                    values[*it] = 123;
+                    //5 - 8	工作模式	0：手持抽吸 | 1：干式清扫 | 2：湿式清扫 | 3：专用功能 | 4 - 14：reserved | 15：NA
+                    switch(m_chasiss_status.working_mode)
+                    {
+                    case 2:
+                        values[*it] = 1;
+                    break;
+                    
+                    default:
+                        values[*it] = 0;
+                    break;
+                    }
                 }
-                else if (it->compare(IApi4HMI::Item_saopan) == 0)
+                else if (it->compare(IApi4HMI::Item_brush_status) == 0)
                 {
-                    values[*it] = 3;
+                    //上装工作使能	00：禁止 | 01：使能 | 10：NA | 11：无动作
+                    values[*it] = m_chasiss_status.sweeper_enable;
                 }
-                else if (it->compare(IApi4HMI::Item_shou_sha) == 0)
+                // else if (it->compare(IApi4HMI::Item_manual_brake) == 0)
+                // {
+                //     values[*it] = 1;
+                // }
+                else if (it->compare(IApi4HMI::Item_width_light) == 0)
                 {
-                    values[*it] = m_msg_ads_control_light.BrakeLight;
+                    values[*it] = this->m_chasiss_status.width_light;
                 }
-                else if (it->compare(IApi4HMI::Item_shikuo_light) == 0)
+                // else if (it->compare(IApi4HMI::Item_emergency_light) == 0)
+                // {
+                //     values[*it] = 0;
+                // }
+                else if (it->compare(IApi4HMI::Item_low_beam_light) == 0)
                 {
-                    values[*it] = m_msg_ads_control_light.WidthLight;      //light for show status
+                    values[*it] = this->m_chasiss_status.low_beam_light;
                 }
-                else if (it->compare(IApi4HMI::Item_yingji_light) == 0)
+                // else if (it->compare(IApi4HMI::Item_fault_list) == 0)
+                // {
+                //     values[*it] = 1;
+                // }
+                else if (it->compare(IApi4HMI::Item_high_beam_light) == 0)
                 {
-                    values[*it] = 0;
-                }
-                else if (it->compare(IApi4HMI::Item_jinguang_light) == 0)
-                {
-                    values[*it] = 0;
-                }
-                else if (it->compare(IApi4HMI::Item_checliang_fault) == 0)
-                {
-                    values[*it] = 'A';
-                }
-                else if (it->compare(IApi4HMI::Item_yuanguang_light) == 0)
-                {
-                    values[*it] = std::string("Test");
+                    values[*it] = this->m_chasiss_status.high_beam_light;
                 }
                 else if (it->compare(IApi4HMI::Item_car_state) == 0)
                 {
                     values[*it] = static_cast<ads_ad_report::_carState_type>(m_msg_ads_ad_report.carState);
                 }
-                else if (it->compare(IApi4HMI::Item_shui_liang) == 0)
+                // else if (it->compare(IApi4HMI::Item_water_level) == 0)
+                // {
+                //     values[*it] = 10;
+                // }
+                else if (it->compare(dbAds::IApi4HMI::Item_gear) == 0)
                 {
-                    values[*it] = 10;
+                    values[*it] = this->m_chasiss_status.gear;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_dang_wei) == 0)
+                else if (it->compare(dbAds::IApi4HMI::Item_light) == 0)
                 {
-                    values[*it] = 1;
+                    values[*it] = this->m_chasiss_status.light;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_reverse_light) == 0)
+                {
+                    values[*it] = this->m_chasiss_status.reversing_light;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_brake_light) == 0)
+                {
+                    values[*it] = this->m_chasiss_status.brake_light;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_left_light) == 0)
+                {
+                    values[*it] = this->m_chasiss_status.left_turn_light;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_right_light) == 0)
+                {
+                    values[*it] = this->m_chasiss_status.right_turn_light;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_suction_status) == 0)
+                {
+                    values[*it] = this->m_chasiss_status.fan_hz > 0 ? 1 : 0;
                 }
                 else
                 {
                     std::cout << "Unknown Property:" << *it << std::endl;
                 }
-           }
+            }
             return values;
         }
 
@@ -782,17 +1160,11 @@ namespace{
             return m_CloudPointSignal.connect(callback);
         }
 
-        virtual bool UpdateMapInfo(const std::string& strMapPath) override
-        {
-            (void)strMapPath;
-            return true;
-        }
-
-        virtual bool StartAutoDrive(unsigned int action = ads_ad_command::action_SweepTo,
-                                    double x = 0.0, double y = 0.0, double z = 0.0) override
+        //自动驾驶，清扫到指定位置。全0.0意味着循环
+        virtual bool SweepTo(double x = 0.0, double y = 0.0, double z = 0.0) override
         {
             ads_msgs::ads_ad_command msg;
-            msg.action = action;
+            msg.action = ads_ad_command::action_SweepTo;
             msg.lat = x;
             msg.lon = y;
 
@@ -800,7 +1172,8 @@ namespace{
             return true;
         }
 
-        virtual bool StopAutoDrive() override
+        //退出自动驾驶
+        virtual bool Stop() override
         {
             ads_msgs::ads_ad_command msg;
             msg.action = ads_ad_command::action_Stop;
@@ -809,236 +1182,364 @@ namespace{
             return true;
         }
 
-
-        virtual boost::signals2::connection InstallEventCallback(std::function<int(CEventReport&)> callback,
-                                                                 const std::vector<std::string>& property)override
+        virtual boost::signals2::connection InstallEventCallback(
+            std::function<int(CEventReport&)> callback, const std::vector<std::string>& cared_property)override
         {
-            m_cared_property = property;
+            m_cared_property = cared_property;
             return m_eventSignal.connect(callback);
         }
 
-        virtual bool StartWithHost(IHostApi4HMI* host, const std::string& szFile, int iDebug = 0) override
+        virtual bool StartWithHost(IHostApi4HMI* host) override
         {
-            this->m_bDebug = iDebug;
             m_hostApi = host;
-            if (!szFile.empty())
+            return Init();
+        }
+        
+        //自动驾驶，移动到指定位置，全0.0意味着循环
+        virtual bool MoveTo(double x, double y, double z) override
+        {
+            ads_msgs::ads_ad_command msg;
+            msg.action = ads_ad_command::action_MoveTo;
+            msg.lat = x;
+            msg.lon = y;
+
+            m_Pubs["/ads_ad_command"].publish(msg);
+            return true;
+        }
+  
+        //出库
+        virtual bool MoveTo(int path) override
+        {
+            return true;
+        }
+
+        //路边停车
+        virtual bool Pause() override
+        {
+            ads_msgs::ads_ad_command msg;
+            msg.action = ads_ad_command::action_RoadSideStop;
+            m_Pubs["/ads_ad_command"].publish(msg);
+            return true;
+        }
+
+        //取消路边停车，继续自动驾驶
+        virtual bool Resume() override
+        {
+            ads_msgs::ads_ad_command msg;
+            msg.action = ads_ad_command::action_Resume;
+            m_Pubs["/ads_ad_command"].publish(msg);
+            return true;
+        }
+
+        //选择清扫场景
+        virtual bool SetTask(const std::string& strSiteName, const std::string& strJobName) override
+        {
+            ads_msgs::ads_site_data_path msg;
+            msg.szSiteName = strSiteName;
+            msg.szJobName = strJobName;
+            m_Pubs["/ads_site_data_path"].publish(msg);
+            return true;
+        }
+
+        //停车入库
+        virtual bool ParkTo(int path) override
+        {
+            return true;
+        }
+
+        virtual boost::any GetProperty(const std::string& property) override
+        {
+            std::vector<std::string> properties{property};
+            auto values = GetProperty(properties);
+            if(values.size() == 1)
             {
-                m_fault_code_file = szFile;
+                return values.begin()->second;
+            }
+            else
+            {
+                std::cout << "Failed to get property for: " << property;
+                return boost::any();
+            }
+        }
+
+        template<typename T> T toValue(T, const boost::any& data)
+        {
+            if (data.type() == typeid (int))
+            {
+                return boost::any_cast<int>(data);
+            }
+            else if (data.type() == typeid (float))
+            {
+                return boost::any_cast<float>(data);
+            }
+            else if (data.type() == typeid (double))
+            {
+                return boost::any_cast<double>(data);
+            }
+            else if (data.type() == typeid (std::string))
+            {
+                return std::strtod(boost::any_cast<std::string>(data).c_str(), nullptr);
+            }
+            else if (data.type() == typeid (bool))
+            {
+                return boost::any_cast<bool>(data);
+            }
+            else
+            {
+                std::cout << "Unsuportd type:" << data.type().name() << std::endl;
+            }
+            return -1;
+        }
+
+        virtual bool SetProperty(const std::map<std::string, boost::any>& values) override
+        {
+            ads_int2int_data msg;
+            ads_int2int_item item;
+
+            static const std::map<std::string, int> map_ = 
+            {
+                {IApi4HMI::Item_spout_water,    ads_sweeper_control_id::item_spout_water_run},
+                {IApi4HMI::Item_brush_status,   ads_sweeper_control_id::item_brush_run},
+                {IApi4HMI::Item_width_light,    ads_sweeper_control_id::item_width_light},
+                {IApi4HMI::Item_low_beam_light, ads_sweeper_control_id::item_low_beam_light},
+                {IApi4HMI::Item_high_beam_light,ads_sweeper_control_id::item_high_beam_light},
+                {IApi4HMI::Item_light,          ads_sweeper_control_id::item_light},
+                {IApi4HMI::Item_reverse_light,  ads_sweeper_control_id::item_reversing_light},
+                {IApi4HMI::Item_brake_light,    ads_sweeper_control_id::item_brake_light},
+                {IApi4HMI::Item_left_light,     ads_sweeper_control_id::item_left_turn_light},
+                {IApi4HMI::Item_right_light,    ads_sweeper_control_id::item_right_turn_light},
+                {IApi4HMI::Item_suction_status, ads_sweeper_control_id::item_suction_run},
+
+                // {IApi4HMI::Item_emergency_light, 0},
+                // {IApi4HMI::Item_fault_list, 0},
+                // {IApi4HMI::Item_car_state, 0},
+                // {IApi4HMI::Item_water_level, 0},
+                // {IApi4HMI::Item_gear, 0},
+            };                
+                            
+            for (auto it = values.begin(); it != values.end(); it++)
+            {
+                auto key_ = map_.find(it->first);
+                if(key_ != map_.end())
+                {
+                    item.key = key_->second;
+                }
+                else
+                {
+                    std::cout << "Unknown Property:" << it->first << std::endl;
+                    continue;
+                }
+                item.value = toValue(item.value, it->second);
+                msg.items.push_back(item);
             }
 
-            return Init();
+            if(msg.items.size() > 0)
+            {
+                std::string topic = "/ads_sweeper_control_i";
+                m_Pubs[topic].publish(msg);
+            }
+
+            return true;
+        }
+
+        virtual bool SetProperty(const std::string& property, const boost::any& value) override
+        {
+            std::map<std::string, boost::any> data = 
+            {
+                {property, value},
+            };
+            return SetProperty(data);
+        }
+
+        virtual bool AdIsReady(int) override
+        {
+            if(g_bEnableFaultHandle)
+            {
+                int value[2] = {0, 0};
+                QueryFaultAmount(IFaultProvider::DisableAd, value[0], value[1]);
+                //std::cout << __FUNCTION__ << ":" <<  value[0] << "," <<  value[1] << std::endl;
+                return (value[0] == 0);
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        //是否有critical fault发生，应该退出自动驾驶
+        virtual bool AdNeedQuit(void) override
+        {
+            if(g_bEnableFaultHandle)
+            {
+                int value[2] = {0, 0};
+                QueryFaultAmount(IFaultProvider::StopAd, value[0], value[1]);
+                //std::cout << __FUNCTION__ << ":" <<  value[0] << "," <<  value[1] << std::endl;
+                return (value[0] != 0);
+            }
+            else
+            {
+                return false;
+            }
+        }   
+
+        virtual bool QueryFaultAmount(IFaultProvider::e_type type, int& iCritical, int& iWarning) override
+        {
+            iCritical = iWarning = 0;
+
+            decltype(m_module_reports) data;
+            //std::set<ads_msgs::ads_module_report_item, CModule_report_item_Comp> data;
+            {
+                std::lock_guard<std::recursive_mutex> lock(m_mutex);
+                data = m_module_reports;
+            }
+
+            for(auto& item : data)
+            {
+                CFaultItemCategoryInfo* lp =  m_lpFaultDataBase->GetItemCategory(item.moduleID, item.moduleStatus, item.moduleSubtype);
+                if(lp == nullptr) continue;
+
+                switch (type)
+                {
+                case Chassis:
+                case System:
+                case Sensor:
+                case Algorithm:
+                    if(lp->m_category_post == type) 
+                    {
+                        switch(item.moduleStatus)
+                        {
+                        default:
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Critical:
+                            iCritical++;
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Warning:
+                            iWarning++;
+                            break;
+                        }
+                    }
+                break;
+
+                case DisableAd:
+                    if(lp->m_category_ad_init) 
+                    {
+                        switch(item.moduleStatus)
+                        {
+                        default:
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Critical:
+                            iCritical++;
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Warning:
+                            iWarning++;
+                            break;
+                        }
+                    }
+                break;
+
+                case StopAd:
+                    if(lp->m_category_ad) 
+                    {
+                        switch(item.moduleStatus)
+                        {
+                        default:
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Critical:
+                            iCritical++;
+                            break;
+                        case ads_msgs::ads_module_report_item::moduleStatus_Warning:
+                            iWarning++;
+                            break;
+                        }
+                    }
+                break;
+                
+                default:
+                break;
+                }
+            }
+            //std::cout << "iCritical=" << iCritical << ", iWarning" <<iWarning << std::endl;
+            return true;
         }
     };
 }
 
 namespace dbAds
 {
-#define DECLARE_STATE_ITEM(name)   const std::string IApi4HMI::Item_##name = #name;
-    DECLARE_STATE_ITEM(shou_sha);
-    DECLARE_STATE_ITEM(shikuo_light);
-    DECLARE_STATE_ITEM(jinguang_light);
-    DECLARE_STATE_ITEM(yuanguang_light);
-    DECLARE_STATE_ITEM(yingji_light);
-    DECLARE_STATE_ITEM(checliang_fault);
-    DECLARE_STATE_ITEM(saopan);
-    DECLARE_STATE_ITEM(penshui);
+    std::ostream& operator <<(std::ostream&out, IApi4HMI::CFaultInfo& fault)
+    {
+        //return out;
+        return out << "fault.szCode:" << fault.szCode << std::endl
+            << "fault.szName:" << fault.szName << std::endl
+            << "fault.szCondition:" << fault.szCondition << std::endl
+            << "fault.szHandle:" << fault.szHandle << std::endl
+            << "fault.szAction:" << fault.szAction << std::endl
+            << "fault.szCategory" << fault.szCategory << std::endl;
+    }
 
-    DECLARE_STATE_ITEM(dang_wei);
-    DECLARE_STATE_ITEM(shui_liang);
+    std::ostream& operator <<(std::ostream&out, IApi4HMI::CEventReport& report)
+    {
+        //return out;
+        if (report.m_value.type() == typeid (int))
+        {
+            auto value = boost::any_cast<int>(report.m_value);
+            return std::cout << "report[\"" << report.m_ItemName << "\"]="
+                << boost::any_cast<int>(report.m_value);
+        }
+        else if (report.m_value.type() == typeid (float))
+        {
+            auto value = boost::any_cast<float>(report.m_value);
+            return std::cout << "report[\"" << report.m_ItemName << "\"]="
+                << boost::any_cast<float>(report.m_value);
+        }
+        else if (report.m_value.type() == typeid (double))
+        {
+            auto value = boost::any_cast<double>(report.m_value);
+            return std::cout << "report[\"" << report.m_ItemName << "\"]="
+                << boost::any_cast<double>(report.m_value);
+        }
+        else if (report.m_value.type() == typeid (std::string))
+        {
+            auto value = boost::any_cast<std::string>(report.m_value);
+            return std::cout << "report[\"" << report.m_ItemName << "\"]=\""
+                << boost::any_cast<std::string>(report.m_value)
+                << "\"";
+        }
+        else if (report.m_value.type() == typeid (ads_msgs::ads_ad_report::_carState_type))
+        {
+            static std::map<ads_msgs::ads_ad_report::_carState_type, std::string> names = 
+            {
+#define carStateItem(A) {ads_msgs::ads_ad_report::A, #A}
+                carStateItem(carState_Idle),
+                carStateItem(carState_Moving),
+                carStateItem(carState_MoveDone),
+                carStateItem(carState_Sweeping),
+                carStateItem(carState_SweepDone),
+                carStateItem(carState_Stop),
+                carStateItem(carState_Manual),
+                carStateItem(carState_Busy),
+#undef carStateItem                
+            };
+            auto value = boost::any_cast<ads_msgs::ads_ad_report::_carState_type>(report.m_value);
 
-    DECLARE_STATE_ITEM(car_state);
-    DECLARE_STATE_ITEM(module_state);
+            return std::cout << "report[\"" << report.m_ItemName << "\"]=\""
+                << names[value] << "\"";
+        }
+        else
+        {
+            std::cout << report.m_ItemName << " with unsuportd type:" << report.m_value.type().name();
+        }
+    }
 
-#undef DECLARE_STATE_ITEM
+#define DECLARE_SWEEPER_CONTROL_DATA(name)   const std::string IApi4HMI::Item_##name = "data_"#name;
+        #include "ISweeperControlData.h"
+#undef DECLARE_SWEEPER_CONTROL_DATA
+
+    const std::string config_filename = "dbAdsApi4HMI.json";
 
     IApi4HMI* getApi4HMI()
     {
-        static CApi4HMI api;
+        static CApi4HMI api(config_filename);
         return &api;
     }
 }
-
-#if 1
-void Api4HMI_TestCase(ros::NodeHandle* lpnode)
-{
-    class CHostApi4HMI :public IHostApi4HMI
-    {
-    public:
-        dbAds::IApi4HMI* m_lpApi = nullptr;
-        ros::NodeHandle* m_lpnode = nullptr;
-
-        virtual void getNodeHandle(std::vector<ros::NodeHandle*>& nhs) override
-        {
-            nhs.push_back(m_lpnode);
-        }
-
-        std::map<std::string, ros::Subscriber> m_Subs;
-        std::map<std::string, ros::Publisher> m_Pubs;
-
-        void OnMsg_ads_ad_command(const ads_msgs::ads_ad_command& msg)
-        {
-            std::cout << __FUNCTION__ << "(" << msg.action << ")" << std::endl;
-        }
-
-        CHostApi4HMI(ros::NodeHandle*lpnode)
-        {
-            m_lpnode = lpnode;
-
-            m_lpApi = dbAds::getApi4HMI();
-            m_lpApi->StartWithHost(this, "", 1);
-
-            std::vector<std::string> cared_property = { dbAds::IApi4HMI::Item_shou_sha
-                                                        , dbAds::IApi4HMI::Item_shikuo_light
-                                                        , dbAds::IApi4HMI::Item_jinguang_light
-                                                        , dbAds::IApi4HMI::Item_yuanguang_light
-                                                        , dbAds::IApi4HMI::Item_yingji_light
-                                                        , dbAds::IApi4HMI::Item_checliang_fault
-                                                        , dbAds::IApi4HMI::Item_saopan
-                                                        , dbAds::IApi4HMI::Item_penshui
-                                                        , dbAds::IApi4HMI::Item_car_state
-                                                        , dbAds::IApi4HMI::Item_module_state
-                                                        , dbAds::IApi4HMI::Item_shui_liang
-                                                        , dbAds::IApi4HMI::Item_dang_wei
-                                                       };
-            m_lpApi->InstallEventCallback([this](dbAds::IApi4HMI::CEventReport& report)
-            {
-                if(dbAds::IApi4HMI::Item_module_state == report.m_ItemName)
-                {
-                    std::cout << "report[" << report.m_ItemName << "]="
-                              << boost::any_cast<std::string>(report.m_value)
-                              << std::endl;
-
-                    std::vector<dbAds::IApi4HMI::CFault> faults;
-                    m_lpApi->GetFaultList(faults);
-                    for (auto it = faults.begin(); it != faults.end(); it++)
-                    {
-                        std::cout << *it;
-                    }
-                }
-                return 1;
-            }, cared_property);
-
-            std::string topic = "/ads_ad_command";
-            m_Subs[topic] = m_lpnode->subscribe(topic, 10, &CHostApi4HMI::OnMsg_ads_ad_command, this);
-
-            topic = "/ads_module_report";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_module_report>(topic, 2);
-
-            topic = "/ads_control_WheelPositionRepor";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_WheelPositionReport>(topic, 10);
-
-            topic = "/ads_control_brakereport";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_brakereport>(topic, 10);
-
-            topic = "/ads_control_fuel_level_report";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_fuel_level_report>(topic, 10);
-
-            topic = "/ads_control_steering_report";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_steering_report>(topic, 10);
-
-            topic = "/ads_control_throttle_report";
-            m_Pubs[topic] = m_lpnode->advertise<ads_msgs::ads_control_throttle_report>(topic, 10);
-        }
-
-        void run()
-        {
-            std::thread th_rosloop = std::thread([]()
-            {
-                pthread_setname_np(pthread_self(), "SpinOnce");
-                ros::Rate loop_rate(10);
-                while (ros::ok())
-                {
-                    ros::spinOnce();
-                    loop_rate.sleep();
-                }
-            });
-
-            while (1)
-            {
-#if 0
-                ads_msgs::ads_module_report msg;
-                msg.deviceID = 0;
-                msg.moduleID = ads_msgs::ads_module_report::moduleID_Planning;
-                msg.moduleStatus = ads_msgs::ads_module_report_item::moduleStatus_Critical;
-                msg.moduleSubtype = 1;
-
-                std::string topic = "/ads_module_report";
-                m_Pubs[topic].publish(msg);
-#endif
-
-                auto check = m_lpApi->GetSelfCheck(dbAds::ISelfCheck::e_type::System);
-
-                check->Start();
-                auto progress_value = check->GetProgress();
-                while(check->GetResult() == ISelfCheck::Processing)
-                {
-                    if(progress_value != check->GetProgress())
-                    {
-                        progress_value = check->GetProgress();
-                        std::cout << check->GetProgress() << "%" << std::endl;
-                    }
-                }
-                check->Stop();
-                std::cout << check->GetProgress() << "%" << std::endl;
-                std::cout << "Result:" << check->GetResult() << std::endl;
-
-                auto values = m_lpApi->GetProperty({ dbAds::IApi4HMI::Item_shou_sha
-                                                     , dbAds::IApi4HMI::Item_shikuo_light
-                                                     , dbAds::IApi4HMI::Item_jinguang_light
-                                                     , dbAds::IApi4HMI::Item_yuanguang_light
-                                                     , dbAds::IApi4HMI::Item_yingji_light
-                                                     , dbAds::IApi4HMI::Item_checliang_fault
-                                                     , dbAds::IApi4HMI::Item_saopan
-                                                     , dbAds::IApi4HMI::Item_penshui
-                                                     , dbAds::IApi4HMI::Item_car_state
-                                                     , dbAds::IApi4HMI::Item_shui_liang
-                                                     , dbAds::IApi4HMI::Item_dang_wei
-                                                   }
-                                                   );
-
-                for(auto it = values.begin(); it != values.end(); it++)
-                {
-                    if(it->second.type() == typeid (int))
-                    {
-                        auto value = boost::any_cast<int>(it->second);
-                        std::cout << it->first << "=" << value << std::endl;
-                    }
-                    else if(it->second.type() == typeid (float))
-                    {
-                        auto value = boost::any_cast<float>(it->second);
-                        std::cout << it->first << "=" << value << std::endl;
-                    }
-                    else if(it->second.type() == typeid (double))
-                    {
-                        auto value = boost::any_cast<double>(it->second);
-                        std::cout << it->first << "=" << value << std::endl;
-                    }
-                    else if(it->second.type() == typeid (std::string))
-                    {
-                        auto value = boost::any_cast<std::string>(it->second);
-                        std::cout << it->first << "=\"" << value << "\"" << std::endl;
-                    }
-                    else if(it->second.type() == typeid (ads_msgs::ads_ad_report::_carState_type))
-                    {
-                        auto value = boost::any_cast<ads_msgs::ads_ad_report::_carState_type>(it->second);
-                        std::cout << it->first << "=" << (int)value << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << it->first << " with unsuportd type:" << it->second.type().name() << std::endl;
-                    }
-                }
-
-                std::this_thread::sleep_for(std::chrono::seconds(10));
-            }
-        }
-    } s_HostApi(lpnode);
-
-    s_HostApi.run();
-}
-#else
-void Api4HMI_TestCase(ros::NodeHandle* lpnode)
-{
-
-}
-#endif

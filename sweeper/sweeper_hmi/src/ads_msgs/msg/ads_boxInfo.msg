@@ -6,3 +6,4 @@ geometry_msgs/Point32 p4
 geometry_msgs/Point32 p_center
 geometry_msgs/Pose pose
 geometry_msgs/Vector3 dimensions
+geometry_msgs/Point32[] edge_points

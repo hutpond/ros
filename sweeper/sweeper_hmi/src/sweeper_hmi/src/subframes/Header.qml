@@ -1,47 +1,107 @@
 import QtQuick 2.0
+import Sweeper.DataManager 1.0
 
 Item {
+
+  id: itemHeader
+  property string title
+  signal showErrMessage()
+
   Rectangle {
     anchors.fill: parent
-    color: "darkGray"
+    color: "#0A0A0A"
+  }
 
-    Image {
-      id: logPng
-      source: "qrc:/image/deepblue.png"
+  Image {
+    id: backgroud
+    anchors.fill: parent
+    source: "qrc:/svg/headerBack.svg"
+  }
 
-      x: 5
-      y: x
-      height: parent.height - 2 * y
-      width: height
+  Image {
+    id: img4G
+    source: "qrc:/svg/4G.svg"
+
+    x: 25
+    height: 22
+    width: 22
+    anchors.verticalCenter: parent.verticalCenter
+  }
+
+  Text {
+    id: text4G
+    text: qsTr("4G")
+    font.family: "SimHei"
+    font.pointSize: 14
+    color: "white"
+
+    anchors.left: img4G.right
+    anchors.leftMargin: 10
+    anchors.verticalCenter: parent.verticalCenter
+  }
+
+  Image {
+    id: imgGps
+    source: "qrc:/image/GPS.png"
+
+    height: 22
+    width: 30
+
+    anchors.left: text4G.right
+    anchors.leftMargin: 10
+    anchors.verticalCenter: parent.verticalCenter
+  }
+
+  Image {
+    id: imgWarning
+    source: "qrc:/image/warning.png"
+
+    height: 22
+    width: 30
+
+    anchors.left: imgGps.right
+    anchors.leftMargin: 10
+    anchors.verticalCenter: parent.verticalCenter
+  }
+  MouseArea {
+    anchors.fill: imgWarning
+    hoverEnabled: true
+
+    onClicked: {
+      itemHeader.showErrMessage()
     }
+  }
 
-    Text {
-      id: currentTime
-      x: logPng.x + logPng.width + 20
-      width: parent.width * 0.1
-      //height: parent.height
-      anchors.verticalCenter: parent.verticalCenter
+  Text {
+    anchors.centerIn: parent
+    text: parent.title
 
-      font.family: "SimHei"
-      font.pointSize: 12
-      color: "black"
+    font.family: "SimHei"
+    font.pointSize: 28
+    color: "white"
+  }
 
-      Timer {
-        interval: 1000; running: true; repeat: true
-        onTriggered: {
-          var currentDate = new Date()
-          currentTime.text = currentDate.toLocaleString(Qt.locale("de_DE"), "yyyy-MM-dd HH:mm:ss")
-        }
+  Text {
+    id: currentTime
+    width: parent.width * 0.17
+    //height: parent.height
+    anchors.right: parent.right
+    anchors.rightMargin: 40
+    anchors.verticalCenter: parent.verticalCenter
+
+    font.family: "SimHei"
+    font.pointSize: 14
+    color: "white"
+
+    Timer {
+      interval: 1000; running: true; repeat: true
+      onTriggered: {
+        var currentDate = new Date()
+        currentTime.text = currentDate.toLocaleString(Qt.locale(), "yyyy-MM-dd HH:mm:ss")
+
+        DataManager.getInfoList()
+        imgWarning.visible = (DataManager.infos.length > 0)
       }
-    }
-
-    Text {
-      anchors.centerIn: parent
-      text: "AI智能扫地机"
-
-      font.family: "SimHei"
-      font.pointSize: 20
-      color: "black"
     }
   }
 }

@@ -56,6 +56,16 @@ public:
   Q_INVOKABLE void startCheck();
   Q_INVOKABLE void startAuto();
   Q_INVOKABLE void stopAuto();
+  Q_INVOKABLE void pause();
+  Q_INVOKABLE void resume();
+
+  Q_INVOKABLE void getInfoList();
+
+  Q_INVOKABLE bool autoIsReady();
+  Q_INVOKABLE bool autoIsQuit();
+
+  Q_INVOKABLE QVariant getProperty(const QString &);
+  Q_INVOKABLE bool setProperty(const QString &, const QVariant &);
 
   int step() const;
   void setStep(int);
@@ -78,7 +88,7 @@ private:
   int m_nStep;
   dbAds::ISelfCheck::e_type m_nType;
   dbAds::ISelfCheck::e_result m_nResult;
-  static QVector<QMsgInfo *> m_infos;
+  QVector<QMsgInfo *> m_infos;
 
   QTimer *m_pTimer;
   CHostApi4HMI *m_pApi4Hmi;

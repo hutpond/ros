@@ -5,390 +5,79 @@ import Sweeper.MsgInfo 1.0
 
 Item {
 
-  property double wspider: 15
+  property double wspider: 20
   property int row: 7
   property int column: 3
+  property int sizeView: row - 2
   property double wgrid: width / column
   property double hgrid: height / row
   property var clrdeep: "#08FFFFFF"
   property var clrlight: "#08212127"
 
   property int spaceText: 10
-  property double column0: 0.27
-  property double column1: 0.2
-  property double column2: 0.53
+  property var columns: [0.27, 0.2, 0.53]
 
-  Rectangle {
-    id: rowheader
-
-    height: hgrid
-    anchors.top: parent.top
+  Column {
+    spacing: 1
     anchors.left: parent.left
     anchors.right: spider.left
-    color: clrdeep
+    height: parent.height
 
-    Text {
-      id: header0
+    Repeater {
 
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
+      model: ListModel {
+        id: modelInfo
+        ListElement {name: "name"; code: "code"; description: "description"}
+      }
 
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 18
+      Rectangle {
+        width: parent.width
+        height: hgrid
+        color: index % 2 == 0 ? clrdeep : clrlight
+        property var pointSize: index == 0 ? 18 : 12
 
-      text: "故障名称"
-    }
-    Text {
-      id: header1
+        Row {
+          spacing: 1
+          anchors.fill: parent
 
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: header0.right
-      anchors.leftMargin: spaceText
-      color: "white"
+          Repeater {
+            model: 3
 
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 18
+            Rectangle {
+              width: parent.width * columns[index]
+              height: parent.height
+              color: clrlight
 
-      text: "故障代码"
-    }
-    Text {
-      id: header2
+              Text {
+                anchors.fill: parent
+                anchors.leftMargin: spaceText
+                color: "white"
 
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: header1.right
-      anchors.leftMargin: spaceText
-      color: "white"
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignLeft
+                font.family: "SimHei"
+                font.pointSize: pointSize
 
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 18
+                wrapMode: Text.WordWrap
 
-      text: "故障描述"
-    }
-  }
-  Rectangle {
-    id: row0
-
-    height: hgrid
-    anchors.top: rowheader.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrlight
-
-    Text {
-      id: grid00
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-
-    }
-    Text {
-      id: grid01
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid00.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid02
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid01.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
-  Rectangle {
-    id: row1
-
-    height: hgrid
-    anchors.top: row0.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrdeep
-
-    Text {
-      id: grid10
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid11
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid10.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid12
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid11.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
-  Rectangle {
-    id: row2
-
-    height: hgrid
-    anchors.top: row1.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrlight
-
-    Text {
-      id: grid20
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid21
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid20.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid22
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid21.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
-  Rectangle {
-    id: row3
-
-    height: hgrid
-    anchors.top: row2.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrdeep
-
-    Text {
-      id: grid30
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid31
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid30.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid32
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid31.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
-  Rectangle {
-    id: row4
-
-    height: hgrid
-    anchors.top: row3.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrlight
-
-    Text {
-      id: grid40
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid41
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid40.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid42
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid41.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
-  Rectangle {
-    id: row5
-
-    height: hgrid
-    anchors.top: row4.bottom
-    anchors.left: parent.left
-    anchors.right: spider.left
-    color: clrdeep
-
-    Text {
-      id: grid50
-
-      height: parent.height
-      width: parent.width * column0 - spaceText
-      anchors.left: parent.left
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid51
-
-      height: parent.height
-      width: parent.width * column1 - spaceText
-      anchors.left: grid50.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-    Text {
-      id: grid52
-
-      height: parent.height
-      width: parent.width * column2 - spaceText
-      anchors.left: grid51.right
-      anchors.leftMargin: spaceText
-      color: "white"
-
-      verticalAlignment: Text.AlignVCenter
-      horizontalAlignment: Text.AlignLeft
-      font.family: "SimHei"
-      font.pointSize: 14
-    }
-  }
+                text: {
+                  if (index == 0) {
+                    return name
+                  }
+                  else if (index == 1) {
+                    return code
+                  }
+                  else {
+                    return description
+                  }
+                } // text
+              }  // Text
+            }  // Rectangle
+          }  // Repeater
+        }  // Row
+      }  // Rectangle
+    }  // Repeater
+  }  // Column
 
   Rectangle {
     id: spider
@@ -406,60 +95,65 @@ Item {
     Rectangle {
       id: spiderbar
 
-      y: (parent.height - height) * spider.index / spider.count
+      y: 0
       width: parent.width
       height: parent.height * 0.25
       radius: width / 2.0
       color: "#0097FF"
     }
+
+    MouseArea {
+      anchors.fill: parent
+      onClicked: {
+        var top = spiderbar.y
+        var bottom = spiderbar.y + spiderbar.height
+        var index = spider.index;
+        if (mouse.y > bottom) {
+          index += sizeView
+          if (index < spider.count) {
+            showMsg(index)
+          }
+        }
+        else if (mouse.y < top) {
+          index -= sizeView
+          if (index >= 0) {
+            showMsg(index)
+          }
+        }
+      }
+    }
   }
 
   function showMsg(index) {
-    if (index < 0 || index >= (spider.count - 6)) {
+    if (index < 0 || index >= (spider.count)) {
       spider.visible = false
       return
     }
     spider.index = index
 
-    grid00.text = dataManager.infos[index].name
-    grid01.text = dataManager.infos[index].code
-    grid02.text = dataManager.infos[index].description
+    var page = (spider.count % sizeView == 0 ? spider.count / sizeView : spider.count / sizeView + 1)
+    page = Math.floor(page)
+    if (page > 1) {
+      var length = (spider.height - spiderbar.height) / (page - 1)
+      var pageIndex = spider.index / sizeView;
+      spiderbar.y = length * pageIndex
+    }
 
-    if (spider.count - index > 1) {
-      grid10.text = dataManager.infos[index + 1].name
-      grid11.text = dataManager.infos[index + 1].code
-      grid12.text = dataManager.infos[index + 1].description
+    modelInfo.clear()
+    modelInfo.append({name: "故障名称", code: "故障代码", description: "故障描述"});
+    for (var i = index; i < Math.min(index + sizeView, spider.count); ++i) {
+      modelInfo.append(
+            {name: DataManager.infos[i].name,
+              code: DataManager.infos[i].code,
+              description: DataManager.infos[i].description});
     }
-    if (spider.count - index > 2) {
-      grid20.text = dataManager.infos[index + 2].name
-      grid21.text = dataManager.infos[index + 2].code
-      grid22.text = dataManager.infos[index + 2].description
-    }
-    if (spider.count - index > 3) {
-      grid30.text = dataManager.infos[index + 3].name
-      grid31.text = dataManager.infos[index + 3].code
-      grid32.text = dataManager.infos[index + 3].description
-    }
-    if (spider.count - index > 4) {
-      grid40.text = dataManager.infos[index + 4].name
-      grid41.text = dataManager.infos[index + 4].code
-      grid42.text = dataManager.infos[index + 4].description
-    }
-    if (spider.count - index > 5) {
-      grid50.text = dataManager.infos[index + 5].name
-      grid51.text = dataManager.infos[index + 5].code
-      grid52.text = dataManager.infos[index + 5].description
-    }
-  }
-
-  DataManager {
-    id: dataManager
   }
 
   onVisibleChanged: {
     if (visible) {
-      spider.count = dataManager.infos.length
-      if (spider.count > 6) {
+      DataManager.getInfoList();
+      spider.count = DataManager.infos.length
+      if (spider.count > sizeView) {
         spider.visible = true
       }
       else {

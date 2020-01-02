@@ -15,19 +15,13 @@ Item {
     color: "#0A0A0A"
   }
 
-  Basic.Header {
-    id: headerUserPage
-    title: "AI智能扫地机"
-    width: parent.width
-    height: parent.height * 87.0 / 768
-  }
-
   Basic.UserPageState {
     id: userPageState
 
     anchors.left: parent.left
     anchors.leftMargin: 30
-    anchors.top: headerUserPage.bottom
+    anchors.top: parent.top
+    anchors.topMargin: 35
 
     width: parent.width * 637.0 / 1024
     height: parent.height * 480.0 / 768

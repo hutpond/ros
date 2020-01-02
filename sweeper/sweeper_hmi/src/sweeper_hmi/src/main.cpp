@@ -6,6 +6,8 @@
 #include "ros/ros.h"
 #include "QDataManager.h"
 
+static QObject * dataManagerProvider(QQmlEngine *, QJSEngine *);
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "SWEEPER_HMI_ROS");
@@ -14,7 +16,7 @@ int main(int argc, char **argv)
   QGuiApplication a(argc, argv);
 
   qmlRegisterType<QMsgInfo>("Sweeper.MsgInfo", 1, 0, "MsgInfo");
-  qmlRegisterType<QDataManager>("Sweeper.DataManager", 1, 0, "DataManager");
+  qmlRegisterSingletonType<QDataManager>("Sweeper.DataManager", 1, 0, "DataManager", dataManagerProvider);
 
   QQmlApplicationEngine engine;
 
@@ -27,4 +29,13 @@ int main(int argc, char **argv)
   engine.load(url);
 
   return a.exec();
+}
+
+QObject * dataManagerProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    QDataManager *manager = new QDataManager();
+    return manager;
 }

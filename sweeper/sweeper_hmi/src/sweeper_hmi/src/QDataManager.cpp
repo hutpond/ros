@@ -2,6 +2,9 @@
 #include <QDebug>
 #include "QDataManager.h"
 #include "CHostApi4HMI.h"
+#include <QDateTime>
+
+std::array<int, 2> getSunTime(long double glat, long double glong, int year, int month, int day);
 
 QMsgInfo::QMsgInfo(QObject *parent)
   : QObject(parent) {
@@ -44,11 +47,12 @@ void QMsgInfo::setDescription(const QString &description)
 }
 
 
-QVector<QMsgInfo *> QDataManager::m_infos;
 QDataManager::QDataManager(QObject *parent)
   : QObject(parent)
 {
   m_pApi4Hmi = new CHostApi4HMI;
+  m_pApi4Hmi->run();
+
   m_pTimer = new QTimer(this);
   connect(m_pTimer, SIGNAL(timeout()), this, SLOT(onChecked()));
 }
@@ -58,7 +62,7 @@ void QDataManager::startCheck()
   m_nStep = 0;
   m_nType = dbAds::ISelfCheck::e_type::Chassis;
   m_nResult = dbAds::ISelfCheck::e_result::Pass;
-  dbAds::ISelfCheck *pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
+  auto pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
   pCheck->Start();
 
   this->clearInfos();
@@ -67,12 +71,104 @@ void QDataManager::startCheck()
 
 void QDataManager::startAuto()
 {
-  m_pApi4Hmi->m_lpApi->StartAutoDrive();
+  m_pApi4Hmi->m_lpApi->SweepTo();
+
+  QDateTime current_time=QDateTime::currentDateTime();
+  int year = current_time.date().year();
+  int month = current_time.date().month();
+  int day = current_time.date().day();
+
+  int _minute = current_time.time().hour() * 60 + current_time.time().minute();
+  auto ret = getSunTime(31.815051, 120.0127376, year, month, day);
+
+  std::cout << "Sun Rise at:" << std::setfill('0') << std::setw(2)<< (ret[0]/60) << ":" << std::setw(2) << (ret[0]%60) << std::endl
+            << "Sun Set at :" << std::setw(2) << (ret[1]/60) << ":" << std::setw(2) << (ret[1]%60) << std::endl
+            << "Now at     :" << std::setw(2) << (_minute/60) << ":" << std::setw(2) << (_minute%60) << std::endl;
+
+  if((_minute < (ret[0] + 60)) || (_minute > (ret[1] - 60)))
+  {
+      static const std::map<std::string, boost::any> control_ =
+      {
+          {dbAds::IApi4HMI::Item_spout_water, 1},
+          {dbAds::IApi4HMI::Item_brush_status, 1},
+          {dbAds::IApi4HMI::Item_width_light, 1},
+          {dbAds::IApi4HMI::Item_low_beam_light, 1},
+          {dbAds::IApi4HMI::Item_high_beam_light, 0},
+          {dbAds::IApi4HMI::Item_light, 1},
+          {dbAds::IApi4HMI::Item_reverse_light, 0},
+          {dbAds::IApi4HMI::Item_brake_light, 0},
+          {dbAds::IApi4HMI::Item_left_light, 0},
+          {dbAds::IApi4HMI::Item_right_light, 0},
+      };
+      m_pApi4Hmi->m_lpApi->SetProperty(control_);
+  }
 }
 
 void QDataManager::stopAuto()
 {
-  m_pApi4Hmi->m_lpApi->StopAutoDrive();
+  m_pApi4Hmi->m_lpApi->Stop();
+}
+
+void QDataManager::pause()
+{
+  m_pApi4Hmi->m_lpApi->Pause();
+}
+
+void QDataManager::resume()
+{
+  m_pApi4Hmi->m_lpApi->Resume();
+}
+
+void QDataManager::getInfoList()
+{
+  m_infos.clear();
+  std::vector<dbAds::IApi4HMI::CFaultInfo> faults;
+  m_pApi4Hmi->m_lpApi->GetFaultList(faults);
+  for (const auto &fault : faults) {
+    QMsgInfo *info = new QMsgInfo;
+    info->setName(QString::fromStdString(fault.szName));
+    info->setCode(QString::fromStdString(fault.szCode));
+    info->setDescription(QString::fromStdString(fault.szCondition));
+    this->appendInfo(info);
+  }
+}
+
+bool QDataManager::autoIsReady()
+{
+  m_pApi4Hmi->m_lpApi->AdIsReady(0);
+}
+
+bool QDataManager::autoIsQuit()
+{
+  m_pApi4Hmi->m_lpApi->AdNeedQuit();
+}
+
+QVariant QDataManager::getProperty(const QString &property)
+{
+  boost::any value = m_pApi4Hmi->m_lpApi->GetProperty(property.toStdString());
+  QVariant value_ret;
+  if (value.type() == typeid(int)) {
+    value_ret = boost::any_cast<int>(value);
+  }
+  else {
+    auto str = boost::any_cast<std::string>(&value);
+    if (str != nullptr) {
+      value_ret = QString::fromStdString(*str);
+    }
+  }
+  return value_ret;
+}
+
+bool QDataManager::setProperty(const QString &property, const QVariant &value)
+{
+  boost::any property_value;
+  if (value.type() == QVariant::Int) {
+    property_value = value.toInt();
+  }
+  else if (value.type() == QVariant::String) {
+    property_value = value.toString().toStdString();
+  }
+  m_pApi4Hmi->m_lpApi->SetProperty(property.toStdString(), property_value);
 }
 
 int QDataManager::step() const
@@ -117,7 +213,7 @@ void QDataManager::clearInfos()
 
 void QDataManager::onChecked()
 {
-  dbAds::ISelfCheck *pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
+  auto pCheck = m_pApi4Hmi->m_lpApi->GetSelfCheck(m_nType);
   int percent = pCheck->GetProgress();
   m_nStep = 25 * m_nType + percent / 4;
   emit stepChanged(m_nStep);
@@ -138,7 +234,7 @@ void QDataManager::onChecked()
       QTimer::singleShot(1000, this, SIGNAL(stopCheck()));
 
       if (m_nResult != 0) {
-        std::vector<dbAds::IApi4HMI::CFault> faults;
+        std::vector<dbAds::IApi4HMI::CFaultInfo> faults;
         m_pApi4Hmi->m_lpApi->GetFaultList(faults);
         for (const auto &fault : faults) {
           QMsgInfo *info = new QMsgInfo;

@@ -12,6 +12,7 @@ Window {
   height: 768
   minimumWidth: 475
   minimumHeight: 300
+  property Item currentItem: start
 
   color: "#ffffff"
   title: qsTr("Conway’s Game of Life")
@@ -23,6 +24,25 @@ Window {
     anchors.fill: parent
     focus: true
     Keys.onEscapePressed: Qt.quit()
+  }
+
+  // header
+  SubFrames.Header {
+    id: header
+
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    height: parent.height * 87 / 768.0
+
+    function onShowErrMessage() {
+      vehicleErrMsg.visible = !vehicleErrMsg.visible
+      currentItem.visible = !vehicleErrMsg.visible
+    }
+
+    Component.onCompleted: {
+      showErrMessage.connect(onShowErrMessage)
+    }
   }
 
   // start page
@@ -39,7 +59,7 @@ Window {
 
     onVisibleChanged: {
       if (visible) {
-        dataManager.startCheck()
+        DataManager.startCheck()
         check.startTimer()
       }
       else {
@@ -61,15 +81,36 @@ Window {
     }
   }
 
+  // vehicle error message
+  SubFrames.VehicleErrMessage {
+    id: vehicleErrMsg
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
+    visible: false
+  }
+
   // user page
   SubFrames.UserPage {
     id: userPage
-    anchors.fill: parent
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
     visible: false
 
     onStartAutoPilot: {
       userPage.visible = false
       autoPilot.visible = true
+    }
+
+    onVisibleChanged: {
+      header.visible = true;
+      if (visible) {
+        header.title = "AI智能扫地机"
+        currentItem = this
+      }
     }
   }
 
@@ -88,20 +129,63 @@ Window {
   // auto pilot start
   SubFrames.AutoPilot {
     id: autoPilot
-    anchors.fill: parent
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
     visible: false
 
     onAuto: {
-      dataManager.startAuto()
+      DataManager.startAuto()
     }
     onStopAuto: {
-      dataManager.stopAuto()
-      userPage.visible = true
+      DataManager.stopAuto()
       autoPilot.visible = false
+      //userPage.visible = true
+      taskReport.visible = true
     }
-    onManul: {
-      userPage.visible = true
+    onStopAutoBack: {
+      DataManager.stopAuto()
       autoPilot.visible = false
+      currentItem = userPage
+
+      vehicleErrMsg.visible = true
+      currentItem.visible = false
+    }
+
+    onManul: {
+      autoPilot.visible = false
+      userPage.visible = true
+    }
+    onVisibleChanged: {
+      header.visible = true;
+      if (visible) {
+        header.title = "AI智能扫地机"
+        currentItem = this
+      }
+    }
+  }
+
+  // task report
+  SubFrames.TaskReport {
+    id: taskReport
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
+    visible: false
+
+    onCancel: {
+      autoPilot.visible = true
+      visible = false
+    }
+
+    onVisibleChanged: {
+      header.visible = true;
+      if (visible) {
+        header.title = "任务报告"
+        currentItem = this
+      }
     }
   }
 
@@ -117,8 +201,8 @@ Window {
   }
 
   // check function
-  DataManager {
-    id: dataManager
+  Connections {
+    target: DataManager
 
     onCheckEnd: {
       check.setCheckedResult(type, ret)

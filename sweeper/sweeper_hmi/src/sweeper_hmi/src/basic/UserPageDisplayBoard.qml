@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import Sweeper.DataManager 1.0
 
 Item {
 
@@ -62,58 +63,76 @@ Item {
     anchors.left: battery.left
     anchors.right: batteryUsed.right
 
-    property double space: (width - height * 9) / 8.0
-
     Row {
-      spacing: board.space
+      spacing: 5
+      anchors.fill: parent
 
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/brake.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/positionLamp.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/highBeam.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/lowBeam.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/spout.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/pallet.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/leftSignalLight.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/rightSignalLight.svg"
-      }
-      Image {
-        width: board.height
-        height: width
-        source: "qrc:/svg/setting.svg"
+      property int imgWidth: (width - spacing * 10) / 9 + 1
+      property int addCount: width - imgWidth * 9 - spacing * 10
+
+      Repeater {
+
+        model: ListModel {
+          id: modelInfo
+          ListElement {name: "qrc:/svg/brake.svg";
+            name_off: "qrc:/svg/brake_off.svg"; property_name: "data_suction_status"}
+          ListElement {name: "qrc:/svg/positionLamp.svg";
+            name_off: "qrc:/svg/positionLamp_off.svg"; property_name: "data_width_light"}
+          ListElement {name: "qrc:/svg/highBeam.svg";
+            name_off: "qrc:/svg/highBeam_off.svg"; property_name: "data_high_beam_light"}
+          ListElement {name: "qrc:/svg/lowBeam.svg";
+            name_off: "qrc:/svg/lowBeam_off.svg"; property_name: "data_low_beam_light"}
+          ListElement {name: "qrc:/svg/spout.svg";
+            name_off: "qrc:/svg/spout_off.svg"; property_name: "data_spout_water"}
+          ListElement {name: "qrc:/svg/pallet.svg";
+            name_off: "qrc:/svg/pallet_off.svg"; property_name: "data_brush_status"}
+          ListElement {name: "qrc:/svg/leftSignalLight.svg";
+            name_off: "qrc:/svg/leftSignalLight_off.svg"; property_name: "data_left_light"}
+          ListElement {name: "qrc:/svg/rightSignalLight.svg";
+            name_off: "qrc:/svg/rightSignalLight_off.svg"; property_name: "data_right_light"}
+          ListElement {name: "qrc:/svg/setting.svg";
+            name_off: "qrc:/svg/setting.svg"; property_name: "data_suction_status"}
+        }
+
+        Image {
+          property int status: 1
+          width: parent.imgWidth
+          height: parent.imgWidth
+          anchors.bottom: parent.bottom
+          source: name
+
+          MouseArea {
+            anchors.fill: parent
+            onClicked: {
+              parent.status = parent.status == 0 ? 1 : 0
+              parent.source = parent.status == 0 ? name_off : name
+              var value = parent.status
+              DataManager.setProperty(property_name, value)
+            }
+          }
+
+          Timer {
+            id: timer
+            interval: 200; running: false; repeat: true
+            onTriggered: {
+              var value// = DataManager.getProperty(property_name)
+              if("number" == typeof value){
+                parent.status = value
+                parent.source = value === 0 ? name_off : name
+              }
+            }
+          }
+
+          onVisibleChanged: {
+            if (visible && index < 9) {
+              timer.running = true
+            }
+            else {
+              timer.running = false
+            }
+          }
+        }
       }
     }
-
   }
-
 }
