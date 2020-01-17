@@ -197,6 +197,11 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
   if (!fs::exists(m_fsPath)) {
     fs::create_directories(m_fsPath);
   }
+  if (qAbs(planningData.vehicle_enu_x) < 1e-6 && qAbs(planningData.vehicle_enu_y) < 1e-6 &&
+      qAbs(planningData.vehicle_enu_z) < 1e-6 && qAbs(planningData.vehicle_pitch) < 1e-6 &&
+      qAbs(planningData.vehicle_roll) < 1e-6 && qAbs(planningData.vehicle_yaw) < 1e-6) {
+    return;
+  }
 
   fs::path path = m_fsPath;
   std::string strFileName = QBaseWidget::dataFileName(planningData.header.stamp.sec,
