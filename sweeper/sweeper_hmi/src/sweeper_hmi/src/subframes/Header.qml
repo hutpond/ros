@@ -58,6 +58,7 @@ Item {
 
     height: 22
     width: 30
+    visible: true
 
     anchors.left: imgGps.right
     anchors.leftMargin: 10
@@ -68,7 +69,9 @@ Item {
     hoverEnabled: true
 
     onClicked: {
-      itemHeader.showErrMessage()
+      if (imgWarning.visible) {
+        itemHeader.showErrMessage()
+      }
     }
   }
 
@@ -98,9 +101,6 @@ Item {
       onTriggered: {
         var currentDate = new Date()
         currentTime.text = currentDate.toLocaleString(Qt.locale(), "yyyy-MM-dd HH:mm:ss")
-
-        DataManager.getInfoList()
-        imgWarning.visible = (DataManager.infos.length > 0)
       }
     }
   }

@@ -58,6 +58,7 @@ public:
   Q_INVOKABLE void stopAuto();
   Q_INVOKABLE void pause();
   Q_INVOKABLE void resume();
+  Q_INVOKABLE void stopBySide();
 
   Q_INVOKABLE void getInfoList();
 

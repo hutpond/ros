@@ -47,7 +47,7 @@ namespace {
     struct 
     {
         std::set<std::string> m_ignore_fault_list;
-        bool m_charge_fault = true;
+        bool m_charge_fault = false;
         std::string m_fault_code_file{"./fault_code.xls"};
         int m_debug = 0;
     } s_my_config;
@@ -136,35 +136,47 @@ namespace {
                 return false;
             }
 
-            m_lpProvider->QueryFaultAmount(type_map[m_type], m_FaultAmountInit[0], m_FaultAmountInit[1]);
-            if ((m_FaultAmountInit[0] + m_FaultAmountInit[1]) == 0)
-            {
-                m_progress = 100;
-                m_result = ISelfCheck::Pass;
-                return true;
-            }
+            // m_lpProvider->QueryFaultAmount(type_map[m_type], m_FaultAmountInit[0], m_FaultAmountInit[1]);
+            // if ((m_FaultAmountInit[0] + m_FaultAmountInit[1]) == 0)
+            // {
+            //     m_progress = 100;
+            //     m_result = ISelfCheck::Pass;
+            //     return true;
+            // }
 
             m_result = ISelfCheck::Processing;
 
             m_th = std::thread([this](IFaultProvider::e_type type) 
             {
-                int iFaultAmount[2] = { 0 , 0 };
-                for (m_progress = 0; m_progress < 100; m_progress += 10)
+                auto tp_start = std::chrono::system_clock::now();
+
+                for (m_progress = 0; m_progress < 100; m_progress += 1)
                 {
                     if(g_bEnableFaultHandle)
                     {
+                        int iFaultAmount[2] = { 0 , 0 };
                         m_lpProvider->QueryFaultAmount(type, iFaultAmount[0], iFaultAmount[1]);
                         if((iFaultAmount[0] + iFaultAmount[1]) == 0)
                         {
-                            m_result = ISelfCheck::Pass;
-                            break;
+                            //确保UI显示足够时间
+                            if(std::chrono::system_clock::now() - tp_start > std::chrono::seconds(4))
+                            //if(m_progress >= 50)
+                            {
+                                m_result = ISelfCheck::Pass;
+                                break;                                
+                            }
                         }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                    }
+                    
+                    if((type == IFaultProvider::System) && g_bEnableFaultHandle)
+                    {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(400));
                     }
                     else
                     {
                         std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     }
+
                     if (m_bStop) break;
                 }
 
@@ -838,6 +850,42 @@ sleep 2s
         {
             std::lock_guard<std::recursive_mutex> lock(m_mutex);
             m_msg_ads_ad_report = msg;
+            switch(m_msg_ads_ad_report.carState)
+            {
+            case ads_msgs::ads_ad_report::carState_Stop:
+            {
+                static const std::map<std::string, boost::any> property_value = 
+                {
+                    {IApi4HMI::Item_spout_water,    0},
+                    {IApi4HMI::Item_brush_status,   0},
+                    {IApi4HMI::Item_width_light,    0},
+                    {IApi4HMI::Item_low_beam_light, 0},
+                    {IApi4HMI::Item_high_beam_light,0},
+                    {IApi4HMI::Item_light,          0},
+                    {IApi4HMI::Item_reverse_light,  0},
+                    {IApi4HMI::Item_brake_light,    0},
+                    {IApi4HMI::Item_left_light,     0},
+                    {IApi4HMI::Item_right_light,    0},
+                    {IApi4HMI::Item_suction_status, 0},
+                };
+                SetProperty(property_value);
+
+                ads_msgs::ads_ad_command msg_cmd;
+                msg_cmd.action = ads_msgs::ads_ad_command::action_Stop;
+                m_Pubs["/ads_ad_command"].publish(msg_cmd);
+            }
+            break;
+
+            default:
+            case ads_msgs::ads_ad_report::carState_Idle:
+            case ads_msgs::ads_ad_report::carState_Moving:
+            case ads_msgs::ads_ad_report::carState_MoveDone:
+            case ads_msgs::ads_ad_report::carState_Sweeping:
+            case ads_msgs::ads_ad_report::carState_SweepDone:
+            case ads_msgs::ads_ad_report::carState_Manual:
+            case ads_msgs::ads_ad_report::carState_Busy:
+            break;
+            }
         }
 
         void OnMsg_report_ThrottleInfo(const sweep_msgs::ThrottleReport & msg)
@@ -1213,8 +1261,8 @@ sleep 2s
             return true;
         }
 
-        //路边停车
-        virtual bool Pause() override
+        //路边停车, 停车后应退出自动驾驶，所以会有Stop命令跟随
+        virtual bool StopByRoadSide() override
         {
             ads_msgs::ads_ad_command msg;
             msg.action = ads_ad_command::action_RoadSideStop;
@@ -1222,7 +1270,16 @@ sleep 2s
             return true;
         }
 
-        //取消路边停车，继续自动驾驶
+        //暂停，保持自动驾驶状态， 可以被resume
+        virtual bool Pause() override
+        {
+            ads_msgs::ads_ad_command msg;
+            msg.action = ads_ad_command::action_Pause;
+            m_Pubs["/ads_ad_command"].publish(msg);
+            return true;
+        }
+
+        //继续自动驾驶
         virtual bool Resume() override
         {
             ads_msgs::ads_ad_command msg;
@@ -1369,6 +1426,25 @@ sleep 2s
         //是否有critical fault发生，应该退出自动驾驶
         virtual bool AdNeedQuit(void) override
         {
+            //Temp solution
+            return false;
+
+            if(m_chasiss_status.clear_auto_driving)
+            {
+                // ads_msgs::ads_ad_command msg_cmd;
+                // msg_cmd.action = ads_msgs::ads_ad_command::action_Stop;
+                // m_Pubs["/ads_ad_command"].publish(msg_cmd);
+                std::cout << "clear_auto_driving=1(人工终止自动驾驶!)" << std::endl;
+
+                return true;
+            }
+
+            if(!s_my_config.m_charge_fault)            
+            {
+                //改动：控制模块将控制车是否行进，直接返回false
+                return false;
+            }
+
             if(g_bEnableFaultHandle)
             {
                 int value[2] = {0, 0};

@@ -16,6 +16,7 @@ class QBaseWidget;
 class QDataDisplayWidget;
 class QPlanningCostWidget;
 class QEditToolsWidget;
+class QDecisionStateWidget;
 
 class QDebugToolMainWnd : public QMainWindow
 {
@@ -78,6 +79,7 @@ public:
   static QTextBrowser *s_pTextBrowser;
   static QDataDisplayWidget *s_pDataDisplay;
   static QPlanningCostWidget *s_pWdgPlanningCost;
+  static QDecisionStateWidget *s_pWdgDecisionState;
 };
 
 #endif  // Q_DEBUG_TOOL_MAIN_WND_H

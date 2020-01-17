@@ -19,6 +19,7 @@ add_message_files(
    
    ads_planning_output.msg
    ads_ReferencePoint.msg
+   ads_Point.msg
    ads_TargetPoint.msg
    ads_planning_trajectory.msg
    ads_planningv1_status.msg
@@ -92,7 +93,6 @@ add_message_files(
 
    ads_int2int_data.msg
    ads_int2int_item.msg
-   ads_Point.msg
 )
 
 generate_messages(

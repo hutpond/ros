@@ -28,17 +28,20 @@ protected:
   void drawReferences(QPainter &);
   void drawVehicleLine(QPainter &);
   void drawVehicle(QPainter &);
+  void drawPlanningPointLine(QPainter &);
 
   quint64 nameToIndex(const QString &);
   int findIndexPos(const QList<QSharedPointer<MapPoint>>&, quint64);
 
   void addVehicleLine(const debug_tool::ads_PlanningData4Debug &, quint64);
+  void addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &, quint64);
   int isIndexValid(const QList<QSharedPointer<MapPoint>>&, quint64);
 
 protected:
   debug_tool::ads_PlanningData4Debug m_planningData;
   QList<QSharedPointer<MapPoint>> m_listReferences;
   QList<QSharedPointer<MapPoint>> m_listVehicleLine;
+  QList<QSharedPointer<MapPoint>> m_listPlanningPoints;
 };
 
 #endif // QFULLVIEWWIDGET_H

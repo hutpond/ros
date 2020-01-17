@@ -24,6 +24,7 @@
 #include "QPlanningCostWidget.h"
 #include "QFullViewWidget.h"
 #include "QCostValueWidget.h"
+#include "QDecisionStateWidget.h"
 #include "QReadDataManagerRos.h"
 #include "splines.h"
 
@@ -213,6 +214,11 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
 void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
                                          const debug_tool::ads_PlanningData4Debug &planningData)
 {
+  // header
+  Json::Value header;
+  header["second"] = planningData.header.stamp.sec;
+  header["nano_second"] = planningData.header.stamp.nsec;
+
   // vehicle
   Json::Value carStatus, frontAxleCenter, rearAxleCenter, headPoint, rearPoint, hingePoint;
 
@@ -276,6 +282,12 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   carStatus["rear_vehicle_length"] = planningData.rear_vehicle_length;
   carStatus["rear_vehicle_width"] = planningData.rear_vehicle_width;
   carStatus["steering_angle"] = planningData.steering_angle;
+  carStatus["vehicle_enu_x"] = planningData.vehicle_enu_x;
+  carStatus["vehicle_enu_y"] = planningData.vehicle_enu_y;
+  carStatus["vehicle_enu_z"] = planningData.vehicle_enu_z;
+  carStatus["vehicle_pitch"] = planningData.vehicle_pitch;
+  carStatus["vehicle_roll"] = planningData.vehicle_roll;
+  carStatus["vehicle_yaw"] = planningData.vehicle_yaw;
 
   // referene
   Json::Value referenceLine, referencePoints, referenceSplines;
@@ -383,6 +395,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["DEVICE_SOURCE"] = static_cast<int>(target.DEVICE_SOURCE);
     item["MOTION_STATUS"] = static_cast<int>(target.MOTION_STATUS);
     item["TARGET_TYPE"] = static_cast<int>(target.TARGET_TYPE);
+    item["DIRX"] = target.DIRX;
+    item["DIRY"] = target.DIRY;
 
     Json::Value edgePoints;
     for (const auto &point : target.edge_points) {
@@ -525,6 +539,7 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
 
   // all data
   Json::Value data;
+  data["header"] = header;
   data["car_status"] = carStatus;
   data["reference_line"] = referenceLine;
   data["radar_data"] = radarData;
@@ -552,6 +567,7 @@ void QPlanningWidget::parseDataFromJson(
 {
 
   // all data
+  Json::Value header = data["header"];
   Json::Value carStatus = data["car_status"];
   Json::Value referenceLine = data["reference_line"];
   Json::Value radarData = data["radar_data"];
@@ -566,6 +582,10 @@ void QPlanningWidget::parseDataFromJson(
   planningData.scenario_type = static_cast<uint8_t>(data["scenario_type"].asInt());
   planningData.debug_info = data["debug_info"].asString();
 
+  // header
+  planningData.header.stamp.sec = header["second"].asUInt();
+  planningData.header.stamp.nsec = header["nano_second"].asUInt();
+
   // vehicle
   Json::Value frontAxleCenter = carStatus["front_axle_center"];
   Json::Value rearAxleCenter = carStatus["rear_axle_center"];
@@ -577,6 +597,13 @@ void QPlanningWidget::parseDataFromJson(
   planningData.rear_vehicle_length = carStatus["rear_vehicle_length"].asDouble();
   planningData.rear_vehicle_width = carStatus["rear_vehicle_width"].asDouble();
   planningData.steering_angle = carStatus["steering_angle"].asDouble();
+
+  planningData.vehicle_enu_x = carStatus["vehicle_enu_x"].asDouble();
+  planningData.vehicle_enu_y = carStatus["vehicle_enu_y"].asDouble();
+  planningData.vehicle_enu_z = carStatus["vehicle_enu_z"].asDouble();
+  planningData.vehicle_pitch = carStatus["vehicle_pitch"].asDouble();
+  planningData.vehicle_roll = carStatus["vehicle_roll"].asDouble();
+  planningData.vehicle_yaw = carStatus["vehicle_yaw"].asDouble();
 
   planningData.front_axle_center.id = frontAxleCenter["id"].asInt();
   planningData.front_axle_center.x = frontAxleCenter["x"].asDouble();
@@ -743,6 +770,8 @@ void QPlanningWidget::parseDataFromJson(
     target.W = item["W"].asFloat();
     target.L = item["L"].asFloat();
     target.H = item["H"].asFloat();
+    target.DIRX = item["DIRX"].asFloat();
+    target.DIRY = item["DIRY"].asFloat();
     target.DEVICE_SOURCE = static_cast<int8_t>(item["DEVICE_SOURCE"].asInt());
     target.MOTION_STATUS = static_cast<int8_t>(item["MOTION_STATUS"].asInt());
     target.TARGET_TYPE = static_cast<int8_t>(item["TARGET_TYPE"].asInt());
@@ -927,6 +956,7 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
   QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
+  QDebugToolMainWnd::s_pWdgDecisionState->setPlanningData(data);
 }
 
 bool QPlanningWidget::ObstacleCollisionCheck(

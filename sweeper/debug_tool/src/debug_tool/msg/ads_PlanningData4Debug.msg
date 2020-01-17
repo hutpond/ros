@@ -1,5 +1,11 @@
 Header header
 
+float64 vehicle_enu_x
+float64 vehicle_enu_y
+float64 vehicle_enu_z
+float64 vehicle_pitch
+float64 vehicle_roll
+float64 vehicle_yaw
 ads_Point front_axle_center
 ads_Point rear_axle_center
 ads_Point head_point

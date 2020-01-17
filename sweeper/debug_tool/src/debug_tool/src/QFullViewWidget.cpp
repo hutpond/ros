@@ -5,6 +5,9 @@
 #include <QPainter>
 #include <QPen>
 #include <QMouseEvent>
+#include <QtMath>
+
+#include <eigen3/Eigen/Core>
 
 struct MapPoint
 {
@@ -12,6 +15,15 @@ struct MapPoint
   double x;
   double y;
 };
+
+struct MapPoint3D
+{
+  double x;
+  double y;
+  double z;
+};
+
+void TransformRFU2ENU(const MapPoint3D *, const MapPoint3D *, const MapPoint3D *, MapPoint3D *);
 
 QFullViewWidget::QFullViewWidget(QWidget *parent)
   : QBaseShowWidget(parent)
@@ -32,6 +44,7 @@ void QFullViewWidget::mousePressEvent(QMouseEvent *e)
 void QFullViewWidget::clearMapDatas()
 {
   m_listVehicleLine.clear();
+  m_listPlanningPoints.clear();
 }
 
 void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data,
@@ -39,6 +52,7 @@ void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &
 {
   quint64 index = this->nameToIndex(name);
   this->addVehicleLine(data, index);
+  this->addPlanningPointLine(data, index);
 
   if (update) {
     m_planningData = data;
@@ -138,11 +152,37 @@ void QFullViewWidget::addVehicleLine(const debug_tool::ads_PlanningData4Debug &d
   QSharedPointer<MapPoint> vehicle;
   vehicle.reset(new MapPoint);
   vehicle->index = index;
-  vehicle->x = data.front_axle_center.x;
-  vehicle->y = data.front_axle_center.y;
+  vehicle->x = data.vehicle_enu_x;
+  vehicle->y = data.vehicle_enu_y;
 
   if (this->isIndexValid(m_listVehicleLine, index) == 1) {
     m_listVehicleLine.append(vehicle);
+  }
+}
+
+void QFullViewWidget::addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &data,
+                                     quint64 index)
+{
+  MapPoint3D vehicleAngle, vehiclePos, localPos, enuPos;
+  vehicleAngle.x = data.vehicle_pitch;
+  vehicleAngle.y = data.vehicle_roll;
+  vehicleAngle.z = data.vehicle_yaw;
+  vehiclePos.x = data.vehicle_enu_x;
+  vehiclePos.y = data.vehicle_enu_y;
+  vehiclePos.z = data.vehicle_enu_z;
+  localPos.x = data.planning_output.pose.position.x;
+  localPos.y = data.planning_output.pose.position.y;
+  localPos.z = data.planning_output.pose.position.z;
+
+  TransformRFU2ENU(&vehicleAngle, &vehiclePos, &localPos, &enuPos);
+  QSharedPointer<MapPoint> decision;
+  decision.reset(new MapPoint);
+  decision->index = index;
+  decision->x = enuPos.x;
+  decision->y = enuPos.y;
+
+  if (this->isIndexValid(m_listPlanningPoints, index) == 1) {
+    m_listPlanningPoints.append(decision);
   }
 }
 
@@ -200,6 +240,7 @@ void QFullViewWidget::drawImage()
   this->drawReferences(painter);
   this->drawVehicleLine(painter);
   this->drawVehicle(painter);
+  this->drawPlanningPointLine(painter);
 }
 
 void QFullViewWidget::drawReferences(QPainter &painter)
@@ -242,7 +283,7 @@ void QFullViewWidget::drawVehicleLine(QPainter &painter)
 
 void QFullViewWidget::drawVehicle(QPainter &painter)
 {
-  QPointF ptf = QPointF(m_planningData.front_axle_center.x, m_planningData.front_axle_center.y);
+  QPointF ptf = QPointF(m_planningData.vehicle_enu_x, m_planningData.vehicle_enu_y);
   ptf = m_transform.map(ptf);
   painter.save();
   QPen pen;
@@ -251,6 +292,25 @@ void QFullViewWidget::drawVehicle(QPainter &painter)
   painter.setPen(pen);
   painter.drawEllipse(ptf, 3, 3);
   painter.restore();
+}
+
+void QFullViewWidget::drawPlanningPointLine(QPainter &painter)
+{
+  QPolygonF pgf;
+  for (const auto &pt : m_listPlanningPoints) {
+    pgf << QPointF(pt->x, pt->y);
+  }
+  if (pgf.size() > 0) {
+    pgf = m_transform.map(pgf);
+    painter.save();
+    QPen pen;
+    pen.setWidth(2);
+    pen.setStyle(Qt::SolidLine);
+    pen.setBrush(Qt::magenta);
+    painter.setPen(pen);
+    painter.drawPolyline(pgf);
+    painter.restore();
+  }
 }
 
 void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
@@ -321,4 +381,48 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
   }
   this->calcMapRect();
   in.close();
+}
+
+// 将角度转换成弧度
+double DegreeToRadian(double value)
+{
+  return value * M_PI / 180;
+}
+
+// 将本车坐标系转换到ENU坐标系
+void TransformRFU2ENU(const MapPoint3D *vehicalPos, const MapPoint3D *vehicleAngle,
+                      const MapPoint3D *SLPoint, MapPoint3D *EnuPoint)
+{
+  double deltX = SLPoint->x;
+  double deltY = SLPoint->y;
+  double deltZ = SLPoint->z;
+  double pitch = DegreeToRadian(vehicleAngle->x);
+  double roll = DegreeToRadian(vehicleAngle->y);
+  double yaw = DegreeToRadian(vehicleAngle->z);
+
+  Eigen::MatrixXd Y(3, 1);
+  Y(0, 0) = deltX;
+  Y(1, 0) = deltY;
+  Y(2, 0) = deltY;
+
+  Eigen::MatrixXd R0(3, 3);
+
+  R0 <<
+        cos(M_PI / 2), sin(M_PI / 2), 0,
+      -sin(M_PI / 2), cos(M_PI / 2), 0,
+      0, 0, 1;
+
+  Eigen::MatrixXd R(3, 3);
+
+  R <<
+       (cos(roll) * cos(yaw) + sin(roll) * sin(pitch) * sin(yaw)), (-cos(roll) * sin(yaw) + sin(roll) * sin(pitch) * cos(yaw)), (-sin(roll) * cos(pitch)),
+      (cos(pitch) * sin(yaw)), (cos(pitch) * cos(yaw)), sin(pitch),
+      (sin(roll) * cos(yaw) - cos(roll) * sin(pitch) * sin(yaw)), (-sin(roll) * sin(yaw) - cos(roll) * sin(pitch) * cos(yaw)), cos(roll) * cos(pitch);
+
+  Eigen::MatrixXd R2(3, 1);
+
+  R2 = R.transpose() * R0.transpose() * Y;
+  EnuPoint->x = R2(0, 0) + vehicalPos->x;
+  EnuPoint->y = R2(1, 0) + vehicalPos->y;
+  EnuPoint->z = R2(2, 0) + vehicalPos->z;
 }

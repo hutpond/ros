@@ -3,6 +3,7 @@
 #include "QDataManager.h"
 #include "CHostApi4HMI.h"
 #include <QDateTime>
+#include <ctime>
 
 std::array<int, 2> getSunTime(long double glat, long double glong, int year, int month, int day);
 
@@ -69,53 +70,123 @@ void QDataManager::startCheck()
   m_pTimer->start(100);
 }
 
-void QDataManager::startAuto()
+bool needTurnLightOn(void)
 {
-  m_pApi4Hmi->m_lpApi->SweepTo();
-
+#if 1
   QDateTime current_time=QDateTime::currentDateTime();
   int year = current_time.date().year();
   int month = current_time.date().month();
   int day = current_time.date().day();
+  int minutes = current_time.time().hour() * 60 + current_time.time().minute();
+ #else  
+  std::time_t t = std::time(nullptr);
+  auto tm_ = std::localtime(&t);
+  int year = tm_->tm_year + 1900;
+  int month = tm_->tm_mon;
+  int day = tm_->tm_mday - 1;
+  int minutes = tm_->tm_hour * 60 + tm_->tm_min;
+#endif
 
-  int _minute = current_time.time().hour() * 60 + current_time.time().minute();
   auto ret = getSunTime(31.815051, 120.0127376, year, month, day);
-
   std::cout << "Sun Rise at:" << std::setfill('0') << std::setw(2)<< (ret[0]/60) << ":" << std::setw(2) << (ret[0]%60) << std::endl
             << "Sun Set at :" << std::setw(2) << (ret[1]/60) << ":" << std::setw(2) << (ret[1]%60) << std::endl
-            << "Now at     :" << std::setw(2) << (_minute/60) << ":" << std::setw(2) << (_minute%60) << std::endl;
+            << "Now at     :" << std::setw(2) << (minutes/60) << ":" << std::setw(2) << (minutes%60) << std::endl;
 
-  if((_minute < (ret[0] + 60)) || (_minute > (ret[1] - 60)))
+  return ((minutes < (ret[0] + 60)) || (minutes > (ret[1] - 60)));
+}
+
+void QDataManager::startAuto()
+{
+  std::map<std::string, boost::any> property_value =
   {
-      static const std::map<std::string, boost::any> control_ =
-      {
-          {dbAds::IApi4HMI::Item_spout_water, 1},
-          {dbAds::IApi4HMI::Item_brush_status, 1},
-          {dbAds::IApi4HMI::Item_width_light, 1},
-          {dbAds::IApi4HMI::Item_low_beam_light, 1},
-          {dbAds::IApi4HMI::Item_high_beam_light, 0},
-          {dbAds::IApi4HMI::Item_light, 1},
-          {dbAds::IApi4HMI::Item_reverse_light, 0},
-          {dbAds::IApi4HMI::Item_brake_light, 0},
-          {dbAds::IApi4HMI::Item_left_light, 0},
-          {dbAds::IApi4HMI::Item_right_light, 0},
-      };
-      m_pApi4Hmi->m_lpApi->SetProperty(control_);
+      {dbAds::IApi4HMI::Item_spout_water,     1},
+      {dbAds::IApi4HMI::Item_brush_status,    1},
+      {dbAds::IApi4HMI::Item_light,           1},
+      
+      {dbAds::IApi4HMI::Item_width_light,     0},
+      {dbAds::IApi4HMI::Item_low_beam_light,  0},
+      {dbAds::IApi4HMI::Item_high_beam_light, 0},
+      {dbAds::IApi4HMI::Item_reverse_light,   0},
+      {dbAds::IApi4HMI::Item_brake_light,     0},
+      {dbAds::IApi4HMI::Item_left_light,      0},
+      {dbAds::IApi4HMI::Item_right_light,     0},
+  };
+
+  if(nullptr != getenv("DISABLE_BRUSH_CONTROL"))
+  {
+      property_value[dbAds::IApi4HMI::Item_spout_water] = 0;
+      property_value[dbAds::IApi4HMI::Item_brush_status] = 0;
   }
+
+  if(needTurnLightOn())
+  {
+      property_value[dbAds::IApi4HMI::Item_width_light] = 1;
+      property_value[dbAds::IApi4HMI::Item_low_beam_light] = 1;
+  }
+  m_pApi4Hmi->m_lpApi->SetProperty(property_value);
+
+  m_pApi4Hmi->m_lpApi->SweepTo();
 }
 
 void QDataManager::stopAuto()
 {
+  std::map<std::string, boost::any> property_value =
+  {
+      {dbAds::IApi4HMI::Item_spout_water,     0},
+      {dbAds::IApi4HMI::Item_brush_status,    0},
+      {dbAds::IApi4HMI::Item_light,           0},
+      
+      {dbAds::IApi4HMI::Item_width_light,     0},
+      {dbAds::IApi4HMI::Item_low_beam_light,  0},
+      {dbAds::IApi4HMI::Item_high_beam_light, 0},
+      {dbAds::IApi4HMI::Item_reverse_light,   0},
+      {dbAds::IApi4HMI::Item_brake_light,     0},
+      {dbAds::IApi4HMI::Item_left_light,      0},
+      {dbAds::IApi4HMI::Item_right_light,     0},
+  };
+  m_pApi4Hmi->m_lpApi->SetProperty(property_value);
+
   m_pApi4Hmi->m_lpApi->Stop();
+}
+
+void QDataManager::stopBySide()
+{
+  // std::map<std::string, boost::any> property_value =
+  // {
+  //     {dbAds::IApi4HMI::Item_spout_water,     0},
+  //     {dbAds::IApi4HMI::Item_brush_status,    0},
+  // };
+  // m_pApi4Hmi->m_lpApi->SetProperty(property_value);
+
+  m_pApi4Hmi->m_lpApi->StopByRoadSide();
 }
 
 void QDataManager::pause()
 {
+  std::map<std::string, boost::any> property_value =
+  {
+      {dbAds::IApi4HMI::Item_spout_water,     0},
+      {dbAds::IApi4HMI::Item_brush_status,    0},
+  };
+  m_pApi4Hmi->m_lpApi->SetProperty(property_value);
+
   m_pApi4Hmi->m_lpApi->Pause();
 }
 
 void QDataManager::resume()
 {
+  std::map<std::string, boost::any> property_value =
+  {
+      {dbAds::IApi4HMI::Item_spout_water,     1},
+      {dbAds::IApi4HMI::Item_brush_status,    1},
+  };
+  if(nullptr != getenv("DISABLE_BRUSH_CONTROL"))
+  {
+      property_value[dbAds::IApi4HMI::Item_spout_water] = 0;
+      property_value[dbAds::IApi4HMI::Item_brush_status] = 0;
+  }
+  m_pApi4Hmi->m_lpApi->SetProperty(property_value);
+
   m_pApi4Hmi->m_lpApi->Resume();
 }
 

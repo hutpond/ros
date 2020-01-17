@@ -115,7 +115,7 @@ Item {
             id: timer
             interval: 200; running: false; repeat: true
             onTriggered: {
-              var value// = DataManager.getProperty(property_name)
+              var value = DataManager.getProperty(property_name)
               if("number" == typeof value){
                 parent.status = value
                 parent.source = value === 0 ? name_off : name

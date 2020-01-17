@@ -98,13 +98,16 @@ namespace dbAds
         //退出自动驾驶
         virtual bool Stop() = 0;
 
-        //出库
+        //出库，保持自动驾驶状态
         virtual bool MoveTo(int path) = 0; 
 
-        //路边停车
+        //路边停车, 停车后应退出自动驾驶，所以会有Stop命令跟随
+        virtual bool StopByRoadSide() = 0;
+
+        //暂停，保持自动驾驶状态， 可以被resume
         virtual bool Pause() = 0;
 
-        //取消路边停车，继续自动驾驶
+        //继续
         virtual bool Resume() = 0;
 
         //选择清扫场景

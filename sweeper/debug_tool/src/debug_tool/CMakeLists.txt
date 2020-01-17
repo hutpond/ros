@@ -20,6 +20,8 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/qwt/include)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/qwt/lib)
 
+include_directories(/usr/include/eigen3)
+
 add_message_files (
   FILES
   ads_PlanningData4Debug.msg
@@ -49,26 +51,32 @@ generate_messages(
   )
 catkin_package()
 
-add_executable(debug_tool src/main.cpp)
-
-target_sources(debug_tool PRIVATE src/GlobalDefine.cpp)
-target_sources(debug_tool PRIVATE src/QBaseWidget.cpp)
-target_sources(debug_tool PRIVATE src/QPlanningWidget.cpp)
-target_sources(debug_tool PRIVATE src/QDebugToolMainWnd.cpp)
-target_sources(debug_tool PRIVATE src/QPlanningParamWidget.cpp)
-target_sources(debug_tool PRIVATE src/QBaseShowWidget.cpp)
-target_sources(debug_tool PRIVATE src/QPlanningShowWidget.cpp)
-target_sources(debug_tool PRIVATE src/QReadDataManagerRos.cpp)
-target_sources(debug_tool PRIVATE src/QDataDisplayWidget.cpp)
-target_sources(debug_tool PRIVATE src/QPlanningCostWidget.cpp)
-target_sources(debug_tool PRIVATE src/QCostValueWidget.cpp)
-target_sources(debug_tool PRIVATE src/QFullViewWidget.cpp)
-target_sources(debug_tool PRIVATE src/QEditToolsWidget.cpp)
-target_sources(debug_tool PRIVATE src/QNewPlanningWidget.cpp)
-target_sources(debug_tool PRIVATE src/QNewPlanningShowWidget.cpp)
-target_sources(debug_tool PRIVATE src/splines.cpp)
-target_sources(debug_tool PRIVATE src/QNewPlanningPlot.cpp)
-target_sources(debug_tool PRIVATE src/QBezierCurve.cpp)
+add_executable(debug_tool
+  src/main.cpp
+  src/GlobalDefine.cpp
+  src/QBaseWidget.cpp
+  src/QPlanningWidget.cpp
+  src/QDebugToolMainWnd.cpp
+  src/QPlanningParamWidget.cpp
+  src/QBaseShowWidget.cpp
+  src/QPlanningShowWidget.cpp
+  src/QReadDataManagerRos.cpp
+  src/QDataDisplayWidget.cpp
+  src/QPlanningCostWidget.cpp
+  src/QCostValueWidget.cpp
+  src/QFullViewWidget.cpp
+  src/QEditToolsWidget.cpp
+  src/QNewPlanningWidget.cpp
+  src/QNewPlanningShowWidget.cpp
+  src/splines.cpp
+  src/QNewPlanningPlot.cpp
+  src/QBezierCurve.cpp
+  src/QDecisionStateWidget.cpp
+  src/qstateitem.cpp
+  src/qstatewidget.cpp
+  src/QFrameTimeWidget.cpp
+  src/debugtool.qrc
+  )
 
 target_link_libraries(debug_tool jsoncpp)
 target_link_libraries(debug_tool boost_system)

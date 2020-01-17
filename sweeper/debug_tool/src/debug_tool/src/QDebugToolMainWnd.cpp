@@ -20,6 +20,7 @@
 #include "QEditToolsWidget.h"
 #include "QNewPlanningWidget.h"
 #include "QBaseShowWidget.h"
+#include "QDecisionStateWidget.h"
 
 static const int TOOL_BAR_ACTION_SIZE = 40;
 static const char *PLANNING_TOOL_BAR = "PLANNING";
@@ -27,12 +28,13 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V4.0.5";
+static const char *WND_TITLE = "Debug Tool V4.0.6";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
 QDataDisplayWidget * QDebugToolMainWnd::s_pDataDisplay = Q_NULLPTR;
 QPlanningCostWidget * QDebugToolMainWnd::s_pWdgPlanningCost = Q_NULLPTR;
+QDecisionStateWidget * QDebugToolMainWnd::s_pWdgDecisionState = Q_NULLPTR;
 
 QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   : QMainWindow(parent)
@@ -80,6 +82,10 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   // plannig cost
   s_pWdgPlanningCost = new QPlanningCostWidget(this);
   pTabWidget->addTab(s_pWdgPlanningCost, tr("Cost"));
+
+  // state
+  s_pWdgDecisionState = new QDecisionStateWidget();
+  pTabWidget->addTab(s_pWdgDecisionState, tr("State"));
 
   pDockWdg->setWidget(pTabWidget);
 
@@ -225,6 +231,7 @@ void QDebugToolMainWnd::onActionPlanningReplay()
     m_pWdgPlanning[m_nCurrentIndex]->startReplay(strPath);
     m_pWdgPlanning[m_nCurrentIndex]->setShowType(QPlanningWidget::RePlay);
     this->setWndTitle();
+    s_pWdgDecisionState->clearData();
   }
 }
 

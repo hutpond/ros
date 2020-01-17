@@ -47,6 +47,16 @@ void QDataDisplayWidget::setPlanningData(
                 );
 
   item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("vehicle enu_x, enu_y, enu_z, pitch, roll, yaw: %1, %2, %3, %4, %5, %6").
+                arg(planningData.vehicle_enu_x).
+                arg(planningData.vehicle_enu_y).
+                arg(planningData.vehicle_enu_z).
+                arg(planningData.vehicle_pitch).
+                arg(planningData.vehicle_roll).
+                arg(planningData.vehicle_yaw)
+                );
+
+  item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("front_axle_center: %1, %2, %3, %4, %5, %6, %7, %8, %9").
                 arg(planningData.front_axle_center.id).
                 arg(planningData.front_axle_center.x).
@@ -224,6 +234,10 @@ void QDataDisplayWidget::setPlanningData(
     itemChild->setText(0, QString("L: %1").arg(planningData.fusion_results[i].L));
     itemChild = new QTreeWidgetItem(item);
     itemChild->setText(0, QString("H: %1").arg(planningData.fusion_results[i].H));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("DIRX: %1").arg(planningData.fusion_results[i].DIRX));
+    itemChild = new QTreeWidgetItem(item);
+    itemChild->setText(0, QString("DIRY: %1").arg(planningData.fusion_results[i].DIRY));
     itemChild = new QTreeWidgetItem(item);
     itemChild->setText(0, QString("DEVICE_SOURCE: %1").
                        arg(static_cast<int>(planningData.fusion_results[i].DEVICE_SOURCE)));

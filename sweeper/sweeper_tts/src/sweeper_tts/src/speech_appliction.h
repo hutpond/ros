@@ -2,6 +2,7 @@
 #define SPEECH_APPLICTION_H
 
 #include <memory>
+#include <atomic>
 #include <thread>
 #include <ros/ros.h>
 #include <std_msgs/String.h>

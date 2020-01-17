@@ -34,5 +34,8 @@ float64 garbage_cost_weight
 ads_planning_trajectory[] planning_trajectory_candidates
 ads_planning_trajectory planning_trajectory
 ads_planning_output planning_output
+uint8 scenario_type
+uint8 NORMAL = 0
+uint8 YIELD = 1
 
 string debug_info

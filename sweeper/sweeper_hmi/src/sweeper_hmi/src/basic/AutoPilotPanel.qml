@@ -126,11 +126,11 @@ Item {
 
       onClicked: {
         if (pause) {
-          DataManager.resume()
+          DataManager.startAuto()
           btnText.text = qsTr("靠边停车")
         }
         else {
-          DataManager.pause()
+          DataManager.stopBySide()
           btnText.text = qsTr("恢复")
         }
         pause = !pause
@@ -188,6 +188,8 @@ Item {
 
   onVisibleChanged: {
     timer.running = visible
+    pause = false
+    btnText.text = qsTr("靠边停车")
   }
 
   function setButtonEnable(enabled) {

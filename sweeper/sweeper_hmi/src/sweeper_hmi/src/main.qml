@@ -20,11 +20,11 @@ Window {
   //flags: Qt.FramelessWindowHint
 
   // quit
-  Item {
-    anchors.fill: parent
-    focus: true
-    Keys.onEscapePressed: Qt.quit()
-  }
+//  Item {
+//    anchors.fill: parent
+//    focus: true
+//    Keys.onEscapePressed: Qt.quit()
+//  }
 
   // header
   SubFrames.Header {
@@ -149,8 +149,8 @@ Window {
       autoPilot.visible = false
       currentItem = userPage
 
-      vehicleErrMsg.visible = true
-      currentItem.visible = false
+      //vehicleErrMsg.visible = true
+      currentItem.visible = true
     }
 
     onManul: {

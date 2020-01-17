@@ -24,6 +24,7 @@ DECLARE_SWEEPER_CONTROL_DATA(width_light)               //示廓灯,0:关，1：
 DECLARE_SWEEPER_CONTROL_DATA(emergency_light)           //应急灯,0:关，1：开 , rw
 
 DECLARE_SWEEPER_CONTROL_DATA(gear)                      //档位:"N","P","D","R", ro
+DECLARE_SWEEPER_CONTROL_DATA(steer_angle_value)         //当前方向盘转角:度, ro
 DECLARE_SWEEPER_CONTROL_DATA(throttle_value)            //油门值, ro
 DECLARE_SWEEPER_CONTROL_DATA(brake_value)               //刹车值：0-100%, ro, 当前制动踏板角度
 DECLARE_SWEEPER_CONTROL_DATA(manual_brake)              //手刹状态 ,0:关，1：开, ro
