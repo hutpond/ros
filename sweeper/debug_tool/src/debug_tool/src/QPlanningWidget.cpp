@@ -199,7 +199,8 @@ void QPlanningWidget::onParsePlanningData(const debug_tool::ads_PlanningData4Deb
   }
 
   fs::path path = m_fsPath;
-  std::string strFileName = QBaseWidget::dataFileName();
+  std::string strFileName = QBaseWidget::dataFileName(planningData.header.stamp.sec,
+                                                      planningData.header.stamp.nsec);
   path /= strFileName;
   strFileName = path.string();
 

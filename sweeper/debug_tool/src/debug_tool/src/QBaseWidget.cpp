@@ -254,4 +254,24 @@ std::string QBaseWidget::dataFileName()
   return strFileName;
 }
 
+std::string QBaseWidget::dataFileName(long second, long nanosecond)
+{
+  char time_str[64] = {0};
+  time_t times = second;
+  struct tm *utcTime = localtime(&times);
+  sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",
+          utcTime->tm_year + 1900,
+          utcTime->tm_mon + 1,
+          utcTime->tm_mday,
+          utcTime->tm_hour,
+          utcTime->tm_min,
+          utcTime->tm_sec,
+          static_cast<int>(nanosecond / (1000 * 1000))
+          );
+
+  std::string strFileName = time_str;
+  strFileName += ".txt";
+  return strFileName;
+}
+
 #include "moc_QBaseWidget.cpp"

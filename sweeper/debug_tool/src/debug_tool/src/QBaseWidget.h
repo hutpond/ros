@@ -61,6 +61,7 @@ protected:
   void fileList(const std::string &, std::vector<std::string> &);
 
   std::string dataFileName();
+  std::string dataFileName(long, long);
 
 public slots:
   void onSelectTool(int, bool);

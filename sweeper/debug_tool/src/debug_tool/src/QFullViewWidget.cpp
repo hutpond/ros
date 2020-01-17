@@ -174,7 +174,7 @@ void QFullViewWidget::addPlanningPointLine(const debug_tool::ads_PlanningData4De
   localPos.y = data.planning_output.pose.position.y;
   localPos.z = data.planning_output.pose.position.z;
 
-  TransformRFU2ENU(&vehicleAngle, &vehiclePos, &localPos, &enuPos);
+  TransformRFU2ENU(&vehiclePos, &vehicleAngle, &localPos, &enuPos);
   QSharedPointer<MapPoint> decision;
   decision.reset(new MapPoint);
   decision->index = index;
