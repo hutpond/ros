@@ -376,6 +376,7 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
     in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
     in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
+    in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
 
     m_listReferences.push_back(point);
   }

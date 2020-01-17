@@ -15,6 +15,7 @@ class QStateWidget : public QWidget
     StateFollow,
     StatePass,
     StateSafeStop,
+    StateExitAuto,
     StateCount
   };
 

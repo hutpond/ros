@@ -182,7 +182,8 @@ void QPlanningShowWidget::drawImage()
   this->drawTrackTargetWithPoints(painter);
   this->drawNewTarget(painter);
   this->drawPlanningPoint(painter);
-  this->drawPlanningPoints(painter);
+  this->drawPlanningCandidatesSplines(painter);
+  this->drawPlanningSplines(painter);
   this->drawGarbageResults(painter);
   this->drawText(painter);
 }
@@ -622,7 +623,7 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
 
 void QPlanningShowWidget::drawPlanningPoints(QPainter &painter)
 {
-  QPolygonF pgf;
+  /*QPolygonF pgf;
   for (const auto &point : m_planningData.planning_trajectory.points) {
     pgf << QPointF(point.x, point.y);
   }
@@ -648,7 +649,7 @@ void QPlanningShowWidget::drawPlanningPoints(QPainter &painter)
                      QString::number(m_planningData.planning_trajectory.id));
 
     painter.restore();
-  }
+  }*/
 }
 
 /*******************************************************

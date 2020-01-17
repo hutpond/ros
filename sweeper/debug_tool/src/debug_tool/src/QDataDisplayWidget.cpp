@@ -320,12 +320,10 @@ void QDataDisplayWidget::setPlanningData(
   for (int i = 0; i < size_candidates; ++ i) {
     const auto &val_candidates_spines = val_candidates[i].splines;
     int size_candidates_splines = static_cast<int>(val_candidates_spines.size());
-    const auto &val_candidates_points = val_candidates[i].points;
-    int size_candidates_points = static_cast<int>(val_candidates_points.size());
 
     item = new QTreeWidgetItem(itemRoot);
     QString text = QString(
-          "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8, points: %9").
+          "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8").
         arg(val_candidates[i].id).
         arg(val_candidates[i].cost).
         arg(val_candidates[i].safety_cost).
@@ -333,8 +331,7 @@ void QDataDisplayWidget::setPlanningData(
         arg(val_candidates[i].smoothness_cost).
         arg(val_candidates[i].consistency_cost).
         arg(val_candidates[i].garbage_cost).
-        arg(size_candidates_splines).
-        arg(size_candidates_points);
+        arg(size_candidates_splines);
     item->setText(0, text);
 
     for (int j = 0; j < size_candidates_splines; ++ j) {
@@ -351,21 +348,6 @@ void QDataDisplayWidget::setPlanningData(
           arg(val_candidates_spines[j].yb.w);
       itemChild->setText(0, text);
     }
-
-    for (int j = 0; j < size_candidates_points; ++ j) {
-      QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-      itemChild->setText(0, QString("point: %1, %2, %3, %4, %5, %6, %7, %8, %9").
-                         arg(val_candidates_points[j].id).
-                         arg(val_candidates_points[j].x).
-                         arg(val_candidates_points[j].y).
-                         arg(val_candidates_points[j].enu_x).
-                         arg(val_candidates_points[j].enu_y).
-                         arg(val_candidates_points[j].s).
-                         arg(val_candidates_points[j].l).
-                         arg(val_candidates_points[j].left_road_width).
-                         arg(val_candidates_points[j].right_road_width)
-                         );
-    }
   }
 
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
@@ -373,11 +355,9 @@ void QDataDisplayWidget::setPlanningData(
   const auto &val_planning_trajectory = planningData.planning_trajectory;
   const auto &val_planning_trajectory_spines = val_planning_trajectory.splines;
   int size_trajectory_splines = static_cast<int>(val_planning_trajectory_spines.size());
-  const auto &val_planning_trajectory_points = val_planning_trajectory.points;
-  int size_trajectory_points = static_cast<int>(val_planning_trajectory_points.size());
   item = new QTreeWidgetItem(itemRoot);
   QString text = QString(
-        "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8, points: %9").
+        "id: %1, cost: %2, safety: %3, lateral: %4, smoothness: %5, consistency: %6, garbage: %7, splines: %8").
       arg(val_planning_trajectory.id).
       arg(val_planning_trajectory.cost).
       arg(val_planning_trajectory.safety_cost).
@@ -385,8 +365,7 @@ void QDataDisplayWidget::setPlanningData(
       arg(val_planning_trajectory.smoothness_cost).
       arg(val_planning_trajectory.consistency_cost).
       arg(val_planning_trajectory.garbage_cost).
-      arg(size_trajectory_splines).
-      arg(size_trajectory_points);
+      arg(size_trajectory_splines);
   item->setText(0, text);
 
   for (int j = 0; j < size_trajectory_splines; ++ j) {
@@ -402,21 +381,6 @@ void QDataDisplayWidget::setPlanningData(
         arg(val_planning_trajectory_spines[j].yb.z).
         arg(val_planning_trajectory_spines[j].yb.w);
     itemChild->setText(0, text);
-  }
-
-  for (int j = 0; j < size_trajectory_points; ++ j) {
-    QTreeWidgetItem *itemChild = new QTreeWidgetItem(item);
-    itemChild->setText(0, QString("point: %1, %2, %3, %4, %5, %6, %7, %8, %9").
-                       arg(val_planning_trajectory_points[j].id).
-                       arg(val_planning_trajectory_points[j].x).
-                       arg(val_planning_trajectory_points[j].y).
-                       arg(val_planning_trajectory_points[j].enu_x).
-                       arg(val_planning_trajectory_points[j].enu_y).
-                       arg(val_planning_trajectory_points[j].s).
-                       arg(val_planning_trajectory_points[j].l).
-                       arg(val_planning_trajectory_points[j].left_road_width).
-                       arg(val_planning_trajectory_points[j].right_road_width)
-                       );
   }
 }
 
