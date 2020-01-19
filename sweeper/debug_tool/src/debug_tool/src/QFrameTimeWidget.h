@@ -13,7 +13,7 @@ class QFrameTimeWidget : public QWidget
 public:
   explicit QFrameTimeWidget(QWidget *parent = nullptr);
 
-  void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
+  void setPlanningData(quint64, const debug_tool::ads_PlanningData4Debug &);
   void clearData();
 
 protected:
@@ -23,8 +23,7 @@ protected:
 private:
   QwtPlot *m_pWdgPlot;
   QwtPlotCurve *m_pPlotCurve;
-  QVector<QPointF> m_points;
-  double m_dCurrentMS;
+  QList<QPair<quint64, quint64>> m_listMillSecond;
 };
 
 #endif // QFRAMETIMEWIDGET_H

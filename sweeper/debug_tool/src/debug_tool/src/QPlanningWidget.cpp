@@ -98,9 +98,11 @@ void QPlanningWidget::timerEvent(QTimerEvent *e)
       return;
     }
     debug_tool::ads_PlanningData4Debug data;
-    std::string name = *m_itFile;
-    std::size_t index = name.find_last_of('/');
-    name = name.substr(index + 1, name.length() - (index + 1) - 1);
+    std::string name;
+    if (m_itFile != m_listPlanningFiles.begin()) {
+        auto it = m_itFile - 1;
+        name = *it;
+    }
     if (this->readFromJsonFile(*m_itFile, data)) {
       this->setPlanningData(data, QString::fromStdString(name));
     }
@@ -141,8 +143,11 @@ void QPlanningWidget::onSetFrameIndexReplay(int frame)
   else {
     full_name = m_listPlanningFiles.back();
   }
-  std::size_t pos = full_name.find_last_of('/');
-  std::string file_name = full_name.substr(pos + 1, full_name.length() - (pos + 1) - 1);
+  std::string file_name;
+  if (m_itFile != m_listPlanningFiles.begin()) {
+    auto it = m_itFile - 1;
+    file_name = *it;
+  }
   if (this->readFromJsonFile(full_name, data)) {
     this->setPlanningData(data, QString::fromStdString(file_name));
   }
@@ -883,16 +888,22 @@ void QPlanningWidget::setPlanningData(debug_tool::ads_PlanningData4Debug &data,
   if (m_nShowView == LocalViewVehicle) {
     m_pWdgShow[0]->setPlanningData(data);
     m_pWdgShow[1]->setPlanningData(data_cost);
-    m_pWdgFullView->setPlanningData(data, name, false);
+    m_pWdgFullView->setPlanningData(data, false);
   }
   else {
-    m_pWdgFullView->setPlanningData(data, name, true);
+    m_pWdgFullView->setPlanningData(data, true);
   }
   m_pWdgParam->setPlanningData(data, data_cost);
   QDebugToolMainWnd::s_pTextBrowser->setPlainText(QString::fromStdString(data.debug_info));
   QDebugToolMainWnd::s_pDataDisplay->setPlanningData(data);
   QDebugToolMainWnd::s_pWdgPlanningCost->setPlanningData(data);
-  QDebugToolMainWnd::s_pWdgDecisionState->setPlanningData(data);
+
+  quint64 mill_second = 0;
+  debug_tool::ads_PlanningData4Debug pre_data;
+  if (!name.isEmpty() && this->readFromJsonFile(name.toStdString(), pre_data)) {
+    mill_second = static_cast<quint64>(pre_data.header.stamp.toSec() * 1000);
+  }
+  QDebugToolMainWnd::s_pWdgDecisionState->setPlanningData(mill_second, data);
 }
 
 bool QPlanningWidget::ObstacleCollisionCheck(
@@ -957,11 +968,9 @@ bool QPlanningWidget::ObstacleCollisionCheck(
 void QPlanningWidget::onSaveDataToFile(const debug_tool::ads_PlanningData4Debug &data)
 {
   this->saveDataToJsonFile(m_strJsonFile, data);
-  std::size_t pos = m_strJsonFile.find_last_of('/');
-  std::string file_name = m_strJsonFile.substr(pos + 1, m_strJsonFile.length() - (pos + 1) - 1);
 
   debug_tool::ads_PlanningData4Debug dataNew = data;
-  this->setPlanningData(dataNew, QString::fromStdString(file_name));
+  this->setPlanningData(dataNew, "");
 }
 
 bool QPlanningWidget::RoadBoundaryCheck(

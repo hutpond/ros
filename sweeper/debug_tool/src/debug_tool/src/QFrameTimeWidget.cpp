@@ -6,7 +6,6 @@
 
 QFrameTimeWidget::QFrameTimeWidget(QWidget *parent)
   : QWidget(parent)
-  , m_dCurrentMS(0.0)
 {
   m_pWdgPlot = new QwtPlot(QStringLiteral(""), this);
   m_pWdgPlot->setAxisTitle(QwtPlot::xBottom, QStringLiteral("index"));
@@ -37,20 +36,48 @@ void QFrameTimeWidget::showEvent(QShowEvent *)
   m_pWdgPlot->replot();
 }
 
-void QFrameTimeWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
+void QFrameTimeWidget::setPlanningData(quint64 preMillSecond, const debug_tool::ads_PlanningData4Debug &data)
 {
-  QPointF ptf;
-  ptf.setX(m_points.size());
-  double dCurrentMS = data.header.stamp.toSec() * 1000;
-  if (qAbs<double>(m_dCurrentMS) < 1.0e-6) {
-    ptf.setY(0);
+  quint64 nCurrentMS = static_cast<quint64>(data.header.stamp.toSec() * 1000);
+  QPair<quint64, quint64> pair_millsecond;
+  pair_millsecond.second = nCurrentMS;
+
+  const int size_item = m_listMillSecond.size();
+  if (size_item == 0) {
+    pair_millsecond.first = preMillSecond;
+    m_listMillSecond.push_back(pair_millsecond);
+  }
+  else if (nCurrentMS > m_listMillSecond[size_item - 1].second) {
+    pair_millsecond.first = m_listMillSecond[size_item - 1].second;
+    m_listMillSecond.push_back(pair_millsecond);
+  }
+  else if (nCurrentMS < m_listMillSecond[0].second) {
+    pair_millsecond.first = preMillSecond;
+    m_listMillSecond.push_front(pair_millsecond);
   }
   else {
-    ptf.setY(dCurrentMS - m_dCurrentMS);
+    for (int i = 1; i < size_item; ++i) {
+      if (nCurrentMS == m_listMillSecond[i - 1].second || nCurrentMS == m_listMillSecond[i].second) {
+        break;
+      }
+      else if (nCurrentMS > m_listMillSecond[i - 1].second && nCurrentMS < m_listMillSecond[i].second) {
+        if (preMillSecond != 0) {
+          pair_millsecond.first = preMillSecond;
+        }
+        else {
+          pair_millsecond.first = m_listMillSecond[i - 1].second;
+        }
+        m_listMillSecond[i].first = pair_millsecond.second;
+        m_listMillSecond.insert(i, pair_millsecond);
+      }
+    }
   }
-  m_dCurrentMS = dCurrentMS;
-  m_points << ptf;
-  m_pPlotCurve->setSamples(m_points);
+
+  QVector<QPointF> points;
+  for (int i = 1; i < m_listMillSecond.size(); ++i) {
+    points << QPointF(i, m_listMillSecond[i].second - m_listMillSecond[i].first);
+  }
+  m_pPlotCurve->setSamples(points);
   if (this->isVisible()) {
     m_pWdgPlot->replot();
   }
@@ -58,6 +85,5 @@ void QFrameTimeWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug 
 
 void QFrameTimeWidget::clearData()
 {
-  m_points.clear();
-  m_dCurrentMS = 0.0;
+  m_listMillSecond.clear();
 }

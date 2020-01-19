@@ -34,10 +34,10 @@ void QDecisionStateWidget::resizeEvent(QResizeEvent *)
         );
 }
 
-void QDecisionStateWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data)
+void QDecisionStateWidget::setPlanningData(quint64 preMillSecond, const debug_tool::ads_PlanningData4Debug &data)
 {
   m_pWdgState->setData(data);
-  m_pWdgFrameTime->setPlanningData(data);
+  m_pWdgFrameTime->setPlanningData(preMillSecond, data);
 }
 
 void QDecisionStateWidget::clearData()

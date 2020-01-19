@@ -28,7 +28,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V4.1.0";
+static const char *WND_TITLE = "Debug Tool V4.1.1";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;

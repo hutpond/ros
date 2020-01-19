@@ -12,7 +12,7 @@ class QDecisionStateWidget : public QWidget
   Q_OBJECT
 public:
   explicit QDecisionStateWidget(QWidget *parent = nullptr);
-  void setPlanningData(const debug_tool::ads_PlanningData4Debug &);
+  void setPlanningData(quint64, const debug_tool::ads_PlanningData4Debug &);
   void clearData();
 
 protected:

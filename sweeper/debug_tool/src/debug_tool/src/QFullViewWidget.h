@@ -15,8 +15,7 @@ public:
   explicit QFullViewWidget(QWidget *parent = Q_NULLPTR);
 
   void clearMapDatas();
-  void setPlanningData(const debug_tool::ads_PlanningData4Debug &,
-                       const QString &, bool);
+  void setPlanningData(const debug_tool::ads_PlanningData4Debug &, bool);
   void loadReferenceFile(const boost::filesystem::path &);
 
 protected:
@@ -30,12 +29,9 @@ protected:
   void drawVehicle(QPainter &);
   void drawPlanningPointLine(QPainter &);
 
-  quint64 nameToIndex(const QString &);
   int findIndexPos(const QList<QSharedPointer<MapPoint>>&, quint64);
-
-  void addVehicleLine(const debug_tool::ads_PlanningData4Debug &, quint64);
-  void addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &, quint64);
-  int isIndexValid(const QList<QSharedPointer<MapPoint>>&, quint64);
+  void addVehicleLine(const debug_tool::ads_PlanningData4Debug &);
+  void addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &);
 
 protected:
   debug_tool::ads_PlanningData4Debug m_planningData;

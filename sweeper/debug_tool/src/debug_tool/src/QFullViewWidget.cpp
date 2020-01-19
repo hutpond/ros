@@ -11,7 +11,7 @@
 
 struct MapPoint
 {
-  int index;
+  quint64 millsecond;
   double x;
   double y;
 };
@@ -48,11 +48,10 @@ void QFullViewWidget::clearMapDatas()
 }
 
 void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data,
-                                      const QString &name, bool update)
+                                      bool update)
 {
-  quint64 index = this->nameToIndex(name);
-  this->addVehicleLine(data, index);
-  this->addPlanningPointLine(data, index);
+  this->addVehicleLine(data);
+  this->addPlanningPointLine(data);
 
   if (update) {
     m_planningData = data;
@@ -60,40 +59,32 @@ void QFullViewWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &
   }
 }
 
-quint64 QFullViewWidget::nameToIndex(const QString &name)
+int QFullViewWidget::findIndexPos(const QList<QSharedPointer<MapPoint>>& points, quint64 millsecond)
 {
-  quint64 index = 0;
-  if (name.isEmpty()) {
-    return index;
+  const int size_points = points.size();
+  if (size_points == 0) {
+    return 0;
+  }
+  else if (size_points == 1 && millsecond == points[0]->millsecond) {
+    return -1;
   }
 
-  int pos = name.indexOf('.');
-  QString pre_name = name.mid(0, pos);
-  QStringList list = pre_name.split('_');
-  if (list.size() != 3) {
-    return index;
+  if (millsecond < points[0]->millsecond) {
+    return 0;
   }
-  // day
-  index = list[0].mid(6).toULongLong() * qPow(10, 9);
-  // h m s
-  index += list[1].toULongLong() * qPow(10, 3);
-  // ms
-  index += list[2].toULongLong();
+  else if (millsecond > points[size_points - 1]->millsecond) {
+    return size_points;
+  }
 
-  return index;
-}
-
-int QFullViewWidget::findIndexPos(const QList<QSharedPointer<MapPoint>>& points, quint64 index)
-{
-  int low = 0;
-  int heigh = points.size() - 1;
   int pos = -1;
-  while (heigh - low > 1) {
-    int pos = (heigh + low) / 2;
-    if (index < points[pos]->index) {
-      heigh = pos;
+  int low = 0;
+  int high = points.size() - 1;
+  while (high - low > 1) {
+    int pos = (high + low) / 2;
+    if (millsecond < points[pos]->millsecond) {
+      high = pos;
     }
-    else if (index > points[pos]->index) {
+    else if (millsecond > points[pos]->millsecond) {
       low = pos;
     }
     else {
@@ -101,68 +92,45 @@ int QFullViewWidget::findIndexPos(const QList<QSharedPointer<MapPoint>>& points,
       break;
     }
   }
-  if (heigh - low == 1) {
-    if (index == points[low]->index || index == points[heigh]->index) {
+  if (high - low == 1) {
+    if (millsecond == points[low]->millsecond || millsecond == points[high]->millsecond) {
       pos = -1;
     }
-    else {
+    else if (millsecond < points[low]->millsecond) {
       pos = low;
+    }
+    else {
+      pos = high;
     }
   }
   return pos;
 }
 
-/*******************************************************
- * @brief 创建Setting对应的ToolBar
- * @param
-
- * @return
-********************************************************/
-int QFullViewWidget::isIndexValid(const QList<QSharedPointer<MapPoint>> &points, quint64 index)
-{
-  int ret = 0;
-  auto size = points.size();
-  if (size == 0) {
-    ret = 1;
-  }
-  else if (points[0]->index == 0 && index == 0) {
-    ret = 1;
-  }
-  else if (points[0]->index == 0 || index == 0) {
-    ;
-  }
-  else if (index > points[size - 1]->index){
-    ret = 1;
-  }
-  else if (index < points[0]->index){
-    ret = 1;
-  }
-  else {
-    int pos = this->findIndexPos(points, index);
-    if (pos >= 0) {
-      ret = 1;
-    }
-  }
-  return ret;
-}
-
-void QFullViewWidget::addVehicleLine(const debug_tool::ads_PlanningData4Debug &data,
-                                     quint64 index)
+void QFullViewWidget::addVehicleLine(const debug_tool::ads_PlanningData4Debug &data)
 {
   QSharedPointer<MapPoint> vehicle;
   vehicle.reset(new MapPoint);
-  vehicle->index = index;
+  vehicle->millsecond = static_cast<quint64>(data.header.stamp.toSec() * 1000);
   vehicle->x = data.vehicle_enu_x;
   vehicle->y = data.vehicle_enu_y;
 
-  if (this->isIndexValid(m_listVehicleLine, index) == 1) {
-    m_listVehicleLine.append(vehicle);
+  int pos = this->findIndexPos(m_listVehicleLine, vehicle->millsecond);
+  if (m_listVehicleLine.size() == 0 || pos == m_listVehicleLine.size()) {
+    m_listVehicleLine.push_back(vehicle);
+  }
+  else if (pos >= 0) {
+    m_listVehicleLine.insert(pos, vehicle);
   }
 }
 
-void QFullViewWidget::addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &data,
-                                     quint64 index)
+void QFullViewWidget::addPlanningPointLine(const debug_tool::ads_PlanningData4Debug &data)
 {
+  quint64 millsecond = static_cast<quint64>(data.header.stamp.toSec() * 1000);
+  int pos = this->findIndexPos(m_listPlanningPoints, millsecond);
+  if (pos < 0) {
+    return;
+  }
+
   MapPoint3D vehicleAngle, vehiclePos, localPos, enuPos;
   vehicleAngle.x = data.vehicle_pitch;
   vehicleAngle.y = data.vehicle_roll;
@@ -177,12 +145,15 @@ void QFullViewWidget::addPlanningPointLine(const debug_tool::ads_PlanningData4De
   TransformRFU2ENU(&vehiclePos, &vehicleAngle, &localPos, &enuPos);
   QSharedPointer<MapPoint> decision;
   decision.reset(new MapPoint);
-  decision->index = index;
+  decision->millsecond = millsecond;
   decision->x = enuPos.x;
   decision->y = enuPos.y;
 
-  if (this->isIndexValid(m_listPlanningPoints, index) == 1) {
-    m_listPlanningPoints.append(decision);
+  if (m_listPlanningPoints.size() == 0 || m_listPlanningPoints.size() == pos) {
+    m_listPlanningPoints.push_back(decision);
+  }
+  else {
+    m_listPlanningPoints.insert(pos, decision);
   }
 }
 
@@ -362,7 +333,7 @@ void QFullViewWidget::loadReferenceFile(const boost::filesystem::path &path)
     QSharedPointer<MapPoint> point(new MapPoint);
     double value;
     int value_2;
-    in.read(reinterpret_cast<char*>(&point->index), sizeof(point->index));
+    in.read(reinterpret_cast<char*>(&value_2), sizeof(value_2));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
     in.read(reinterpret_cast<char*>(&value), sizeof(value));
