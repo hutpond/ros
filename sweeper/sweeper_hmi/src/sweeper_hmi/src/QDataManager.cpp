@@ -221,6 +221,9 @@ QVariant QDataManager::getProperty(const QString &property)
   if (value.type() == typeid(int)) {
     value_ret = boost::any_cast<int>(value);
   }
+  else if (value.type() == typeid(double)) {
+    value_ret = boost::any_cast<double>(value);
+  }
   else {
     auto str = boost::any_cast<std::string>(&value);
     if (str != nullptr) {

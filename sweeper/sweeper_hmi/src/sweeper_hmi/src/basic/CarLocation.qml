@@ -34,7 +34,7 @@ Item {
   }
 
   Text {
-    id: textLongtitude
+    id: textLongitude
 
     width: textLatitude.width
     height: textLatitude.height
@@ -79,5 +79,18 @@ Item {
     ret += valSeconds.toFixed(2) + "″"
 
     return ret
+  }
+
+  function setPosition(lon, lat) {
+    if (textLatitude.visible) {
+      if (Math.abs(longitude - lon) > 1e-10) {
+        longitude = lon
+        textLongitude.update()
+      }
+      if (Math.abs(latitude - lat) > 1e-10) {
+        latitude = lat
+        textLatitude.update()
+      }
+    }
   }
 }

@@ -1,3 +1,9 @@
+/**
+ * 自动驾驶操作面板，包括以下部分：
+ * 全局路径显示，扫地车按钮面板，
+ * 自动驾驶、停止自动驾驶、靠边停车操作按钮
+ *
+*/
 import QtQuick 2.0
 import QtQuick.Layouts 1.3
 import Sweeper.DataManager 1.0
@@ -12,9 +18,8 @@ Item {
 
   property bool pause: false
 
-  Image {
-    id: mapAutoPilotPanel
-    source: "qrc:/image/map_1.png"
+  FullScreenView {
+    id: fullView
     x: 0
     y: 0
     width: parent.width
@@ -26,7 +31,7 @@ Item {
 
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: mapAutoPilotPanel.bottom
+    anchors.top: fullView.bottom
     anchors.topMargin: 30
     height: parent.height * 0.15
   }
@@ -202,5 +207,9 @@ Item {
     buttonManul.visible = !flag
     buttonStopBySide.visible = flag
     buttonStopAuto.visible = flag
+  }
+
+  function setPosition(lon, lat) {
+    fullView.setPosition(lon, lat)
   }
 }

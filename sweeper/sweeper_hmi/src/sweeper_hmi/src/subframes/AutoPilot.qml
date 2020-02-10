@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import "../basic" as Basic
+import Sweeper.DataManager 1.0
 
 Item {
 
@@ -108,6 +109,28 @@ Item {
       else {
         waitStartAuto.setText(index)
         -- index
+      }
+    }
+  }
+
+  /**
+   * 定时器，读经纬度、车头方向
+  */
+  Timer {
+    id: timerVehicle
+    interval: 200; running: true; repeat: true
+    onTriggered: {
+      // longitude & latitude
+      var valueLon = DataManager.getProperty("data_longitude")
+      var valueLat = DataManager.getProperty("data_latitude")
+      if("number" == typeof valueLon && "number" == typeof valueLat){
+        locationState.setPosition(valueLon, valueLat)
+        autoPilotPanel.setPosition(valueLon, valueLat)
+      }
+      // yaw angle
+      var valueYaw = DataManager.getProperty("data_yaw_angle")
+      if("number" == typeof valueYaw){
+        locationState.setYawAngle(valueYaw)
       }
     }
   }

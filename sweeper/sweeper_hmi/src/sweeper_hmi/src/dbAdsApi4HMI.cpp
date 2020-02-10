@@ -650,6 +650,7 @@ sleep 2s
         sweep_msgs::FuelLevelReport m_FuelLevelReport;
         ads_msgs::ads_ad_report m_msg_ads_ad_report;
         ads_msgs::Status m_chasiss_status;
+        ads_msgs::ads_ins_data m_dataAdsIns;
 
         //std::map<int, std::chrono::system_clock::time_point> m_module_beat;
         std::set<ads_msgs::ads_module_report_item, CModule_report_item_Comp> m_module_reports;
@@ -927,9 +928,7 @@ sleep 2s
 
         void OnMsg_ads_ins_data(const ads_msgs::ads_ins_data& msg)
         {
-            msg.lat;
-            msg.lon;
-            msg.yaw;
+            m_dataAdsIns = msg;
         }
 
         bool Init(void)
@@ -999,8 +998,8 @@ sleep 2s
             topic = "/status";
             m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_chasiss_status, this);
 
-            // std::string topic = "/ads_imu_data";
-            // m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_ins_data, this);
+            topic = "/ads_imu_data";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_ins_data, this);
 
             return true;
         }
@@ -1188,6 +1187,18 @@ sleep 2s
                 else if (it->compare(dbAds::IApi4HMI::Item_suction_status) == 0)
                 {
                     values[*it] = this->m_chasiss_status.fan_hz > 0 ? 1 : 0;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_latitude) == 0)
+                {
+                    values[*it] = this->m_dataAdsIns.lat;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_longitude) == 0)
+                {
+                    values[*it] = this->m_dataAdsIns.lon;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_yaw_angle) == 0)
+                {
+                    values[*it] = this->m_dataAdsIns.yaw;
                 }
                 else
                 {

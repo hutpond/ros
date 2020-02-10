@@ -1,22 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="54px" height="68px" viewBox="0 0 54 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
-    <title>分组 7</title>
-    <desc>Created with Sketch.</desc>
-    <g id="stella" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="07-工作" transform="translate(-523.000000, -139.000000)">
-            <g id="分组-7" transform="translate(496.000000, 126.000000)">
-                <g id="zhinanzhen" transform="translate(54.000000, 54.000000) rotate(-37.000000) translate(-54.000000, -54.000000) translate(16.000000, 16.000000)" fill-rule="nonzero">
-                    <path d="M37.9973636,11 C23.1119032,11 11,23.1107205 11,38 C11,52.8892795 23.1119032,65 37.9973636,65 C52.8880969,65 65,52.8892795 65,38 C65,23.1107205 52.8880968,11 37.9973636,11 Z M62.2158969,38 C62.2158969,51.3497364 51.3536764,62.2161687 37.9973636,62.2161687 C24.6410507,62.2161687 13.7841031,51.3497364 13.7841031,38 C13.7841031,24.6502636 24.6463236,13.7838313 38.0026364,13.7838313 C51.3589493,13.7838313 62.2158969,24.6502636 62.2158969,38 Z" id="形状" fill="#7F7F7F" transform="translate(38.000000, 38.000000) rotate(38.000000) translate(-38.000000, -38.000000) "></path>
-                    <g id="分组-3" transform="translate(21.000000, 25.000000)" fill="#F8F8F8">
-                        <path d="M1.96891016,11.5265484 C1.02797671,11.8940193 0.462359387,12.7887309 0.52579312,13.8059328 C0.594512972,14.8231347 1.2711393,15.6326357 2.25436191,15.8776162 L14.3437709,16.8440113 L17.7250645,27.9639985 C18.110953,28.7575225 18.888016,29.2474836 19.7496573,29.2474836 C19.8606663,29.2474836 19.9769614,29.2368323 20.1038289,29.2208553 C21.108196,29.066411 21.8535422,28.3154924 22.0068403,27.3089418 L27.6859959,3.11444853 C27.8128633,2.2942962 27.506267,1.49544654 26.8613576,0.978857138 C26.2270204,0.462267685 25.3865237,0.334451758 24.6253191,0.632688938 L1.96891016,11.5265484 Z M24.7944757,3.58310701 L21.5012085,25.2159557 L16.7383937,15.3847793 C16.4423698,14.7723279 15.8926108,14.3302977 15.231843,14.1705278 L4.5168311,11.5396496 L24.7944757,3.58310701 Z" id="形状"></path>
-                        <polygon id="路径-30" points="3.67413711 10.8589717 25.9244576 2.08401415 21.9893878 27.9415867 15.49376 15.8913512 2.27822356 12.0311788"></polygon>
-                    </g>
-                </g>
-                <text id="N" transform="translate(54.121558, 17.068743) rotate(1.000000) translate(-54.121558, -17.068743) " font-family="PingFangSC-Medium, PingFang SC" font-size="10" font-weight="400" fill="#F8F8F8">
-                    <tspan x="50.4765576" y="21.0687435">N</tspan>
-                </text>
-            </g>
-        </g>
-    </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   t="1581327191245"
+   class="icon"
+   viewBox="0 0 461.16238 651.34504"
+   version="1.1"
+   p-id="6439"
+   width="90.070778"
+   height="127.21583"
+   id="svg904"
+   sodipodi:docname="direction.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata
+     id="metadata908">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1853"
+     inkscape:window-height="1010"
+     id="namedview906"
+     showgrid="false"
+     inkscape:zoom="3.925"
+     inkscape:cx="50.080228"
+     inkscape:cy="52.089389"
+     inkscape:window-x="67"
+     inkscape:window-y="40"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg904" />
+  <defs
+     id="defs898">
+    <style
+       type="text/css"
+       id="style896" />
+  </defs>
+  <path
+     d="M 241.5547,479.12697 0,651.34502 241.56718,0 461.16237,651.34502 Z"
+     p-id="6441"
+     id="path902"
+     inkscape:connector-curvature="0"
+     style="fill:#d42379" />
 </svg>

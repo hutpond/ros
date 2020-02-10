@@ -2,6 +2,8 @@ import QtQuick 2.0
 
 Item {
 
+  property double yawAngle: 0
+
   Image {
     id: direction
     source: "qrc:/svg/direction.svg"
@@ -10,7 +12,11 @@ Item {
     anchors.top: parent.top
     anchors.topMargin: 50
 
-    rotation: 30
+    width: sourceSize.width * 0.5
+    height: sourceSize.height * 0.5
+    scale: Qt.KeepAspectRatio
+
+    rotation: yawAngle
   }
 
   Image {
@@ -33,5 +39,10 @@ Item {
     height: width
   }
 
-
+  function setYawAngle(yaw) {
+    if (direction.visible && Math.abs(yaw - yawAngle) > 1.0) {
+      yawAngle = yaw;
+      direction.update()
+    }
+  }
 }

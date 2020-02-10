@@ -48,4 +48,12 @@ Item {
     anchors.bottom: parent.bottom
     width: parent.width * 0.25
   }
+
+  function setPosition(lon, lat) {
+    carLocation.setPosition(lon, lat)
+  }
+
+  function setYawAngle(yaw) {
+    carDisplayZoom.setYawAngle(yaw)
+  }
 }
