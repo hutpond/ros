@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import "../basic" as Basic
+import Sweeper.DataManager 1.0
 
 Item {
   id: itemUserPage
@@ -77,6 +78,38 @@ Item {
         itemUserPage.startAutoPilot()
       }
     }
+  }
+
+  /**
+   * 定时器，读电池电量
+  */
+  Timer {
+    id: timerVehicleUserPage
+    interval: 200; running: false; repeat: true
+    onTriggered: {
+      // velocity
+      var valueVelocity = DataManager.getProperty("data_velocity")
+      if("number" == typeof valueVelocity){
+        valueVelocity *= 3.6
+        valueVelocity = valueVelocity.toFixed(1)
+        userPageState.setVelocity(valueVelocity)
+      }
+      // battery level
+      var valueBattery = DataManager.getProperty("data_battery_remaining_capacity")
+      if("number" == typeof valueBattery){
+        valueBattery = Math.round(valueBattery)
+        displayBoard.setBatteryLevel(valueBattery)
+      }
+      // gear mode
+      var valueGearMode = DataManager.getProperty("data_gear")
+      if("number" == typeof valueBattery){
+        userPageState.setVehicleGear(valueGearMode)
+      }
+    }
+  }
+
+  onVisibleChanged: {
+    timerVehicleUserPage.running = visible
   }
 
 }

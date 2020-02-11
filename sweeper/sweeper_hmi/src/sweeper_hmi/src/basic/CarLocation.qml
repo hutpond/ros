@@ -8,6 +8,7 @@ Item {
   property var longitude: 119.58345
 
   Gears {
+    id: gearVehicle
     width: parent.width * 0.7
     height: parent.height * 0.04
 
@@ -92,5 +93,9 @@ Item {
         textLatitude.update()
       }
     }
+  }
+
+  function setGearMode(value) {
+    gearVehicle.setGearMode(value)
   }
 }

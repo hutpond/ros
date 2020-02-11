@@ -188,6 +188,10 @@ Item {
         changeToAutoRun(false)
         autoPilotPanel.stopAutoBack()
       }
+
+      if (autoIsQuit) {
+        fullView.setAutoMode(autoIsQuit)
+      }
     }
   }
 
@@ -207,9 +211,14 @@ Item {
     buttonManul.visible = !flag
     buttonStopBySide.visible = flag
     buttonStopAuto.visible = flag
+
+    if (flag) {
+      fullView.setAutoMode(flag)
+    }
   }
 
   function setPosition(lon, lat) {
     fullView.setPosition(lon, lat)
+    fullView.update()
   }
 }

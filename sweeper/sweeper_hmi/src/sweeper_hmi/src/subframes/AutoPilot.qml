@@ -114,10 +114,10 @@ Item {
   }
 
   /**
-   * 定时器，读经纬度、车头方向
+   * 定时器，读经纬度
   */
   Timer {
-    id: timerVehicle
+    id: timerVehiclePosition
     interval: 200; running: true; repeat: true
     onTriggered: {
       // longitude & latitude
@@ -127,10 +127,25 @@ Item {
         locationState.setPosition(valueLon, valueLat)
         autoPilotPanel.setPosition(valueLon, valueLat)
       }
+    }
+  }
+
+  /**
+   * 定时器，车头方向
+  */
+  Timer {
+    id: timerVehicle
+    interval: 200; running: false; repeat: true
+    onTriggered: {
       // yaw angle
       var valueYaw = DataManager.getProperty("data_yaw_angle")
       if("number" == typeof valueYaw){
         locationState.setYawAngle(valueYaw)
+      }
+      // gear mode
+      var valueGearMode = DataManager.getProperty("data_gear")
+      if("number" == typeof valueBattery){
+        locationState.setGearMode(valueGearMode)
       }
     }
   }
@@ -139,5 +154,6 @@ Item {
     if (visible) {
       autoPilotPanel.changeToAutoRun(false)
     }
+    timerVehicle.running = visible
   }
 }

@@ -2,6 +2,7 @@ import QtQuick 2.0
 
 Item {
 
+  property double velocity: 69
   property double currenKm: 1.2
   property double totalKm: 1024.6
   Rectangle {
@@ -51,7 +52,7 @@ Item {
 
   Text {
     id: textVelocity
-    text: qsTr("69")
+    text: velocity
 
     font.family: "SimHei"
     font.pointSize: 28
@@ -65,7 +66,7 @@ Item {
     verticalAlignment: Text.AlignBottom
     horizontalAlignment: Text.AlignRight
 
-    width: 40
+    width: 60
     height: 50
   }
 
@@ -107,7 +108,7 @@ Item {
   }
 
   Text {
-    id: texTotalKm
+    id: textTotalKm
     text: "总里程: " + totalKm + "Km"
 
     font.family: "SimHei"
@@ -123,6 +124,31 @@ Item {
     horizontalAlignment: Text.AlignRight
 
     width: parent.width * 0.3
+  }
+
+  function setVehicleGear(value) {
+    gearsUserPage.setGearMode(value)
+  }
+
+  function setVelocity(value) {
+    if (textVelocity.visible && Math.abs(velocity - value) >= 1) {
+      velocity = value
+      textCurKm.update()
+    }
+  }
+
+  function setCurrentKm(value) {
+    if (textTotalKm.visible && Math.abs(currenKm - value) >= 1) {
+      currenKm = value
+      textTotalKm.update()
+    }
+  }
+
+  function setTotalKm(value) {
+    if (textVelocity.visible && Math.abs(totalKm - value) >= 1) {
+      totalKm = value
+      textVelocity.update()
+    }
   }
 
 }

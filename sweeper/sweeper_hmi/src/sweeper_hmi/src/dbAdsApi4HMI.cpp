@@ -918,7 +918,7 @@ sleep 2s
         void OnMsg_report_BmsInfo(const sweep_msgs::FuelLevelReport& msg)
         {
             std::lock_guard<std::recursive_mutex> lock(m_mutex);
-            sweep_msgs::FuelLevelReport m_FuelLevelReport = msg;
+            m_FuelLevelReport = msg;
         }
 
         void OnMsg_ads_chasiss_status(const ads_msgs::Status& msg)
@@ -928,6 +928,7 @@ sleep 2s
 
         void OnMsg_ads_ins_data(const ads_msgs::ads_ins_data& msg)
         {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
             m_dataAdsIns = msg;
         }
 
@@ -1199,6 +1200,14 @@ sleep 2s
                 else if (it->compare(dbAds::IApi4HMI::Item_yaw_angle) == 0)
                 {
                     values[*it] = this->m_dataAdsIns.yaw;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_velocity) == 0)
+                {
+                    values[*it] = 1.23;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_battery_remaining_capacity) == 0)
+                {
+                    values[*it] = m_FuelLevelReport.rsoc;
                 }
                 else
                 {

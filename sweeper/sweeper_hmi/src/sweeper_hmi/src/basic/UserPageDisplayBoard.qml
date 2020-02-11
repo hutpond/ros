@@ -19,7 +19,7 @@ Item {
     id: batteryUsed
     color: "#081A2E"
 
-    property int used: 48
+    property int levelRemained: 48
 
     anchors.top: battery.top
     anchors.bottom: battery.bottom
@@ -34,7 +34,7 @@ Item {
       anchors.top: parent.top
       anchors.bottom: parent.bottom
       anchors.left: parent.left
-      width: parent.width * batteryUsed.used / 100
+      width: parent.width * batteryUsed.levelRemained / 107
     }
 
     Text {
@@ -42,15 +42,21 @@ Item {
 
       anchors.top: parent.top
       anchors.bottom: parent.bottom
-      anchors.right: rectUsed.right
-      anchors.rightMargin: 10
+      x: rectUsed.x + rectUsed.width + 5
 
       font.family: "SimHei"
       font.pointSize: 12
       verticalAlignment: Text.AlignVCenter
       color: "white"
 
-      text: batteryUsed.used + "%"
+      text: batteryUsed.levelRemained + "%"
+    }
+  }
+
+  function setBatteryLevel(level) {
+    if (batteryUsed.visible && Math.abs(batteryUsed.levelRemained - level) >= 1.0) {
+      batteryUsed.levelRemained = level
+      batteryUsed.update()
     }
   }
 

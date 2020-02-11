@@ -53,7 +53,12 @@ Item {
     carLocation.setPosition(lon, lat)
   }
 
+  function setGearMode(value) {
+    carLocation.setGearMode(value)
+  }
+
   function setYawAngle(yaw) {
     carDisplayZoom.setYawAngle(yaw)
   }
+
 }
