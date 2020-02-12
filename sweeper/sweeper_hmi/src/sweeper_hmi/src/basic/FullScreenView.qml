@@ -43,7 +43,7 @@ Item {
             ctx.lineWidth = 1
             ctx.strokeStyle = "red"
             ctx.fillStyle = "red"
-            ctx.ellipse(0, 0, 4, 4)
+            ctx.ellipse(point.x, point.y, 4, 4)
             ctx.fill()
           }
         }
