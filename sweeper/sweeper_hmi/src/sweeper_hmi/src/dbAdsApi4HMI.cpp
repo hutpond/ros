@@ -1203,11 +1203,11 @@ sleep 2s
                 }
                 else if (it->compare(dbAds::IApi4HMI::Item_velocity) == 0)
                 {
-                    values[*it] = 1.23;
+                    values[*it] = this->m_chasiss_status.speed;
                 }
                 else if (it->compare(dbAds::IApi4HMI::Item_battery_remaining_capacity) == 0)
                 {
-                    values[*it] = m_FuelLevelReport.rsoc;
+                    values[*it] = this->m_chasiss_status.battery;
                 }
                 else
                 {

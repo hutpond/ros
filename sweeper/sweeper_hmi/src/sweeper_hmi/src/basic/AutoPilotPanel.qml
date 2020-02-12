@@ -171,6 +171,7 @@ Item {
       }
       onClicked: {
         autoPilotPanel.stopAuto()
+        fullView.setAutoMode(false)
       }
     }
   }
@@ -190,7 +191,7 @@ Item {
       }
 
       if (autoIsQuit) {
-        fullView.setAutoMode(autoIsQuit)
+        fullView.setAutoMode(false)
       }
     }
   }
@@ -212,9 +213,7 @@ Item {
     buttonStopBySide.visible = flag
     buttonStopAuto.visible = flag
 
-    if (flag) {
-      fullView.setAutoMode(flag)
-    }
+    fullView.setAutoMode(flag)
   }
 
   function setPosition(lon, lat) {

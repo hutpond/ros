@@ -85,7 +85,7 @@ Item {
   */
   Timer {
     id: timerVehicleUserPage
-    interval: 200; running: false; repeat: true
+    interval: 1000; running: false; repeat: true
     onTriggered: {
       // velocity
       var valueVelocity = DataManager.getProperty("data_velocity")

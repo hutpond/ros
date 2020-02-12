@@ -135,7 +135,7 @@ Item {
   */
   Timer {
     id: timerVehicle
-    interval: 200; running: false; repeat: true
+    interval: 1000; running: false; repeat: true
     onTriggered: {
       // yaw angle
       var valueYaw = DataManager.getProperty("data_yaw_angle")

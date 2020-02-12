@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+#include <QPointF>
 #include <QQmlListProperty>
 #include "dbAdsApi4HMI.h"
 
@@ -67,6 +68,8 @@ public:
 
   Q_INVOKABLE QVariant getProperty(const QString &);
   Q_INVOKABLE bool setProperty(const QString &, const QVariant &);
+
+  Q_INVOKABLE QPointF llaToEnu(const QPointF &, const QPointF &);
 
   int step() const;
   void setStep(int);

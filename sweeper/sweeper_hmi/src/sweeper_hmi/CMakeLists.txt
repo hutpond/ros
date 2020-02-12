@@ -34,6 +34,7 @@ set(HEADERS
   src/QDataManager.h
   src/dbAdsApi4HMI.h
   src/CHostApi4HMI.h
+  src/gps.h
   )
 set(SOURCES
   src/main.cpp
@@ -41,6 +42,7 @@ set(SOURCES
   src/dbAdsApi4HMI.cpp
   src/CHostApi4HMI.cpp
   src/CSunTime.cpp
+  src/gps.cpp
   )
 set(RESOURCES
   src/sweeper_hmi.qrc

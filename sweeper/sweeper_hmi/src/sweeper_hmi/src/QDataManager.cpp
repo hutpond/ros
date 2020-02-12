@@ -1,9 +1,11 @@
+#include "QDataManager.h"
+
+#include <ctime>
 #include <QTimer>
 #include <QDebug>
-#include "QDataManager.h"
-#include "CHostApi4HMI.h"
 #include <QDateTime>
-#include <ctime>
+#include "CHostApi4HMI.h"
+#include "gps.h"
 
 std::array<int, 2> getSunTime(long double glat, long double glong, int year, int month, int day);
 
@@ -259,6 +261,24 @@ int QDataManager::step() const
 void QDataManager::setStep(int step)
 {
   m_nStep = step;
+}
+
+QPointF QDataManager::llaToEnu(const QPointF &lla, const QPointF &origin)
+{
+  GpsTran gps_tran(origin.x(), origin.y(), 0);
+
+  GpsDataType gps;
+  NedDataType ned;
+  gps.longitude = lla.x();
+  gps.latitude  = lla.y();
+  gps.altitude  = 0;
+  gps_tran.fromGpsToNed(ned, gps);
+
+  QPointF enu;
+  enu.setX(ned.y_east);
+  enu.setY(ned.x_north);
+
+  return enu;
 }
 
 QQmlListProperty<QMsgInfo> QDataManager::infos()
