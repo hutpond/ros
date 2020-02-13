@@ -18,7 +18,7 @@ class QMsgInfo : public QObject
   Q_PROPERTY(QString description READ description WRITE setDescription)
 
 public:
-  QMsgInfo(QObject *parent = 0);
+  QMsgInfo(QObject *parent = Q_NULLPTR);
   ~QMsgInfo();
 
   QString name() const;
@@ -70,6 +70,7 @@ public:
   Q_INVOKABLE bool setProperty(const QString &, const QVariant &);
 
   Q_INVOKABLE QPointF llaToEnu(const QPointF &, const QPointF &);
+  Q_INVOKABLE QVariantList getTargets();
 
   int step() const;
   void setStep(int);

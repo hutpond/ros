@@ -23,6 +23,7 @@
 #include "ads_msgs/ads_sweeper_control_id.h"
 #include "ads_msgs/Status.h"
 #include "ads_msgs/ads_ins_data.h"
+#include "ads_msgs/ads_PlanningData4Debug.h"
 
 #include "sweep_msgs/ThrottleReport.h"
 #include "sweep_msgs/BrakeReport.h"
@@ -651,6 +652,7 @@ sleep 2s
         ads_msgs::ads_ad_report m_msg_ads_ad_report;
         ads_msgs::Status m_chasiss_status;
         ads_msgs::ads_ins_data m_dataAdsIns;
+        ads_msgs::ads_PlanningData4Debug m_planningDataDebug;
 
         //std::map<int, std::chrono::system_clock::time_point> m_module_beat;
         std::set<ads_msgs::ads_module_report_item, CModule_report_item_Comp> m_module_reports;
@@ -932,6 +934,12 @@ sleep 2s
             m_dataAdsIns = msg;
         }
 
+        void OnMsg_ads_planning_data(const ads_msgs::ads_PlanningData4Debug &data)
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
+            m_planningDataDebug = data;
+        }
+
         bool Init(void)
         {
             if (m_bRunning) return false;
@@ -1001,6 +1009,9 @@ sleep 2s
 
             topic = "/ads_imu_data";
             m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_ins_data, this);
+
+            topic = "/planning_debug_data";
+            m_Subs[topic] = s_nodeHandles[0]->subscribe(topic, 1, &CApi4HMI::OnMsg_ads_planning_data, this);
 
             return true;
         }
@@ -1208,6 +1219,10 @@ sleep 2s
                 else if (it->compare(dbAds::IApi4HMI::Item_battery_remaining_capacity) == 0)
                 {
                     values[*it] = this->m_chasiss_status.battery;
+                }
+                else if (it->compare(dbAds::IApi4HMI::Item_planning_data_debug) == 0)
+                {
+                    values[*it] = this->m_planningDataDebug;
                 }
                 else
                 {

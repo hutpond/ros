@@ -68,6 +68,8 @@ DECLARE_SWEEPER_CONTROL_DATA(imu_status)                //IMU状态：0:有问�
 
 DECLARE_SWEEPER_CONTROL_DATA(fault_list)                //车故障列表，以\n分隔的字符串:"1-1-1\n2-1-1...", ro
 
+DECLARE_SWEEPER_CONTROL_DATA(planning_data_debug)       //debug tool data, ro
+
 //Use by internal
 DECLARE_SWEEPER_CONTROL_DATA(car_state)                 //车当前状态，ro
 DECLARE_SWEEPER_CONTROL_DATA(module_state_changed)      //软件模块状态改变，1: 已经改变， ro

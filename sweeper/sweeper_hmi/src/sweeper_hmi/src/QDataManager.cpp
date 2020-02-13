@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include "CHostApi4HMI.h"
 #include "gps.h"
+#include "ads_msgs/ads_PlanningData4Debug.h"
 
 std::array<int, 2> getSunTime(long double glat, long double glong, int year, int month, int day);
 
@@ -16,7 +17,6 @@ QMsgInfo::QMsgInfo(QObject *parent)
 
 QMsgInfo::~QMsgInfo()
 {
-
 }
 
 QString QMsgInfo::name() const
@@ -208,12 +208,12 @@ void QDataManager::getInfoList()
 
 bool QDataManager::autoIsReady()
 {
-  m_pApi4Hmi->m_lpApi->AdIsReady(0);
+  return m_pApi4Hmi->m_lpApi->AdIsReady(0);
 }
 
 bool QDataManager::autoIsQuit()
 {
-  m_pApi4Hmi->m_lpApi->AdNeedQuit();
+  return m_pApi4Hmi->m_lpApi->AdNeedQuit();
 }
 
 QVariant QDataManager::getProperty(const QString &property)
@@ -250,7 +250,7 @@ bool QDataManager::setProperty(const QString &property, const QVariant &value)
   else if (value.type() == QVariant::String) {
     property_value = value.toString().toStdString();
   }
-  m_pApi4Hmi->m_lpApi->SetProperty(property.toStdString(), property_value);
+  return m_pApi4Hmi->m_lpApi->SetProperty(property.toStdString(), property_value);
 }
 
 int QDataManager::step() const
@@ -279,6 +279,23 @@ QPointF QDataManager::llaToEnu(const QPointF &lla, const QPointF &origin)
   enu.setY(ned.x_north);
 
   return enu;
+}
+
+QVariantList QDataManager::getTargets()
+{
+  boost::any value = m_pApi4Hmi->m_lpApi->GetProperty("data_planning_data_debug");
+  ads_msgs::ads_PlanningData4Debug data = boost::any_cast<ads_msgs::ads_PlanningData4Debug>(value);
+
+  QVariantList targets;
+  for (const auto &target : data.fusion_results) {
+    targets << static_cast<int>(target.edge_points.size());
+    for (const auto &edgePoint : target.edge_points) {
+      QPointF ptf(static_cast<qreal>(edgePoint.x), static_cast<qreal>(edgePoint.y));
+      targets << ptf;
+    }
+  }
+
+  return targets;
 }
 
 QQmlListProperty<QMsgInfo> QDataManager::infos()
