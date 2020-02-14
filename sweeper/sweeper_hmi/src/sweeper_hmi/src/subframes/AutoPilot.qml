@@ -10,6 +10,7 @@ Item {
   signal stopAuto()
   signal stopAutoBack()
   signal manul()
+  signal showErrMsg()
 
   Rectangle {
     id: backgroud
@@ -56,6 +57,10 @@ Item {
     }
     onStopAutoBack: {
       itemAutoPilot.stopAutoBack()
+    }
+    onShowErrMsg: {
+      console.log("auto pilot signal")
+      itemAutoPilot.showErrMsg()
     }
 
     onVisibleChanged: {
@@ -156,4 +161,9 @@ Item {
     }
     timerVehicle.running = visible
   }
+
+  function setErrState(state) {
+    autoPilotPanel.setErrorState(state)
+  }
+
 }

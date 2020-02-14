@@ -15,8 +15,10 @@ Item {
   signal manul()
   signal stopAuto()
   signal stopAutoBack()
+  signal showErrMsg()
 
   property bool pause: false
+  property bool errorState: false
 
   FullScreenView {
     id: fullView
@@ -50,6 +52,8 @@ Item {
       source: "qrc:/svg/button.svg"
     }
     Text {
+      id: textButtonAuto
+
       text: qsTr("启动")
       font.family: "SimHei"
       font.pointSize: 26
@@ -66,7 +70,13 @@ Item {
       onExited: {
       }
       onClicked: {
-        autoPilotPanel.auto()
+        if (errorState) {
+          console.log("pannel signal")
+          autoPilotPanel.showErrMsg()
+        }
+        else {
+          autoPilotPanel.auto()
+        }
       }
     }
   }
@@ -219,5 +229,10 @@ Item {
   function setPosition(lon, lat) {
     fullView.setPosition(lon, lat)
     fullView.update()
+  }
+
+  function setErrorState(state) {
+    errorState = state
+    textButtonAuto.text = state ? qsTr("错误信息") : qsTr("自动工作")
   }
 }

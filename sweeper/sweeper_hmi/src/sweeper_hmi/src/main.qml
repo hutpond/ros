@@ -13,6 +13,7 @@ Window {
   minimumWidth: 475
   minimumHeight: 300
   property Item currentItem: start
+  property bool errorState: false
 
   color: "#ffffff"
   title: qsTr("Conway’s Game of Life")
@@ -112,6 +113,12 @@ Window {
         currentItem = this
       }
     }
+
+    onShowErrMsg: {
+      vehicleErrMsg.visible = true
+      currentItem.visible = false
+    }
+
   }
 
   // task page
@@ -163,6 +170,12 @@ Window {
         header.title = "AI智能扫地机"
         currentItem = this
       }
+    }
+
+    onShowErrMsg: {
+      console.log("subframe signal")
+      vehicleErrMsg.visible = true
+      currentItem.visible = false
     }
   }
 
@@ -220,6 +233,27 @@ Window {
       else {
         checkErrMsg.visible = true
       }
+      timerError.running = true
     }
   }
+
+  // check error
+  Timer {
+    id: timerError
+    interval: 200; running: false; repeat: true
+    onTriggered: {
+      var curErrState = (DataManager.infos.length > 0)
+      curErrState = true
+      if (errorState !== curErrState) {
+        errorState = curErrState
+        header.setErrState(errorState)
+        userPage.setErrState(errorState)
+        autoPilot.setErrState(errorState)
+
+        vehicleErrMsg.visible = errorState
+        currentItem.visible = !errorState
+      }
+    }
+  }
+
 }

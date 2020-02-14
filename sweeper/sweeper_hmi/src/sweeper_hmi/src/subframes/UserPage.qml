@@ -8,8 +8,10 @@ Item {
   property double leftWidth: 0.65
   property double xSpace: 10
   property double ySpace: 10
+  property bool errorState: false
 
   signal startAutoPilot()
+  signal showErrMsg()
 
   Rectangle {
     anchors.fill: parent
@@ -64,6 +66,7 @@ Item {
     }
 
     Text {
+      id: textBtnUserPage
       text: qsTr("自动工作")
       font.family: "SimHei"
       font.pointSize: 26
@@ -75,7 +78,12 @@ Item {
     MouseArea {
       anchors.fill: parent
       onClicked: {
-        itemUserPage.startAutoPilot()
+        if (errorState) {
+          itemUserPage.showErrMsg()
+        }
+        else {
+          itemUserPage.startAutoPilot()
+        }
       }
     }
   }
@@ -110,6 +118,11 @@ Item {
 
   onVisibleChanged: {
     timerVehicleUserPage.running = visible
+  }
+
+  function setErrState(state) {
+    errorState = state
+    textBtnUserPage.text = errorState ? qsTr("错误信息") : qsTr("自动工作")
   }
 
 }

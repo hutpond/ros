@@ -58,7 +58,7 @@ Item {
 
     height: 22
     width: 30
-    visible: true
+    visible: false
 
     anchors.left: imgGps.right
     anchors.leftMargin: 10
@@ -103,5 +103,9 @@ Item {
         currentTime.text = currentDate.toLocaleString(Qt.locale(), "yyyy-MM-dd HH:mm:ss")
       }
     }
+  }
+
+  function setErrState(state) {
+    imgWarning.visible = state
   }
 }
