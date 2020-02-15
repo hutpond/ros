@@ -18,6 +18,7 @@ class QPushButton;
 class QSlider;
 class QTextBrowser;
 class QCostValueWidget;
+class QStateWidget;
 
 class QPlanningParamWidget : public QWidget
 {
@@ -25,7 +26,6 @@ class QPlanningParamWidget : public QWidget
 
   enum
   {
-    DecisionAll,
     DecisionUltraSonic,
     DecisionRadar28,
     DecisionRadar73,
@@ -48,7 +48,6 @@ protected:
   virtual void resizeEvent(QResizeEvent *);
 
 protected:
-  QString getDecisionText(int);
   void showReplayControls(bool);
   QString createTrajectoryString(const debug_tool::ads_PlanningData4Debug &,
                                  const debug_tool::ads_PlanningData4Debug &);
@@ -66,7 +65,7 @@ private:
   QLabel *m_pLblMousePosName;
   QLabel *m_pLblMousePosValue;
 
-  QLabel *m_pLblDecisionName;
+  QStateWidget *m_pWdgState;
   QLabel *m_pLblDecisionValue[DecisionCount];
 
   QLabel *m_pLblScenarioType;
@@ -78,7 +77,6 @@ private:
   QSlider *m_pSliderPlay;
 
   QCostValueWidget *m_pWdgCostValue;
-  //QTextBrowser *m_pTextBrowser;
 
   int m_nSliderValue;
 };

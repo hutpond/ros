@@ -20,7 +20,6 @@ private:
   bool m_bFlagOn;
 
   QRect m_rectSvg;
-  QRect m_rectName;
 };
 
 #endif // QSTATEITEM_H

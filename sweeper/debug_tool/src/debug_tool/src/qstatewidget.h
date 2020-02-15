@@ -12,12 +12,15 @@ class QStateWidget : public QWidget
 
   enum {
     StateForward,
+    StateLeftPass,
+    StateRightPass,
     StateFollow,
-    StatePass,
+    StateWait,
     StateSafeStop,
     StateExitAuto,
     StateCount
   };
+
 
 public:
   explicit QStateWidget(QWidget *parent = nullptr);

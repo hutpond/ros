@@ -27,6 +27,14 @@ ads_UltraSonicTarget[] ultrasonic_results
 ads_TrackTarget[] fusion_results
 ads_garbage_detection[] garbage_detection_results
 
+uint8 Forward = 0										# 前进
+uint8 LeftPass = 1										# 左侧绕行
+uint8 RightPass = 2										# 右侧绕行
+uint8 Follow = 3										# 跟随
+uint8 Wait = 4                                          # 停车等待
+uint8 SafeStop = 5										# 安全停车
+uint8 Exit = 6											# 退出
+
 uint8 decision
 uint8 radar_decision
 uint8 ultrasonic_decision

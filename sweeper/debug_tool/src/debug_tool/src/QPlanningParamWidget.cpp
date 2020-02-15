@@ -17,6 +17,7 @@
 #include "QPlanningWidget.h"
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
+#include "qstatewidget.h"
 
 QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   : QWidget(parent)
@@ -24,7 +25,8 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pLblMousePosName = new QLabel(tr("坐标"), this);
   m_pLblMousePosValue = new QLabel(this);
 
-  m_pLblDecisionName = new QLabel(tr("决策"), this);
+  m_pWdgState = new QStateWidget(this);
+
   for (int i = 0; i < DecisionCount; ++i) {
     m_pLblDecisionValue[i] = new QLabel(this);
     m_pLblDecisionValue[i]->setFont(G_TEXT_FONT);
@@ -110,9 +112,10 @@ void QPlanningParamWidget::setFrameCount(int count)
 void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4Debug &data,
                                            const debug_tool::ads_PlanningData4Debug &/*data_cost*/)
 {
+  m_pWdgState->setData(data);
+
   // 决策状态
   int nIndex = static_cast<int>(data.decision);
-  m_pLblDecisionValue[DecisionAll]->setText(this->getDecisionText(nIndex));
 
   nIndex = static_cast<int>(data.ultrasonic_decision);
   if (nIndex >= 0 && nIndex < 4) {
@@ -146,36 +149,6 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
         );
   // data
   //m_pTextBrowser->setText(this->createTrajectoryString(data, data_cost));
-}
-
-QString QPlanningParamWidget::getDecisionText(int index)
-{
-  QString strText;
-  switch (index)
-  {
-    case -1:
-      strText = tr("quit");
-      break;
-    case 0:
-      strText = tr("Forward");
-      break;
-    case 1:
-      strText = tr("Left Pass");
-      break;
-    case 2:
-      strText = tr("Right Pass");
-      break;
-    case 3:
-      strText = tr("Follow");
-      break;
-    case 4:
-      strText = tr("Safe Stop");
-      break;
-    default:
-      strText = tr("Unknow");
-      break;
-  }
-  return strText;
 }
 
 /*******************************************************
@@ -279,26 +252,26 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   xPos += ITEM_NAME_W + SPACE_X;
   m_pLblMousePosValue->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
 
-  const int size_btn = 4;
-  const int BTN_W = (WIDTH - SPACE_X * (size_btn + 1))  / size_btn;
-
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
 
-  m_pLblDecisionName->setGeometry(xPos, yPos, ITEM_NAME_W, ITEM_H);
-  xPos += ITEM_NAME_W + SPACE_X;
-  m_pLblDecisionValue[DecisionAll]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-  for (int i = 1; i < DecisionCount; ++i) {
-    yPos += ITEM_H + SPACE_Y;
+  m_pWdgState->setGeometry(xPos, yPos, WIDTH, ITEM_H * 3);
+  yPos += ITEM_H * 3 + SPACE_X;
+
+  xPos = SPACE_X;
+  for (int i = DecisionUltraSonic; i < DecisionCount; ++i) {
     m_pLblDecisionValue[i]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
+    yPos += ITEM_H + SPACE_Y;
   }
 
   xPos = SPACE_X;
-  yPos += ITEM_H + SPACE_Y;
   m_pLblScenarioType->setGeometry(xPos, yPos, ITEM_NAME_W + ITEM_VALUE_W, ITEM_H);
 
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
+
+  const int size_btn = 4;
+  const int BTN_W = (WIDTH - SPACE_X * (size_btn + 1))  / size_btn;
   m_pBtnPause->setGeometry(xPos, yPos, BTN_W, ITEM_H);
   xPos += BTN_W + SPACE_X;
   m_pBtnResume->setGeometry(xPos, yPos, BTN_W, ITEM_H);

@@ -4,7 +4,6 @@
 #include <QWidget>
 #include "debug_tool/ads_PlanningData4Debug.h"
 
-class QStateWidget;
 class QFrameTimeWidget;
 
 class QDecisionStateWidget : public QWidget
@@ -23,7 +22,6 @@ signals:
 public slots:
 
 private:
-  QStateWidget *m_pWdgState;
   QFrameTimeWidget *m_pWdgFrameTime;
 };
 

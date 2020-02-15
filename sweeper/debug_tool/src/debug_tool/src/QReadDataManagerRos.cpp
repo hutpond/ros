@@ -13,8 +13,8 @@ QReadDataManagerRos * QReadDataManagerRos::instance()
 QReadDataManagerRos::QReadDataManagerRos(QObject *parent)
   : QObject(parent)
   , m_nTimerId(0)
-  , m_pWdgNewPlanning(Q_NULLPTR)
   , m_pWdgPlanning(Q_NULLPTR)
+  , m_pWdgNewPlanning(Q_NULLPTR)
 {
 }
 
