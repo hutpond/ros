@@ -243,7 +243,6 @@ Window {
     interval: 200; running: false; repeat: true
     onTriggered: {
       var curErrState = (DataManager.infos.length > 0)
-      curErrState = true
       if (errorState !== curErrState) {
         errorState = curErrState
         header.setErrState(errorState)

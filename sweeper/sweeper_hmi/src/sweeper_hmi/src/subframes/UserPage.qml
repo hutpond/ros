@@ -122,7 +122,7 @@ Item {
 
   function setErrState(state) {
     errorState = state
-    textBtnUserPage.text = errorState ? qsTr("错误信息") : qsTr("自动工作")
+    textBtnUserPage.text = errorState ? qsTr("检查错误") : qsTr("自动工作")
   }
 
 }

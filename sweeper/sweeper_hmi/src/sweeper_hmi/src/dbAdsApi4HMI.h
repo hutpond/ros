@@ -15,6 +15,21 @@
 
 namespace dbAds
 {
+   struct SiteJobItem
+    {
+        //作业地图选择页面：作业地点
+        std::string m_SiteName; 
+
+        //作业地图选择页面：作业任务
+        std::string m_JobName;
+
+        //作业地图选择页面：用来显示的图片    
+        std::string m_ImgFilePath;
+
+        //自动驾驶页面：参考线经纬度，左、右车道线经纬度
+        std::string m_RoadSideFilePath;
+    };
+
     class ISelfCheck
     {
     public:
@@ -126,6 +141,8 @@ namespace dbAds
             std::function<int(CEventReport&)> callback, const std::vector<std::string>& cared_property) = 0;
 
         virtual bool StartWithHost(IHostApi4HMI* host) = 0;
+
+        virtual std::vector<SiteJobItem> GetSiteJobsInfo(void) = 0;
     };
 
     IApi4HMI* getApi4HMI();

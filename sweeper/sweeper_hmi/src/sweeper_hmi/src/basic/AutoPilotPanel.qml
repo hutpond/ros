@@ -233,6 +233,6 @@ Item {
 
   function setErrorState(state) {
     errorState = state
-    textButtonAuto.text = state ? qsTr("错误信息") : qsTr("自动工作")
+    textButtonAuto.text = state ? qsTr("检查错误") : qsTr("自动工作")
   }
 }

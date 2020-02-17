@@ -32,6 +32,8 @@
 #include "sweep_msgs/Light.h"
 #include "sweep_msgs/FuelLevelReport.h"
 
+#include "ads_msgs/srv_get_site_job_info.h"
+
 #include <xls.h>
 
 using namespace xls;
@@ -651,7 +653,7 @@ sleep 2s
         sweep_msgs::FuelLevelReport m_FuelLevelReport;
         ads_msgs::ads_ad_report m_msg_ads_ad_report;
         ads_msgs::Status m_chasiss_status;
-        ads_msgs::ads_ins_data m_dataAdsIns;
+        ads_msgs::ads_ins_data m_ads_ins_data;
         ads_msgs::ads_PlanningData4Debug m_planningDataDebug;
 
         //std::map<int, std::chrono::system_clock::time_point> m_module_beat;
@@ -925,13 +927,14 @@ sleep 2s
 
         void OnMsg_ads_chasiss_status(const ads_msgs::Status& msg)
         {
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
             m_chasiss_status = msg;
         }
 
         void OnMsg_ads_ins_data(const ads_msgs::ads_ins_data& msg)
         {
             std::lock_guard<std::recursive_mutex> lock(m_mutex);
-            m_dataAdsIns = msg;
+            m_ads_ins_data = msg;
         }
 
         void OnMsg_ads_planning_data(const ads_msgs::ads_PlanningData4Debug &data)
@@ -1119,9 +1122,10 @@ sleep 2s
             //ads_msgs::ads_ad_report m_msg_ads_ad_report;
 
             std::map<std::string, boost::any> values;
+            std::lock_guard<std::recursive_mutex> lock(m_mutex);
             for (auto it = items.begin(); it != items.end(); it++)
             {
-                if (it->compare(IApi4HMI::Item_spout_water) == 0)
+                if (*it == IApi4HMI::Item_spout_water)
                 {
                     //5 - 8	工作模式	0：手持抽吸 | 1：干式清扫 | 2：湿式清扫 | 3：专用功能 | 4 - 14：reserved | 15：NA
                     switch(m_chasiss_status.working_mode)
@@ -1135,90 +1139,98 @@ sleep 2s
                     break;
                     }
                 }
-                else if (it->compare(IApi4HMI::Item_brush_status) == 0)
+                else if (*it == IApi4HMI::Item_brush_status)
                 {
                     //上装工作使能	00：禁止 | 01：使能 | 10：NA | 11：无动作
                     values[*it] = m_chasiss_status.sweeper_enable;
                 }
-                // else if (it->compare(IApi4HMI::Item_manual_brake) == 0)
+                // else if (*it == IApi4HMI::Item_manual_brake)
                 // {
                 //     values[*it] = 1;
                 // }
-                else if (it->compare(IApi4HMI::Item_width_light) == 0)
+                else if (*it == IApi4HMI::Item_width_light)
                 {
                     values[*it] = this->m_chasiss_status.width_light;
                 }
-                // else if (it->compare(IApi4HMI::Item_emergency_light) == 0)
+                // else if (*it == IApi4HMI::Item_emergency_light)
                 // {
                 //     values[*it] = 0;
                 // }
-                else if (it->compare(IApi4HMI::Item_low_beam_light) == 0)
+                else if (*it == IApi4HMI::Item_low_beam_light)
                 {
                     values[*it] = this->m_chasiss_status.low_beam_light;
                 }
-                // else if (it->compare(IApi4HMI::Item_fault_list) == 0)
+                // else if (*it == IApi4HMI::Item_fault_list)
                 // {
                 //     values[*it] = 1;
                 // }
-                else if (it->compare(IApi4HMI::Item_high_beam_light) == 0)
+                else if (*it == IApi4HMI::Item_high_beam_light)
                 {
                     values[*it] = this->m_chasiss_status.high_beam_light;
                 }
-                else if (it->compare(IApi4HMI::Item_car_state) == 0)
+                else if (*it == IApi4HMI::Item_car_state)
                 {
                     values[*it] = static_cast<ads_ad_report::_carState_type>(m_msg_ads_ad_report.carState);
                 }
-                // else if (it->compare(IApi4HMI::Item_water_level) == 0)
+                // else if (*it == IApi4HMI::Item_water_level)
                 // {
                 //     values[*it] = 10;
                 // }
-                else if (it->compare(dbAds::IApi4HMI::Item_gear) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_gear)
                 {
                     values[*it] = this->m_chasiss_status.gear;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_light) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_light)
                 {
                     values[*it] = this->m_chasiss_status.light;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_reverse_light) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_reverse_light)
                 {
                     values[*it] = this->m_chasiss_status.reversing_light;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_brake_light) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_brake_light)
                 {
                     values[*it] = this->m_chasiss_status.brake_light;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_left_light) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_left_light)
                 {
                     values[*it] = this->m_chasiss_status.left_turn_light;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_right_light) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_right_light)
                 {
                     values[*it] = this->m_chasiss_status.right_turn_light;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_suction_status) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_suction_status)
                 {
                     values[*it] = this->m_chasiss_status.fan_hz > 0 ? 1 : 0;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_latitude) == 0)
-                {
-                    values[*it] = this->m_dataAdsIns.lat;
-                }
-                else if (it->compare(dbAds::IApi4HMI::Item_longitude) == 0)
-                {
-                    values[*it] = this->m_dataAdsIns.lon;
-                }
-                else if (it->compare(dbAds::IApi4HMI::Item_yaw_angle) == 0)
-                {
-                    values[*it] = this->m_dataAdsIns.yaw;
-                }
-                else if (it->compare(dbAds::IApi4HMI::Item_velocity) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_velocity)
                 {
                     values[*it] = this->m_chasiss_status.speed;
                 }
-                else if (it->compare(dbAds::IApi4HMI::Item_battery_remaining_capacity) == 0)
+                else if (*it == dbAds::IApi4HMI::Item_battery_remaining_capacity)
                 {
                     values[*it] = this->m_chasiss_status.battery;
+                } 
+                else if (*it == dbAds::IApi4HMI::Item_total_time)
+                {
+                    values[*it] = this->m_chasiss_status.total_time;
+                }
+                else if (*it == dbAds::IApi4HMI::Item_total_mileage)
+                {
+                    values[*it] = this->m_chasiss_status.total_mileage;
+                }
+                else if (*it == IApi4HMI::Item_latitude)
+                {   
+                    values[*it] = m_ads_ins_data.lat;
+                }
+                else if (*it == IApi4HMI::Item_longitude)
+                {
+                    values[*it] = m_ads_ins_data.lon;
+                }
+                else if (*it == IApi4HMI::Item_yaw_angle)
+                {
+                    values[*it] = m_ads_ins_data.yaw;
                 }
                 else if (it->compare(dbAds::IApi4HMI::Item_planning_data_debug) == 0)
                 {
@@ -1441,6 +1453,31 @@ sleep 2s
                 {property, value},
             };
             return SetProperty(data);
+        }
+
+        virtual std::vector<SiteJobItem> GetSiteJobsInfo(void)
+        {
+            std::vector<SiteJobItem> siteJobs;
+            ros::ServiceClient client = s_nodeHandles[0]->serviceClient<srv_get_site_job_info>("srv_get_site_job_info");
+            srv_get_site_job_info srv;
+            srv.request.type = "all";
+            if (client.call(srv))
+            {
+                for(auto& it : srv.response.result)
+                {
+                    SiteJobItem item;
+                    item.m_ImgFilePath = it.m_ImgFilePath;
+                    item.m_JobName = it.m_JobName;
+                    item.m_RoadSideFilePath = it.m_RoadSideFilePath;
+                    item.m_SiteName = it.m_SiteName;
+                    siteJobs.push_back(item);
+                }
+            } 
+            else 
+            {
+                ROS_ERROR("Failed to call service srv_get_site_job_info");
+            }
+            return siteJobs;
         }
 
         virtual bool AdIsReady(int) override

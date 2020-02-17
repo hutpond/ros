@@ -23,6 +23,9 @@ DECLARE_SWEEPER_CONTROL_DATA(low_beam_light)            //近光灯,0:关，1：
 DECLARE_SWEEPER_CONTROL_DATA(width_light)               //示廓灯,0:关，1：开, rw
 DECLARE_SWEEPER_CONTROL_DATA(emergency_light)           //应急灯,0:关，1：开 , rw
 
+DECLARE_SWEEPER_CONTROL_DATA(total_mileage)             //自动驾驶总里程
+DECLARE_SWEEPER_CONTROL_DATA(total_time)                //自动驾驶总时间
+
 DECLARE_SWEEPER_CONTROL_DATA(gear)                      //档位:"N","P","D","R", ro
 DECLARE_SWEEPER_CONTROL_DATA(steer_angle_value)         //当前方向盘转角:度, ro
 DECLARE_SWEEPER_CONTROL_DATA(throttle_value)            //油门值, ro
