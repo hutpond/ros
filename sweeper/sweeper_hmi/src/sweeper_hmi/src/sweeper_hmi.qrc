@@ -70,5 +70,6 @@
         <file>svg/task_garbage.svg</file>
         <file>basic/PerceptionData.qml</file>
         <file>basic/FullScreenView.qml</file>
+        <file>basic/TaskSelectItem.qml</file>
     </qresource>
 </RCC>

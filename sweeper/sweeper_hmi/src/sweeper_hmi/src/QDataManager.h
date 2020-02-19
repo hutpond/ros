@@ -71,6 +71,8 @@ public:
 
   Q_INVOKABLE QPointF llaToEnu(const QPointF &, const QPointF &);
   Q_INVOKABLE QVariantList getTargets();
+  Q_INVOKABLE QVariantList getCleanningRoute();
+  Q_INVOKABLE bool setCleaningTask(const QString &, const QString &);
 
   int step() const;
   void setStep(int);

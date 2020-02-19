@@ -12,6 +12,7 @@ Item {
 
   signal startAutoPilot()
   signal showErrMsg()
+  signal selectTask()
 
   Rectangle {
     anchors.fill: parent
@@ -39,6 +40,10 @@ Item {
     anchors.bottom: userPageState.bottom
     anchors.right: parent.right
     anchors.rightMargin: 30
+
+    onSelectTask: {
+      itemUserPage.selectTask()
+    }
   }
 
   Basic.UserPageDisplayBoard {
@@ -123,6 +128,10 @@ Item {
   function setErrState(state) {
     errorState = state
     textBtnUserPage.text = errorState ? qsTr("检查错误") : qsTr("自动工作")
+  }
+
+  function setSelectedTask(task) {
+    userPageBoard.setSelectedTask(task)
   }
 
 }

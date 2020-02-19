@@ -298,6 +298,36 @@ QVariantList QDataManager::getTargets()
   return targets;
 }
 
+QVariantList QDataManager::getCleanningRoute()
+{
+  std::vector<dbAds::SiteJobItem> jobItems = m_pApi4Hmi->m_lpApi->GetSiteJobsInfo();
+
+  QVariantList routes;
+  for (const auto &item : jobItems) {
+    QStringList route;
+    route << QString::fromStdString(item.m_SiteName) <<
+             QString::fromStdString(item.m_JobName) <<
+             QString::fromStdString(item.m_ImgFilePath) <<
+             QString::fromStdString(item.m_RoadSideFilePath);
+    routes << route;
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    QStringList route;
+    route << QString::number(10000 * (i + 1) + 100) <<
+             QString::number(10000 * (i + 1) + 200) <<
+             QString::number(10000 * (i + 1) + 300) <<
+             QString::number(10000 * (i + 1) + 400);
+    routes << route;
+  }
+  return routes;
+}
+
+bool QDataManager::setCleaningTask(const QString &siteName, const QString &routeName)
+{
+  return m_pApi4Hmi->m_lpApi->SetTask(siteName.toStdString(), routeName.toStdString());
+}
+
 QQmlListProperty<QMsgInfo> QDataManager::infos()
 {
   return QQmlListProperty<QMsgInfo>(

@@ -107,7 +107,7 @@ Window {
     }
 
     onVisibleChanged: {
-      header.visible = true;
+      header.visible = true
       if (visible) {
         header.title = "AI智能扫地机"
         currentItem = this
@@ -119,17 +119,28 @@ Window {
       currentItem.visible = false
     }
 
+    onSelectTask: {
+      visible = false
+      currentItem = taskSelect
+      currentItem.visible = true
+    }
+
   }
 
   // task page
   SubFrames.TaskSelect {
     id: taskSelect
-    anchors.fill: parent
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
     visible: false
 
     onTaskSlecked: {
       taskSelect.visible = false
-      autoPilot.visible = true
+      currentItem = userPage
+      userPage.visible = true
+      userPage.setSelectedTask(task)
     }
   }
 
@@ -249,7 +260,7 @@ Window {
         userPage.setErrState(errorState)
         autoPilot.setErrState(errorState)
 
-        vehicleErrMsg.visible = errorState
+        vehicleErrMsg.visible = (errorState && !header.visible)
         currentItem.visible = !errorState
       }
     }
