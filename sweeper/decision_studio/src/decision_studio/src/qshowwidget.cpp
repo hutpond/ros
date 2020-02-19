@@ -32,19 +32,31 @@ void QShowWidget::drawImage()
 void QShowWidget::calcMapRect()
 {
   const int size_reference_splines = m_decisionData.reference_splines.size();
+  double left_road_width = 5;
+  double right_road_width = 3;
   if (size_reference_splines == 0) {
-    m_decisionData.vehicle_width = 1.1;
-    m_decisionData.vehicle_length = 2.2;
+    left_road_width = 5;
+    right_road_width = 3;
+    m_decisionData.front_vehicle_length = 2.2;
+  }
+  else {
+    left_road_width = m_decisionData.reference_points[0].left_road_width;
+    right_road_width = m_decisionData.reference_points[0].right_road_width;
   }
 
   // 计算显示区域物理范围，车体坐标系，X正向：上，Y正向：左，坐标原点：车中心
   // 显示范围，height（Y向）：路宽MAP_TO_ROAD_COEF倍，
   // width（X向）：根据显示区域比例计算，起点：车身后START_X_TO_CAR_TAIL米
-  const float VEH_HEAD = m_decisionData.head_distance;
-  const float mapHeight = m_fDisplayRatio * m_decisionData.vehicle_width * 7.0;
+  const float VEH_HEAD = m_decisionData.head_point.x;
+  const float roadLeftWidth = left_road_width;
+  const float roadRightWidth = right_road_width;
+  const float roadWidth = roadLeftWidth + roadRightWidth;
+  const float mapHeight = m_fDisplayRatio * roadWidth;
   const float mapWidth = mapHeight * m_rectPicture.height() / m_rectPicture.width();
-  const float mapX = -(m_decisionData.vehicle_length - VEH_HEAD) - m_ptfTranslate.x();
-  const float mapY = -mapWidth / 2.0 - m_ptfTranslate.y();
+  const float mapX = -(m_decisionData.front_vehicle_length - VEH_HEAD)
+      - m_ptfTranslate.x();
+  const float mapY = -(roadRightWidth + roadWidth * (m_fDisplayRatio - 1.0) / 2.0)
+      - m_ptfTranslate.y();
   m_rectfMap = QRectF(mapX, mapY, mapWidth, mapHeight);
 
   // 坐标转换
@@ -68,10 +80,10 @@ void QShowWidget::drawSweeper(QPainter &painter)
   painter.save();
   QPen pen;
 
-  // vehicle
-  const double VEH_W = m_decisionData.vehicle_width;
-  const double VEH_L = m_decisionData.vehicle_length;
-  const double VEH_HEAD = m_decisionData.head_distance;
+  // front of vehicle
+  const double VEH_W = m_decisionData.front_vehicle_width;
+  const double VEH_L = m_decisionData.front_vehicle_length;
+  const double VEH_HEAD = m_decisionData.head_point.x;
 
   QRectF rectfSweeper = QRectF(-VEH_L + VEH_HEAD, -VEH_W / 2, VEH_L, VEH_W);
   QPolygonF pgfSweeper = m_transform.map(rectfSweeper);
@@ -79,8 +91,69 @@ void QShowWidget::drawSweeper(QPainter &painter)
   painter.setPen(pen);
   painter.drawPolygon(pgfSweeper);
 
+  // front line
+  QLineF linef(m_decisionData.front_axle_center.x, m_decisionData.front_axle_center.y,
+               m_decisionData.hinge_point.x, m_decisionData.hinge_point.y);
+  linef = m_transform.map(linef);
+  pen.setColor(Qt::green);
+  pen.setWidth(2);
+  painter.setPen(pen);
+  painter.drawLine(linef);
+
+  // back line
+  linef = QLineF(m_decisionData.hinge_point.x, m_decisionData.hinge_point.y,
+                 m_decisionData.rear_axle_center.x, m_decisionData.rear_axle_center.y
+               );
+  linef = m_transform.map(linef);
+//  pen.setColor(Qt::green);
+//  painter.setPen(pen);
+  painter.drawLine(linef);
+
+  // point
+  painter.setBrush(Qt::green);
+  QPointF ptf = linef.p1();
+  painter.drawEllipse(ptf, 2, 2);
+
+  // back vehicle
+  linef = QLineF(m_decisionData.hinge_point.x, m_decisionData.hinge_point.y,
+                 m_decisionData.rear_axle_center.x, m_decisionData.rear_axle_center.y
+               );
+
+  QPolygonF pgf;
+  ptf = QPointF(m_decisionData.rear_point.x, m_decisionData.rear_point.y);
+  QLineF linef2;
+  linef2.setP1(ptf);
+  linef2.setLength(m_decisionData.rear_vehicle_width / 2.0);
+  linef2.setAngle(linef.normalVector().angle());
+  pgf << linef2.p2();
+  QPointF ptfStart = linef2.p2();
+  linef2.setAngle(linef.normalVector().angle() + 180);
+  pgf << linef2.p2();
+
+  linef2 = QLineF(m_decisionData.rear_point.x, m_decisionData.rear_point.y,
+                 m_decisionData.hinge_point.x, m_decisionData.hinge_point.y
+               );
+  linef2.setLength(m_decisionData.rear_vehicle_length);
+  ptf = linef2.p2();
+
+  linef2.setP2(QPointF(1000000.0, 0));
+  linef2.setP1(ptf);
+  linef2.setLength(m_decisionData.rear_vehicle_width / 2.0);
+  linef2.setAngle(linef.normalVector().angle() + 180);
+  pgf << linef2.p2();
+  linef2.setAngle(linef.normalVector().angle());
+  pgf << linef2.p2();
+  pgf << ptfStart;
+
+  pgf = m_transform.map(pgf);
+  painter.drawPolyline(pgf);
+
   painter.restore();
+
+  //this->drawRadar(painter);
+  //this->drawUltrasonic(painter);
 }
+
 
 /**
  * @brief 绘制参考线，路边沿(根据参考线左侧、右侧路宽数据绘制）

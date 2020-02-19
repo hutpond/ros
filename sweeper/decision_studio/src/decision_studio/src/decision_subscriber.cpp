@@ -82,20 +82,80 @@ void DecisionSubscriber::saveDataToFile(const decision_studio::ads_DecisionData4
 {
   Json::Value root;
 
+  // header
+  Json::Value header;
+  header["second"] = data.header.stamp.sec;
+  header["nano_second"] = data.header.stamp.nsec;
+
   // vehicle
-  Json::Value vehicle;
-  vehicle["vehicle_latitude"] = data.vehicle_latitude;
-  vehicle["vehicle_longitude"] = data.vehicle_longitude;
-  vehicle["vehicle_altitude"] = data.vehicle_altitude;
-  vehicle["vehicle_x"] = data.vehicle_x;
-  vehicle["vehicle_y"] = data.vehicle_y;
-  vehicle["vehicle_z"] = data.vehicle_z;
-  vehicle["vehicle_s"] = data.vehicle_s;
-  vehicle["vehicle_l"] = data.vehicle_l;
-  vehicle["vehicle_width"] = data.vehicle_width;
-  vehicle["vehicle_length"] = data.vehicle_length;
-  vehicle["head_distance"] = data.head_distance;
-  root["vehicle"] = vehicle;
+  Json::Value carStatus, frontAxleCenter, rearAxleCenter, headPoint, rearPoint, hingePoint;
+
+  frontAxleCenter["id"] = data.front_axle_center.id;
+  frontAxleCenter["x"] = data.front_axle_center.x;
+  frontAxleCenter["y"] = data.front_axle_center.y;
+  frontAxleCenter["enu_x"] = data.front_axle_center.enu_x;
+  frontAxleCenter["enu_y"] = data.front_axle_center.enu_y;
+  frontAxleCenter["s"] = data.front_axle_center.s;
+  frontAxleCenter["l"] = data.front_axle_center.l;
+  frontAxleCenter["left_road_width"] = data.front_axle_center.left_road_width;
+  frontAxleCenter["right_road_width"] = data.front_axle_center.right_road_width;
+
+  rearAxleCenter["id"] = data.rear_axle_center.id;
+  rearAxleCenter["x"] = data.rear_axle_center.x;
+  rearAxleCenter["y"] = data.rear_axle_center.y;
+  rearAxleCenter["enu_x"] = data.rear_axle_center.enu_x;
+  rearAxleCenter["enu_y"] = data.rear_axle_center.enu_y;
+  rearAxleCenter["s"] = data.rear_axle_center.s;
+  rearAxleCenter["l"] = data.rear_axle_center.l;
+  rearAxleCenter["left_road_width"] = data.rear_axle_center.left_road_width;
+  rearAxleCenter["right_road_width"] = data.rear_axle_center.right_road_width;
+
+  headPoint["id"] = data.head_point.id;
+  headPoint["x"] = data.head_point.x;
+  headPoint["y"] = data.head_point.y;
+  headPoint["enu_x"] = data.head_point.enu_x;
+  headPoint["enu_y"] = data.head_point.enu_y;
+  headPoint["s"] = data.head_point.s;
+  headPoint["l"] = data.head_point.l;
+  headPoint["left_road_width"] = data.head_point.left_road_width;
+  headPoint["right_road_width"] = data.head_point.right_road_width;
+
+  rearPoint["id"] = data.rear_point.id;
+  rearPoint["x"] = data.rear_point.x;
+  rearPoint["y"] = data.rear_point.y;
+  rearPoint["enu_x"] = data.rear_point.enu_x;
+  rearPoint["enu_y"] = data.rear_point.enu_y;
+  rearPoint["s"] = data.rear_point.s;
+  rearPoint["l"] = data.rear_point.l;
+  rearPoint["left_road_width"] = data.rear_point.left_road_width;
+  rearPoint["right_road_width"] = data.rear_point.right_road_width;
+
+  hingePoint["id"] = data.hinge_point.id;
+  hingePoint["x"] = data.hinge_point.x;
+  hingePoint["y"] = data.hinge_point.y;
+  hingePoint["enu_x"] = data.hinge_point.enu_x;
+  hingePoint["enu_y"] = data.hinge_point.enu_y;
+  hingePoint["s"] = data.hinge_point.s;
+  hingePoint["l"] = data.hinge_point.l;
+  hingePoint["left_road_width"] = data.hinge_point.left_road_width;
+  hingePoint["right_road_width"] = data.hinge_point.right_road_width;
+
+  carStatus["front_axle_center"] = frontAxleCenter;
+  carStatus["rear_axle_center"] = rearAxleCenter;
+  carStatus["head_point"] = headPoint;
+  carStatus["rear_point"] = rearPoint;
+  carStatus["hinge_point"] = hingePoint;
+  carStatus["front_vehicle_length"] = data.front_vehicle_length;
+  carStatus["front_vehicle_width"] = data.front_vehicle_width;
+  carStatus["rear_vehicle_length"] = data.rear_vehicle_length;
+  carStatus["rear_vehicle_width"] = data.rear_vehicle_width;
+  carStatus["steering_angle"] = data.steering_angle;
+  carStatus["vehicle_enu_x"] = data.vehicle_enu_x;
+  carStatus["vehicle_enu_y"] = data.vehicle_enu_y;
+  carStatus["vehicle_enu_z"] = data.vehicle_enu_z;
+  carStatus["vehicle_pitch"] = data.vehicle_pitch;
+  carStatus["vehicle_roll"] = data.vehicle_roll;
+  carStatus["vehicle_yaw"] = data.vehicle_yaw;
 
   // tarck targets
   Json::Value fusionResults;
@@ -223,19 +283,81 @@ void DecisionSubscriber::readDataFromFile(const std::string &name)
   // parse json
   decision_studio::ads_DecisionData4Debug data;
 
+  // header
+  Json::Value header = root["header"];
+  data.header.stamp.sec = header["second"].asUInt();
+  data.header.stamp.nsec = header["nano_second"].asUInt();
+
   // vehicle
-  Json::Value vehicle = root["vehicle"];
-  data.vehicle_latitude = vehicle["vehicle_latitude"].asDouble();
-  data.vehicle_longitude = vehicle["vehicle_longitude"].asDouble();
-  data.vehicle_altitude = vehicle["vehicle_altitude"].asDouble();
-  data.vehicle_x = vehicle["vehicle_x"].asDouble();
-  data.vehicle_y = vehicle["vehicle_y"].asDouble();
-  data.vehicle_z = vehicle["vehicle_z"].asDouble();
-  data.vehicle_s = vehicle["vehicle_s"].asDouble();
-  data.vehicle_l = vehicle["vehicle_l"].asDouble();
-  data.vehicle_width = vehicle["vehicle_width"].asDouble();
-  data.vehicle_length = vehicle["vehicle_length"].asDouble();
-  data.head_distance = vehicle["head_distance"].asDouble();
+  Json::Value carStatus = root["car_status"];
+
+  Json::Value frontAxleCenter = carStatus["front_axle_center"];
+  Json::Value rearAxleCenter = carStatus["rear_axle_center"];
+  Json::Value headPoint = carStatus["head_point"];
+  Json::Value rearPoint = carStatus["rear_point"];
+  Json::Value hingePoint = carStatus["hinge_point"];
+  data.front_vehicle_length = carStatus["front_vehicle_length"].asDouble();
+  data.front_vehicle_width = carStatus["front_vehicle_width"].asDouble();
+  data.rear_vehicle_length = carStatus["rear_vehicle_length"].asDouble();
+  data.rear_vehicle_width = carStatus["rear_vehicle_width"].asDouble();
+  data.steering_angle = carStatus["steering_angle"].asDouble();
+
+  data.vehicle_enu_x = carStatus["vehicle_enu_x"].asDouble();
+  data.vehicle_enu_y = carStatus["vehicle_enu_y"].asDouble();
+  data.vehicle_enu_z = carStatus["vehicle_enu_z"].asDouble();
+  data.vehicle_pitch = carStatus["vehicle_pitch"].asDouble();
+  data.vehicle_roll = carStatus["vehicle_roll"].asDouble();
+  data.vehicle_yaw = carStatus["vehicle_yaw"].asDouble();
+
+  data.front_axle_center.id = frontAxleCenter["id"].asInt();
+  data.front_axle_center.x = frontAxleCenter["x"].asDouble();
+  data.front_axle_center.y = frontAxleCenter["y"].asDouble();
+  data.front_axle_center.enu_x = frontAxleCenter["enu_x"].asDouble();
+  data.front_axle_center.enu_y = frontAxleCenter["enu_y"].asDouble();
+  data.front_axle_center.s = frontAxleCenter["s"].asDouble();
+  data.front_axle_center.l = frontAxleCenter["l"].asDouble();
+  data.front_axle_center.left_road_width = frontAxleCenter["left_road_width"].asDouble();
+  data.front_axle_center.right_road_width = frontAxleCenter["right_road_width"].asDouble();
+
+  data.rear_axle_center.id = rearAxleCenter["id"].asInt();
+  data.rear_axle_center.x = rearAxleCenter["x"].asDouble();
+  data.rear_axle_center.y = rearAxleCenter["y"].asDouble();
+  data.rear_axle_center.enu_x = rearAxleCenter["enu_x"].asDouble();
+  data.rear_axle_center.enu_y = rearAxleCenter["enu_y"].asDouble();
+  data.rear_axle_center.s = rearAxleCenter["s"].asDouble();
+  data.rear_axle_center.l = rearAxleCenter["l"].asDouble();
+  data.rear_axle_center.left_road_width = rearAxleCenter["left_road_width"].asDouble();
+  data.rear_axle_center.right_road_width = rearAxleCenter["right_road_width"].asDouble();
+
+  data.head_point.id = headPoint["id"].asInt();
+  data.head_point.x = headPoint["x"].asDouble();
+  data.head_point.y = headPoint["y"].asDouble();
+  data.head_point.enu_x = headPoint["enu_x"].asDouble();
+  data.head_point.enu_y = headPoint["enu_y"].asDouble();
+  data.head_point.s = headPoint["s"].asDouble();
+  data.head_point.l = headPoint["l"].asDouble();
+  data.head_point.left_road_width = headPoint["left_road_width"].asDouble();
+  data.head_point.right_road_width = headPoint["right_road_width"].asDouble();
+
+  data.rear_point.id = rearPoint["id"].asInt();
+  data.rear_point.x = rearPoint["x"].asDouble();
+  data.rear_point.y = rearPoint["y"].asDouble();
+  data.rear_point.enu_x = rearPoint["enu_x"].asDouble();
+  data.rear_point.enu_y = rearPoint["enu_y"].asDouble();
+  data.rear_point.s = rearPoint["s"].asDouble();
+  data.rear_point.l = rearPoint["l"].asDouble();
+  data.rear_point.left_road_width = rearPoint["left_road_width"].asDouble();
+  data.rear_point.right_road_width = rearPoint["right_road_width"].asDouble();
+
+  data.hinge_point.id = hingePoint["id"].asInt();
+  data.hinge_point.x = hingePoint["x"].asDouble();
+  data.hinge_point.y = hingePoint["y"].asDouble();
+  data.hinge_point.enu_x = hingePoint["enu_x"].asDouble();
+  data.hinge_point.enu_y = hingePoint["enu_y"].asDouble();
+  data.hinge_point.s = hingePoint["s"].asDouble();
+  data.hinge_point.l = hingePoint["l"].asDouble();
+  data.hinge_point.left_road_width = hingePoint["left_road_width"].asDouble();
+  data.hinge_point.right_road_width = hingePoint["right_road_width"].asDouble();
 
   // tarck targets
   Json::Value fusionResults = root["fusion_results"];

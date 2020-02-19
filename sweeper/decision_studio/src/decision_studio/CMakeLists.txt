@@ -23,6 +23,7 @@ add_message_files(
   ads_ReferencePoint.msg
   ads_Spline.msg
   ads_Vec4f.msg
+  ads_Point.msg
   )
 
 generate_messages(
