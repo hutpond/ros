@@ -86,6 +86,7 @@ void DecisionSubscriber::saveDataToFile(const decision_studio::ads_DecisionData4
   Json::Value header;
   header["second"] = data.header.stamp.sec;
   header["nano_second"] = data.header.stamp.nsec;
+  root["header"] = header;
 
   // vehicle
   Json::Value carStatus, frontAxleCenter, rearAxleCenter, headPoint, rearPoint, hingePoint;
@@ -156,6 +157,8 @@ void DecisionSubscriber::saveDataToFile(const decision_studio::ads_DecisionData4
   carStatus["vehicle_pitch"] = data.vehicle_pitch;
   carStatus["vehicle_roll"] = data.vehicle_roll;
   carStatus["vehicle_yaw"] = data.vehicle_yaw;
+
+  root["car_status"] = carStatus;
 
   // tarck targets
   Json::Value fusionResults;
