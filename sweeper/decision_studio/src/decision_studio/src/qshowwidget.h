@@ -13,6 +13,9 @@ public:
   void setData(const decision_studio::ads_DecisionData4Debug &);
 
 protected:
+  virtual void mousePressEvent(QMouseEvent *) override;
+
+protected:
   virtual void drawImage() final;
   virtual void calcMapRect() final;
 

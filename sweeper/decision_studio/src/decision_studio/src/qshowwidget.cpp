@@ -1,11 +1,31 @@
 #include "qshowwidget.h"
 
 #include <QPainter>
+#include <QMouseEvent>
 #include "QBezierCurve.h"
 
 QShowWidget::QShowWidget(QWidget *parent)
   : QBaseShowWidget(parent)
 {
+
+}
+
+void QShowWidget::mousePressEvent(QMouseEvent *e)
+{
+  QBaseShowWidget::mousePressEvent(e);
+
+  bool bLeftPress = (e->buttons() & Qt::LeftButton);
+  if (bLeftPress) {
+    QPointF ptf = e->localPos();
+    QPointF ptfMap = this->pixelToMap(ptf);
+    double s = 0, l = 0;
+    const int size_reference_points = m_decisionData.reference_points.size();
+    if (size_reference_points > 0) {
+      this->xyToSl(ptfMap, s, l);
+    }
+    m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
+  }
+
 
 }
 
