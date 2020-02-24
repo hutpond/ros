@@ -6,6 +6,7 @@
 #include <boost/filesystem.hpp>
 #include "decision_studio/ads_DecisionData4Debug.h"
 
+class QLabel;
 class QShowWidget;
 class QStateWidget;
 class DecisionSubscriber;
@@ -24,6 +25,8 @@ public:
   void setLivingFlag(bool);
   void createSavePath(const boost::filesystem::path &path);
 
+  void showMousePosition(float, float, float, float);
+
 protected:
   virtual void resizeEvent(QResizeEvent *) final;
 
@@ -35,6 +38,7 @@ public slots:
 private:
   QShowWidget *m_pWdgShow;
   QStateWidget *m_pWdgState;
+  QLabel *m_pLblPosition;
   QReplayWidget *m_pWdgReplay;
   DecisionSubscriber *m_pObjSubscriber;
 

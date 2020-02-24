@@ -37,6 +37,14 @@ void QBaseShowWidget::mousePressEvent(QMouseEvent *e)
 {
   QPointF ptf = e->localPos();
   m_ptfMouseMove = ptf;
+
+  bool bLeftPress = (e->buttons() & Qt::LeftButton);
+  if (bLeftPress) {
+    QPointF ptfMap = this->pixelToMap(ptf);
+    double s = 0, l = 0;
+    m_funPosition(ptfMap.x(), ptfMap.y(), s, l);
+  }
+
 }
 
 void QBaseShowWidget::mouseMoveEvent(QMouseEvent *e)
@@ -87,7 +95,7 @@ void QBaseShowWidget::setFunPosition(std::function<void(float, float, float, flo
 ********************************************************/
 void QBaseShowWidget::setViewResolution(int index)
 {
-  const float RATIO_COEF = 1.2;
+  const float RATIO_COEF = 1.2f;
   switch (index) {
     case -1:
       m_fDisplayRatio *= RATIO_COEF;

@@ -1,4 +1,6 @@
 #include "qcentralwidget.h"
+
+#include <QLabel>
 #include "qshowwidget.h"
 #include "qreplaywidget.h"
 #include "qstatewidget.h"
@@ -9,6 +11,7 @@ QCentralWidget::QCentralWidget(QWidget *parent)
 {
   m_pWdgShow = new QShowWidget(this);
   m_pWdgState = new QStateWidget(this);
+  m_pLblPosition = new QLabel(this);
   m_pWdgReplay = new QReplayWidget(this);
   m_pWdgReplay->hide();
   m_pObjSubscriber = new DecisionSubscriber(*this, this);
@@ -20,6 +23,10 @@ QCentralWidget::QCentralWidget(QWidget *parent)
           this, SIGNAL(replayFileName(const QString &)));
   connect(m_pObjSubscriber, SIGNAL(replayNextIndex()),
            m_pWdgReplay, SLOT(onSliderNextStep()));
+
+  boost::function<void(float, float, float, float)> fun =
+      boost::bind(&QCentralWidget::showMousePosition, this, _1, _2, _3, _4);
+  m_pWdgShow->setFunPosition(fun);
 }
 
 void QCentralWidget::resizeEvent(QResizeEvent *)
@@ -28,7 +35,7 @@ void QCentralWidget::resizeEvent(QResizeEvent *)
   const int HEIGHT = this->height();
 
   const float WDG_STATE_H_PF = 0.1f;
-  const float WDG_STATE_W_PF = 0.3f;
+  const float WDG_STATE_W_PF = 0.25f;
 
   m_pWdgShow->setGeometry(0, 0, WIDTH, HEIGHT * (1.0 - WDG_STATE_H_PF));
 
@@ -36,10 +43,18 @@ void QCentralWidget::resizeEvent(QResizeEvent *)
         0, HEIGHT * (1.0 - WDG_STATE_H_PF), WIDTH * WDG_STATE_W_PF, HEIGHT * WDG_STATE_H_PF
         );
 
-  m_pWdgReplay->setGeometry(
+  const float LBL_POS_W_PF = 0.2f;
+  m_pLblPosition->setGeometry(
         WIDTH * WDG_STATE_W_PF,
         HEIGHT * (1.0 - WDG_STATE_H_PF),
-        WIDTH * (1 - WDG_STATE_W_PF),
+        WIDTH * LBL_POS_W_PF,
+        HEIGHT * WDG_STATE_H_PF
+        );
+
+  m_pWdgReplay->setGeometry(
+        WIDTH * (WDG_STATE_W_PF + LBL_POS_W_PF),
+        HEIGHT * (1.0 - WDG_STATE_H_PF),
+        WIDTH * (1 - WDG_STATE_W_PF - LBL_POS_W_PF),
         HEIGHT * WDG_STATE_H_PF
         );
 }
@@ -78,4 +93,14 @@ void QCentralWidget::setLivingFlag(bool flag)
 void QCentralWidget::createSavePath(const boost::filesystem::path &path)
 {
   m_pObjSubscriber->createSavePath(path);
+}
+
+void QCentralWidget::showMousePosition(float x, float y, float s, float l)
+{
+  QString strText = QString("X:%1, Y:%2, S:%3, L%4").
+      arg(x, 6, 'f', 2).
+      arg(y, 6, 'f', 2).
+      arg(s, 6, 'f', 2).
+      arg(l, 6, 'f', 2);
+  m_pLblPosition->setText(strText);
 }
