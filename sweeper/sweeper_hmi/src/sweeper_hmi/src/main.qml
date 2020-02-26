@@ -140,7 +140,9 @@ Window {
       taskSelect.visible = false
       currentItem = userPage
       userPage.visible = true
-      userPage.setSelectedTask(task)
+      if (task.length > 0) {
+        userPage.setSelectedTask(task)
+      }
     }
   }
 

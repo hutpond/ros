@@ -224,12 +224,12 @@ Item {
     id: itemSelect
 
     anchors.top: item7.bottom
-    anchors.topMargin: spacing
+    anchors.topMargin: spacing * 3
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: spacing
+    anchors.bottomMargin: spacing * 3
 
-    anchors.verticalCenter: parent.Center
     width: parent.width * 0.15
+    x: parent.width / 2 - width / 2
 
     Image {
       anchors.fill: parent
@@ -250,29 +250,33 @@ Item {
       hoverEnabled: true
 
       onClicked: {
-        DataManager.setCleaningTask(currentItem[0], currentItem[1])
+        if (currentItem.length >= 2) {
+          DataManager.setCleaningTask(currentItem[0], currentItem[1])
+        }
         taskSlecked(currentItem)
       }
     }
 
   }
 
-  Component.onCompleted: {
-    taskList = DataManager.getCleanningRoute()
-    taskSize = taskList.length
-    var remainder = (taskList.length % 8);
-    if (remainder !== 0) {
-      for (var i = 0; i < 8 - remainder; ++i) {
-        var task = []
-        task.push("")
-        task.push("")
-        task.push("")
-        task.push("")
-        taskList.push(task)
+  onVisibleChanged: {
+    if (visible && taskList.length === 0) {
+      taskList = DataManager.getCleanningRoute()
+      taskSize = taskList.length
+      var remainder = (taskList.length % 8);
+      if (remainder !== 0) {
+        for (var i = 0; i < 8 - remainder; ++i) {
+          var task = []
+          task.push("")
+          task.push("")
+          task.push("")
+          task.push("")
+          taskList.push(task)
+        }
       }
-    }
 
-    setPage(0)
+      setPage(0)
+    }
   }
 
   function setPage(index) {
@@ -280,29 +284,31 @@ Item {
 
     var taskIndex = sizePerPage * pageIndex
 
-    item0.setTaskItem(taskList[taskIndex])
-    item0.setSelected(true)
+    if (taskIndex + 7 < taskList.length) {
+      item0.setTaskItem(taskList[taskIndex])
+      item0.setSelected(true)
 
-    item1.setTaskItem(taskList[taskIndex + 1])
-    item1.setSelected(false)
+      item1.setTaskItem(taskList[taskIndex + 1])
+      item1.setSelected(false)
 
-    item2.setTaskItem(taskList[taskIndex + 2])
-    item2.setSelected(false)
+      item2.setTaskItem(taskList[taskIndex + 2])
+      item2.setSelected(false)
 
-    item3.setTaskItem(taskList[taskIndex + 3])
-    item3.setSelected(false)
+      item3.setTaskItem(taskList[taskIndex + 3])
+      item3.setSelected(false)
 
-    item4.setTaskItem(taskList[taskIndex + 4])
-    item4.setSelected(false)
+      item4.setTaskItem(taskList[taskIndex + 4])
+      item4.setSelected(false)
 
-    item5.setTaskItem(taskList[taskIndex + 5])
-    item5.setSelected(false)
+      item5.setTaskItem(taskList[taskIndex + 5])
+      item5.setSelected(false)
 
-    item6.setTaskItem(taskList[taskIndex + 6])
-    item6.setSelected(false)
+      item6.setTaskItem(taskList[taskIndex + 6])
+      item6.setSelected(false)
 
-    item7.setTaskItem(taskList[taskIndex + 7])
-    item7.setSelected(false)
+      item7.setTaskItem(taskList[taskIndex + 7])
+      item7.setSelected(false)
+    }
 
     update()
   }

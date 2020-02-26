@@ -34,7 +34,7 @@ Item {
 
     Text {
       id: siteName
-      text: qsTr("text")
+      text: qsTr("")
       color: "black"
 
       anchors.centerIn: parent
@@ -53,7 +53,7 @@ Item {
 
     Text {
       id: routeName
-      text: qsTr("text")
+      text: qsTr("")
       color: "black"
 
       anchors.centerIn: parent
@@ -67,7 +67,7 @@ Item {
     hoverEnabled: true
 
     onClicked: {
-      if (taskItem[0] !== "") {
+      if (taskItem.length > 0) {
         selectedTask(taskItem)
         setSelected(true)
       }
@@ -75,10 +75,12 @@ Item {
   }
 
   function setTaskItem(task) {
-    taskItem = task
-    siteName.text = task[0]
-    routeName.text = task[1]
-    routeImage.source = task[2]
+    if (tast.length >= 3) {
+      taskItem = task
+      siteName.text = task[0]
+      routeName.text = task[1]
+      routeImage.source = task[2]
+    }
   }
 
   function setSelected(value) {

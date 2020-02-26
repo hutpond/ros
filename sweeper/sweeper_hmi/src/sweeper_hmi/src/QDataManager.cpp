@@ -312,6 +312,7 @@ QVariantList QDataManager::getCleanningRoute()
     routes << route;
   }
 
+#if 0
   for (int i = 0; i < 8; ++i) {
     QStringList route;
     route << QString::number(10000 * (i + 1) + 100) <<
@@ -320,6 +321,7 @@ QVariantList QDataManager::getCleanningRoute()
              QString::number(10000 * (i + 1) + 400);
     routes << route;
   }
+#endif
   return routes;
 }
 
