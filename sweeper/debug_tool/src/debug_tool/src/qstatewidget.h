@@ -11,6 +11,7 @@ class QStateWidget : public QWidget
   Q_OBJECT
 
   enum {
+    StateUnknown,
     StateForward,
     StateLeftPass,
     StateRightPass,
@@ -20,7 +21,6 @@ class QStateWidget : public QWidget
     StateExitAuto,
     StateCount
   };
-
 
 public:
   explicit QStateWidget(QWidget *parent = nullptr);

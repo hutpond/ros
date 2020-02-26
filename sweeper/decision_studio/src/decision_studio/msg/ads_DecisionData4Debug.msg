@@ -25,9 +25,15 @@ float64 wait_dis
 ads_ReferencePoint[] reference_points
 ads_Spline[] reference_splines
 
+uint8 Unknown = 0
+uint8 Forward = 1               # 前进
+uint8 Left_Pass	= 2	            # 左侧绕行
+uint8 Right_Pass = 3	        # 右侧绕行
+uint8 Follow = 4                # 跟车
+uint8 Wait = 5                  # 停车等待
+uint8 SafeStop = 6              # 安全停车
+uint8 Exit = 7                  # 退出
+
 uint8 decision
 
 string debug_info
-
-
-

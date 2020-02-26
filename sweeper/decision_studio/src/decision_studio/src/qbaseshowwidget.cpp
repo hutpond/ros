@@ -13,7 +13,7 @@
 
 QBaseShowWidget::QBaseShowWidget(QWidget *parent)
   : QWidget(parent)
-  , m_fDisplayRatio(1.0)
+  , m_fDisplayRatio(15.0)
   , m_fOriginRatio(1.0)
 {
 }

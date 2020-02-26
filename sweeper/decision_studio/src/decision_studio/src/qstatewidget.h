@@ -11,10 +11,14 @@ class QStateWidget : public QWidget
   Q_OBJECT
 
   enum {
+    StateUnknown,
     StateForward,
+    StateLeftPass,
+    StateRightPass,
     StateFollow,
-    StatePass,
+    StateWait,
     StateSafeStop,
+    StateExitAuto,
     StateCount
   };
 

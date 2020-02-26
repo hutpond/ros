@@ -4,6 +4,7 @@
 QStateWidget::QStateWidget(QWidget *parent)
   : QWidget(parent)
 {
+  m_pWdgItem[StateUnknown] = new QStateItem(QStringLiteral("未知"), this);
   m_pWdgItem[StateForward] = new QStateItem(QStringLiteral("前进"), this);
   m_pWdgItem[StateLeftPass] = new QStateItem(QStringLiteral("左侧\n绕行"), this);
   m_pWdgItem[StateRightPass] = new QStateItem(QStringLiteral("右侧\n绕行"), this);

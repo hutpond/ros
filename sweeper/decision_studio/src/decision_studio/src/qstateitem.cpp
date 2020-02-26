@@ -21,13 +21,14 @@ void QStateItem::resizeEvent(QResizeEvent *)
 {
   const int WIDTH = this->width();
   const int HEIGHT = this->height();
-  const int SPACE = qMin<int>(HEIGHT * 0.05, 3);
-
-  const float SVG_H_PF = 0.58;
-  const int SVG_W = qMin<int>(HEIGHT * SVG_H_PF, WIDTH - 2 * SPACE);
-  m_rectSvg = QRect((WIDTH - SVG_W) / 2, SPACE, SVG_W, SVG_W);
-
-  m_rectName = QRect(0, SPACE * 2 + SVG_W, WIDTH, HEIGHT - 3 * SPACE - SVG_W);
+  if (WIDTH >= HEIGHT) {
+    const int ITEM_W = static_cast<int>(HEIGHT * 0.8);
+    m_rectSvg = QRect((WIDTH - ITEM_W) / 2, 0, ITEM_W, ITEM_W);
+  }
+  else {
+    const int ITEM_W = static_cast<int>(WIDTH * 0.8);
+    m_rectSvg = QRect(0, (HEIGHT - ITEM_W) / 2, ITEM_W, ITEM_W);
+  }
 }
 
 void QStateItem::paintEvent(QPaintEvent *)
@@ -37,6 +38,6 @@ void QStateItem::paintEvent(QPaintEvent *)
   render.load(m_bFlagOn ? QStringLiteral(":image/state_on.svg") : QStringLiteral(":image/state_off.svg"));
   render.render(&painter, m_rectSvg);
 
-  painter.setFont(QFont("SimHei", 14));
-  painter.drawText(m_rectName, Qt::AlignCenter, m_strName);
+  painter.setFont(QFont("Times", 11));
+  painter.drawText(m_rectSvg, Qt::AlignCenter, m_strName);
 }
