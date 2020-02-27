@@ -77,7 +77,6 @@ void QPointsShowWidget::paintGL()
   QOpenGLFunctions_2_1 *f_2_1 = QOpenGLContext::currentContext()->versionFunctions<
       QOpenGLFunctions_2_1>();
 
-  ////////////////////////////////////////////////////////
   //glClearColor(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -145,20 +144,22 @@ void QPointsShowWidget::paintGL()
   glTranslatef( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
 
   //if (lighting_enabled_)
-    glEnable(GL_NORMALIZE);//  f_2_1->glPointSize(1.0f);
+    glEnable(GL_NORMALIZE);
 
-    auto points = m_rObjCloudPoints.points();
-    const size_t sizePoints = points->size();
-    f_2_1->glBegin(GL_POINTS);
-    f_2_1->glColor3f(1.0f, 0.0f, 0.0f);
-    for (size_t i = 0; i < sizePoints; ++i) {
-      auto &point = points->at(i);
-      f_2_1->glVertex3f(point.x, point.y, point.z);
-    }
-    f_2_1->glEnd();
+  f_2_1->glPointSize(1.0f);
 
-
-
+  auto points = m_rObjCloudPoints.points();
+  const size_t sizePoints = points->size();
+  f_2_1->glBegin(GL_POINTS);
+  for (size_t i = 0; i < sizePoints; ++i) {
+    auto &point = points->at(i);
+    float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
+    f_2_1->glColor3f(factor,
+                     0.0f,
+                     1.0f - factor);
+    f_2_1->glVertex3f(point.x, point.y, point.z);
+  }
+  f_2_1->glEnd();
 
   //if (lighting_enabled_)
     glDisable(GL_NORMALIZE);
