@@ -1,17 +1,17 @@
-#include "qcloudmainwnd.h"
 
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QGLFormat>
+#include "qcloudmainwnd.h"
 
 int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
 
-  QDesktopWidget *desktop = QApplication::desktop();
-  QRect rect = desktop->rect();
-
+  if (!QGLFormat::hasOpenGL()) {
+    qWarning( "This system has no OpenGL support. Exiting." );
+    return -1;
+  }
   QCloudMainWnd w;
-  w.setGeometry(rect);
-  w.show();
+  w.showMaximized();
   return a.exec();
 }

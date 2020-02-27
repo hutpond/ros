@@ -42,8 +42,6 @@ void QCloudMainWnd::createMenuBar()
   actionExit->setStatusTip(tr("Exit the program"));
   connect(actionExit, &QAction::triggered, this, &QCloudMainWnd::close);
   menuFile->addAction(actionExit);
-
-
 }
 
 void QCloudMainWnd::open()
