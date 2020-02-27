@@ -30,7 +30,8 @@ protected:
   void saveDataToFile(const decision_studio::ads_DecisionData4Debug &);
   void readDataFromFile(const std::string &);
 
-  std::string timeToString(int = 0);
+  std::string timeToString();
+  std::string timeToString(long, long);
   void fileList(const std::string &, std::vector<std::string> &);
 
   void replayIndex(int);

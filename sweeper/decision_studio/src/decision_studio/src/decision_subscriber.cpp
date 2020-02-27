@@ -242,8 +242,7 @@ void DecisionSubscriber::saveDataToFile(const decision_studio::ads_DecisionData4
   if (fileName[fileName.size() - 1] != '/') {
     fileName.push_back('/');
   }
-  fileName += this->timeToString();
-  fileName += ".txt";
+  fileName += this->timeToString(data.header.stamp.sec, data.header.stamp.nsec);
 
   std::ofstream out(fileName.c_str());
   Json::StreamWriterBuilder builder;
@@ -450,7 +449,7 @@ void DecisionSubscriber::readDataFromFile(const std::string &name)
 void DecisionSubscriber::createSavePath(const boost::filesystem::path &path)
 {
   m_fsPath = path;
-  m_fsPath /= this->timeToString(1);
+  m_fsPath /= this->timeToString();
 }
 
 void DecisionSubscriber::setLiving(bool flag)
@@ -511,7 +510,7 @@ int DecisionSubscriber::sizeOfReplayFiles()
   return m_listPlanningFiles.size();
 }
 
-std::string DecisionSubscriber::timeToString(int type)
+std::string DecisionSubscriber::timeToString()
 {
   time_t times = time(NULL);
   struct tm *utcTime = localtime(&times);
@@ -521,30 +520,37 @@ std::string DecisionSubscriber::timeToString(int type)
 
   char time_sz[64] = {0};
   std::string time_str;
-  if (type == 0) {
-    sprintf(time_sz, "%04d%02d%02d_%02d%02d%02d_%3d",
-            utcTime->tm_year + 1900,
-            utcTime->tm_mon + 1,
-            utcTime->tm_mday,
-            utcTime->tm_hour,
-            utcTime->tm_min,
-            utcTime->tm_sec,
-            static_cast<int>((tv.tv_usec / 1000) % 1000)
-            );
-  }
-  else {
-    sprintf(time_sz, "%04d%02d%02d_%02d%02d%02d",
-            utcTime->tm_year + 1900,
-            utcTime->tm_mon + 1,
-            utcTime->tm_mday,
-            utcTime->tm_hour,
-            utcTime->tm_min,
-            utcTime->tm_sec
-            );
-  }
+  sprintf(time_sz, "%04d%02d%02d_%02d%02d%02d",
+          utcTime->tm_year + 1900,
+          utcTime->tm_mon + 1,
+          utcTime->tm_mday,
+          utcTime->tm_hour,
+          utcTime->tm_min,
+          utcTime->tm_sec
+          );
   time_str = time_sz;
 
   return time_str;
+}
+
+std::string DecisionSubscriber::timeToString(long second, long nanosecond)
+{
+  char time_str[64] = {0};
+  time_t times = second;
+  struct tm *utcTime = localtime(&times);
+  sprintf(time_str, "%04d%02d%02d_%02d%02d%02d_%03d",
+          utcTime->tm_year + 1900,
+          utcTime->tm_mon + 1,
+          utcTime->tm_mday,
+          utcTime->tm_hour,
+          utcTime->tm_min,
+          utcTime->tm_sec,
+          static_cast<int>(nanosecond / (1000 * 1000))
+          );
+
+  std::string strFileName = time_str;
+  strFileName += ".txt";
+  return strFileName;
 }
 
 /**

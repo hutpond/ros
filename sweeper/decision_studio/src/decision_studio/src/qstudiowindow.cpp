@@ -6,7 +6,7 @@
 #include <QTextBrowser>
 #include "qcentralwidget.h"
 
-static const char *WND_TITLE = "Decision Studio 1.7";
+static const char *WND_TITLE = "Decision Studio 1.8";
 
 QStudioWindow::QStudioWindow(QWidget *parent) : QMainWindow(parent)
 {
