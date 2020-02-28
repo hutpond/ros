@@ -3,6 +3,8 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QToolBar>
+#include <QDockWidget>
 #include <QFileDialog>
 
 #include "qpointsshowwidget.h"
@@ -12,6 +14,8 @@ QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   : QMainWindow(parent)
 {
   this->createMenuBar();
+  this->createToolBar();
+  this->createDockWidget();
 
   m_pObjPointsData = new QCloudPoints(this);
 
@@ -29,7 +33,7 @@ void QCloudMainWnd::createMenuBar()
 
   // menu
   QMenu *menuFile = menuBar->addMenu(tr("&File"));
-  menuBar->addMenu(tr("&Edit"));
+  QMenu *menuEdit = menuBar->addMenu(tr("&Edit"));
   menuBar->addMenu(tr("&Help"));
 
   // menu file
@@ -42,6 +46,24 @@ void QCloudMainWnd::createMenuBar()
   actionExit->setStatusTip(tr("Exit the program"));
   connect(actionExit, &QAction::triggered, this, &QCloudMainWnd::close);
   menuFile->addAction(actionExit);
+
+  // menu edit
+  QAction *actionReset = new QAction(tr("&Reset"), this);
+  actionOpen->setStatusTip(tr("Reset the state of Cloud Points"));
+  connect(actionReset, &QAction::triggered, this, &QCloudMainWnd::reset);
+  menuEdit->addAction(actionReset);
+}
+
+void QCloudMainWnd::createToolBar()
+{
+  this->addToolBar(Qt::TopToolBarArea, new QToolBar);
+  this->addToolBar(Qt::LeftToolBarArea, new QToolBar);
+}
+
+void QCloudMainWnd::createDockWidget()
+{
+  this->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget(QStringLiteral("HdMap")));
+  this->addDockWidget(Qt::BottomDockWidgetArea, new QDockWidget(QStringLiteral("Console")));
 }
 
 void QCloudMainWnd::open()
@@ -52,4 +74,9 @@ void QCloudMainWnd::open()
   m_pObjPointsData->openFile(fileName);
 
   m_pWdgPointsShow->update();
+}
+
+void QCloudMainWnd::reset()
+{
+  m_pWdgPointsShow->reset();
 }

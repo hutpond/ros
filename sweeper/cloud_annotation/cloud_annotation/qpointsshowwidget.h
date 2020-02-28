@@ -65,6 +65,8 @@ class QPointsShowWidget : public QOpenGLWidget
 public:
   explicit QPointsShowWidget(QCloudPoints &, QWidget *);
 
+  void reset();
+
 protected:
   virtual void initializeGL() override;
   virtual void resizeGL(int w, int h) override;
@@ -122,9 +124,16 @@ protected:
   void setLightComponent(GLenum property, double r, double g, double b, double a = 1.0, unsigned light=0);
   void setLightComponent(GLenum property, double intensity, unsigned light=0);
 
+  // select point
+  void get3Dpos(int, int, QVector3D *);
+
 private:
   QCloudPoints &m_rObjCloudPoints;
 
+  // bkg color
+  QColor bgcolor_;
+
+  // opengl state
   bool ortho_;
 
   GLdouble xRot_, yRot_, zRot_;

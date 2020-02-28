@@ -16,9 +16,14 @@ public:
 
 protected:
   void createMenuBar();
+  void createToolBar();
+  void createDockWidget();
 
 protected slots:
+  // &file
   void open();
+  // &edit
+  void reset();
 
 private:
   QPointsShowWidget *m_pWdgPointsShow;

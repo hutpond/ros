@@ -1,20 +1,21 @@
 #include "qpointsshowwidget.h"
 
 #include <cfloat>
+#include <GL/glu.h>
+#include <GL/glut.h>
 #include <QOpenGLFunctions_2_1>
 #include <QMouseEvent>
+#include <QDebug>
 #include "qcloudpoints.h"
 
 QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
   : m_rObjCloudPoints(points)
   , QOpenGLWidget(parent)
 {
-  ortho_ = true;
+  bgcolor_ = QColor(0xA0, 0xA0, 0xA0, 0x0);
 
-  xRot_ = yRot_ = zRot_ = 0.0;
-  xShift_ = yShift_ = zShift_ = xVPShift_ = yVPShift_ = 0.0;
-  xScale_ = yScale_ = zScale_ = 1.0;
-  zoom_ = 1;
+  ortho_ = false;
+  reset();
 
   setFocusPolicy(Qt::StrongFocus);
   assignMouse(
@@ -36,6 +37,16 @@ QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
   lighting_enabled_ = false;
   disableLighting();
   lights_ = std::vector<Light>(8);
+}
+
+void QPointsShowWidget::reset()
+{
+  xRot_ = yRot_ = zRot_ = 0.0;
+  xShift_ = yShift_ = zShift_ = xVPShift_ = yVPShift_ = 0.0;
+  xScale_ = yScale_ = zScale_ = 1.0;
+  zoom_ = 1;
+
+  this->update();
 }
 
 void QPointsShowWidget::initializeGL()
@@ -78,7 +89,11 @@ void QPointsShowWidget::paintGL()
   QOpenGLFunctions_2_1 *f_2_1 = QOpenGLContext::currentContext()->versionFunctions<
       QOpenGLFunctions_2_1>();
 
-  //glClearColor(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
+  glClearColor(bgcolor_.red() / float(0xFF),
+               bgcolor_.green() / float(0xFF),
+               bgcolor_.blue() / float(0xFF),
+               bgcolor_.alpha() / float(0xFF)
+               );
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode( GL_MODELVIEW );
@@ -167,13 +182,16 @@ void QPointsShowWidget::paintGL()
 
   glMatrixMode( GL_MODELVIEW );
   glPopMatrix();
-
 }
 
 void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
 {
   lastMouseMovePosition_ = e->pos();
   mpressed_ = true;
+
+  QVector3D pp;
+  get3Dpos(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), &pp);
+  qDebug() << pp;
 }
 
 void QPointsShowWidget::mouseReleaseEvent(QMouseEvent *)
@@ -193,7 +211,7 @@ void QPointsShowWidget::mouseMoveEvent(QMouseEvent *e)
 
   QPoint diff = e->pos() - lastMouseMovePosition_;
 
-  setRotationMouse(bstate, 3, diff);
+  setRotationMouse(bstate, 2, diff);
   setScaleMouse(bstate, 5, diff);
   setShiftMouse(bstate, 2, diff);
   this->update();
@@ -206,7 +224,7 @@ void QPointsShowWidget::wheelEvent(QWheelEvent *e)
   if (!mouseEnabled())
     return;
 
-  double accel = 0.1;
+  double accel = 0.15;
 
   constexpr double WHEEL_DELTA = 120;
   double step =  accel * e->delta() / WHEEL_DELTA ;
@@ -248,11 +266,11 @@ void QPointsShowWidget::setRotationMouse(MouseState bstate, double accel, QPoint
   double new_zrot = zRotation();
 
   if ( bstate == xrot_mstate_ )
-    new_xrot = round(xRotation() + relyz);
+    new_xrot = std::fmod(round(xRotation() + relyz), 360);
   if ( bstate == yrot_mstate_ )
-    new_yrot = round(yRotation() + relx);
+    new_yrot = std::fmod(round(yRotation() + relx), 360);
   if ( bstate == zrot_mstate_ )
-    new_zrot = round(zRotation() + relx);
+    new_zrot = std::fmod(round(zRotation() + relx), 360);
 
   setRotation(new_xrot, new_yrot, new_zrot);
 }
@@ -516,4 +534,26 @@ void QPointsShowWidget::setLightComponent(GLenum property, double r, double g, d
 void QPointsShowWidget::setLightComponent(GLenum property, double intensity, unsigned light)
 {
   setLightComponent(property,intensity,intensity,intensity,1.0, lightEnum(light));
+}
+
+void QPointsShowWidget::get3Dpos(int x, int y, QVector3D *pp) {
+    GLint viewport[4];
+    GLdouble modelview[16];
+    GLdouble projection[16];
+    GLfloat winX, winY, winZ;
+    GLdouble object_x, object_y, object_z;
+    int mouse_x = x;
+    int mouse_y = y;
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    winX = (float)mouse_x;
+    winY = (float)viewport[3] - (float)mouse_y - 1.0f;
+    glReadBuffer(GL_BACK);
+    glReadPixels(mouse_x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+    gluUnProject((GLdouble)winX, (GLdouble)winY, (GLdouble)winZ, modelview, projection, viewport, &object_x, &object_y, &object_z);
+    pp->setX(object_x);
+    pp->setY(object_y);
+    pp->setZ(object_z);
 }

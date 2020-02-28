@@ -24,6 +24,14 @@ add_executable(cloud_annotation
   qcloudpoints.h
   qpointsshowwidget.cpp
   qpointsshowwidget.h
+  qdrawbase.cpp
+  qdrawbase.h
+  qaxisplot.cpp
+  qaxisplot.h
+  globalfunction.cpp
+  globalfunction.h
+  gl2ps.c
+  gl2ps.h
   )
 
 target_link_libraries(cloud_annotation PRIVATE Qt5::Widgets)
