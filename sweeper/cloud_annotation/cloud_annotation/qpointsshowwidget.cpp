@@ -17,17 +17,25 @@ QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
   zoom_ = 1;
 
   setFocusPolicy(Qt::StrongFocus);
-  assignMouse(Qt::LeftButton,
-              MouseState(Qt::LeftButton, Qt::ShiftModifier),
-              Qt::LeftButton,
-              MouseState(Qt::LeftButton, Qt::AltModifier),
-              MouseState(Qt::LeftButton, Qt::AltModifier),
-              MouseState(Qt::LeftButton, Qt::AltModifier | Qt::ShiftModifier),
-              MouseState(Qt::LeftButton, Qt::AltModifier | Qt::ControlModifier),
-              MouseState(Qt::LeftButton, Qt::ControlModifier),
-              MouseState(Qt::LeftButton, Qt::ControlModifier)
-              );
+  assignMouse(
+        MouseState(Qt::LeftButton, Qt::ControlModifier),
+        MouseState(Qt::LeftButton, Qt::ShiftModifier),
+        MouseState(Qt::LeftButton, Qt::ControlModifier),
+
+        MouseState(Qt::LeftButton, Qt::AltModifier),
+        MouseState(Qt::LeftButton, Qt::AltModifier),
+        MouseState(Qt::LeftButton, Qt::AltModifier | Qt::ShiftModifier),
+
+        MouseState(Qt::LeftButton, Qt::AltModifier | Qt::ControlModifier),
+
+        Qt::LeftButton,
+        Qt::LeftButton
+        );
   mouse_input_enabled_ = true;
+
+  lighting_enabled_ = false;
+  disableLighting();
+  lights_ = std::vector<Light>(8);
 }
 
 void QPointsShowWidget::initializeGL()
@@ -42,27 +50,20 @@ void QPointsShowWidget::initializeGL()
   f_2_1->glShadeModel(GL_SMOOTH);
 
   // Set up the lights
-  //disableLighting();
+  disableLighting();
 
   GLfloat whiteAmb[4] = {1.0, 1.0, 1.0, 1.0};
-  //setLightShift(0, 0, 3000);
+  setLightShift(0, 0, 3000);
   f_2_1->glEnable(GL_COLOR_MATERIAL);
 
   f_2_1->glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
   f_2_1->glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteAmb);
 
-//  setMaterialComponent(GL_DIFFUSE, 1.0);
-//  setMaterialComponent(GL_SPECULAR, 0.3);
-//  setMaterialComponent(GL_SHININESS, 5.0);
-//  setLightComponent(GL_DIFFUSE, 1.0);
-//  setLightComponent(GL_SPECULAR, 1.0);
-
-//  initializedGL_ = true;
-//  if (renderpixmaprequest_)
-//  {
-//    updateData();
-//    renderpixmaprequest_ = false;
-//  }
+  setMaterialComponent(GL_DIFFUSE, 1.0);
+  setMaterialComponent(GL_SPECULAR, 0.3);
+  setMaterialComponent(GL_SHININESS, 5.0);
+  setLightComponent(GL_DIFFUSE, 1.0);
+  setLightComponent(GL_SPECULAR, 1.0);
 }
 
 void QPointsShowWidget::resizeGL(int w, int h)
@@ -82,7 +83,7 @@ void QPointsShowWidget::paintGL()
 
   glMatrixMode( GL_MODELVIEW );
   glPushMatrix();
-  //applyLights();
+  applyLights();
 
   glRotatef( -90, 1.0, 0.0, 0.0 );
   glRotatef( 0.0, 0.0, 1.0, 0.0 );
@@ -143,7 +144,7 @@ void QPointsShowWidget::paintGL()
   }
   glTranslatef( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
 
-  //if (lighting_enabled_)
+  if (lighting_enabled_)
     glEnable(GL_NORMALIZE);
 
   f_2_1->glPointSize(1.0f);
@@ -155,13 +156,13 @@ void QPointsShowWidget::paintGL()
     auto &point = points->at(i);
     float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
     f_2_1->glColor3f(factor,
-                     0.0f,
+                     factor,
                      1.0f - factor);
     f_2_1->glVertex3f(point.x, point.y, point.z);
   }
   f_2_1->glEnd();
 
-  //if (lighting_enabled_)
+  if (lighting_enabled_)
     glDisable(GL_NORMALIZE);
 
   glMatrixMode( GL_MODELVIEW );
@@ -389,4 +390,130 @@ void QPointsShowWidget::setZoom( double val )
   zoom_ = (val < DBL_EPSILON ) ? DBL_EPSILON : val;
   //updateGL();
   //        emit zoomChanged(val);
+}
+
+void QPointsShowWidget::applyLight(unsigned light)
+{
+  if (lights_[light].unlit)
+    return;
+
+  glEnable(lightEnum(light));
+  glLoadIdentity();
+
+  glRotatef( lights_[light].rot.x()-90, 1.0, 0.0, 0.0 );
+  glRotatef( lights_[light].rot.y()   , 0.0, 1.0, 0.0 );
+  glRotatef( lights_[light].rot.z()   , 0.0, 0.0, 1.0 );
+  GLfloat lightPos[4] = { lights_[light].shift.x(), lights_[light].shift.y(),
+                          lights_[light].shift.z(), 1.0};
+  GLenum le = lightEnum(light);
+  glLightfv(le, GL_POSITION, lightPos);
+}
+
+void QPointsShowWidget::applyLights()
+{
+  glMatrixMode( GL_MODELVIEW );
+  glPushMatrix();
+  for (unsigned i=0; i<8; ++i)
+  {
+    applyLight(i);
+  }
+  glPopMatrix();
+}
+
+void QPointsShowWidget::setLightShift( double xVal, double yVal, double zVal, unsigned light )
+{
+  if (light>7)
+    return;
+  lights_[light].shift.setX(xVal);
+  lights_[light].shift.setY(yVal);
+  lights_[light].shift.setZ(zVal);
+}
+
+void QPointsShowWidget::enableLighting(bool val)
+{
+  if (lighting_enabled_ == val)
+    return;
+
+  lighting_enabled_ = val;
+  makeCurrent();
+  if (val)
+    glEnable(GL_LIGHTING);
+  else
+    glDisable(GL_LIGHTING);
+}
+
+void QPointsShowWidget::disableLighting(bool val)
+{
+  enableLighting(!val);
+}
+
+GLenum QPointsShowWidget::lightEnum(unsigned idx)
+{
+  switch(idx) {
+  case 0:
+        return GL_LIGHT0;
+  case 1:
+        return GL_LIGHT1;
+  case 2:
+        return GL_LIGHT2;
+  case 3:
+        return GL_LIGHT3;
+  case 4:
+        return GL_LIGHT4;
+  case 5:
+        return GL_LIGHT5;
+  case 6:
+        return GL_LIGHT6;
+  case 7:
+        return GL_LIGHT7;
+  default:
+        return GL_LIGHT0;
+  }
+}
+
+/**
+  Sets GL material properties
+*/
+void QPointsShowWidget::setMaterialComponent(GLenum property, double r, double g, double b, double a)
+{
+  GLfloat rgba[4] = {(GLfloat)r, (GLfloat)g, (GLfloat)b, (GLfloat)a};
+  makeCurrent();
+  glMaterialfv(GL_FRONT_AND_BACK, property, rgba);
+}
+
+/**
+  This function is for convenience. It sets GL material properties with the equal r,g,b values
+  and a blending alpha with value 1.0
+*/
+void QPointsShowWidget::setMaterialComponent(GLenum property, double intensity)
+{
+  setMaterialComponent(property,intensity,intensity,intensity,1.0);
+}
+
+/**
+  Sets GL shininess
+*/
+void QPointsShowWidget::setShininess(double exponent)
+{
+  makeCurrent();
+  glMaterialf(GL_FRONT, GL_SHININESS, exponent);
+}
+
+/**
+  Sets GL light properties for light 'light'
+*/
+void QPointsShowWidget::setLightComponent(GLenum property, double r, double g, double b, double a, unsigned light)
+{
+  GLfloat rgba[4] = {(GLfloat)r, (GLfloat)g, (GLfloat)b, (GLfloat)a};
+  makeCurrent();
+  glLightfv(lightEnum(light), property, rgba);
+}
+
+/**
+  This function is for convenience. It sets GL light properties with the equal r,g,b values
+  and a blending alpha with value 1.0
+*/
+void QPointsShowWidget::setLightComponent(GLenum property, double intensity, unsigned light)
+{
+  setLightComponent(property,intensity,intensity,intensity,1.0, lightEnum(light));
 }

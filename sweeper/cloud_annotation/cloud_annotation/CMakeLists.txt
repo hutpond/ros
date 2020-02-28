@@ -14,10 +14,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(/usr/include/pcl-1.8)
 include_directories(/usr/include/eigen3)
 
-include_directories(./qwtplot3d/include)
-
-link_directories(./qwtplot3d/lib)
-
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 
 add_executable(cloud_annotation
@@ -35,7 +31,6 @@ target_link_libraries(cloud_annotation PRIVATE Qt5::OpenGL)
 target_link_libraries(cloud_annotation PRIVATE boost_system)
 target_link_libraries(cloud_annotation PRIVATE pcl_common)
 target_link_libraries(cloud_annotation PRIVATE pcl_io)
-target_link_libraries(cloud_annotation PRIVATE qwtplot3d)
 target_link_libraries(cloud_annotation PRIVATE z)
 target_link_libraries(cloud_annotation PRIVATE GL)
 target_link_libraries(cloud_annotation PRIVATE GLU)

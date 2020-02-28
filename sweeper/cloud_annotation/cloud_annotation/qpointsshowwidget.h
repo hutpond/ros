@@ -101,10 +101,26 @@ protected:
 
   double zoom() const { return zoom_;} //!< Returns zoom (0..inf)
 
+  // mouse
   void assignMouse(MouseState xrot, MouseState yrot, MouseState zrot,
                    MouseState xscale, MouseState yscale, MouseState zscale,
                    MouseState zoom, MouseState xshift, MouseState yshift);
   bool mouseEnabled() const {return mouse_input_enabled_;}
+
+  // light
+  void applyLight(unsigned);
+  void applyLights();
+  GLenum lightEnum(unsigned);
+  void setLightShift( double xVal, double yVal, double zVal, unsigned int idx = 0 );
+  void enableLighting(bool val = true);
+  void disableLighting(bool val = true);
+
+  //
+  void setMaterialComponent(GLenum property, double r, double g, double b, double a = 1.0);
+  void setMaterialComponent(GLenum property, double intensity);
+  void setShininess(double exponent);
+  void setLightComponent(GLenum property, double r, double g, double b, double a = 1.0, unsigned light=0);
+  void setLightComponent(GLenum property, double intensity, unsigned light=0);
 
 private:
   QCloudPoints &m_rObjCloudPoints;
@@ -132,6 +148,17 @@ private:
   yshift_mstate_;
 
   bool mouse_input_enabled_;
+
+  // lignt
+  struct Light
+  {
+    Light() : unlit(true){}
+    bool unlit;
+    QVector3D rot;
+    QVector3D shift;
+  };
+  std::vector<Light> lights_;
+  bool lighting_enabled_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H
