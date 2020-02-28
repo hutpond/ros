@@ -327,6 +327,7 @@ QVariantList QDataManager::getCleanningRoute()
 
 bool QDataManager::setCleaningTask(const QString &siteName, const QString &routeName)
 {
+  qDebug() << "set task: " << siteName << routeName;
   return m_pApi4Hmi->m_lpApi->SetTask(siteName.toStdString(), routeName.toStdString());
 }
 

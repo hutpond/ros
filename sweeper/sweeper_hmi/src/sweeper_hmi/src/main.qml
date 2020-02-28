@@ -102,8 +102,16 @@ Window {
     visible: false
 
     onStartAutoPilot: {
-      userPage.visible = false
-      autoPilot.visible = true
+      if (taskSelect.taskList.length == 0 || taskSelect.taskList[0].length === 0 ||
+          taskSelect.taskList[0][0] === "") {
+        visible = false
+        currentItem = taskSelect
+        currentItem.visible = true
+      }
+      else {
+        userPage.visible = false
+        autoPilot.visible = true
+      }
     }
 
     onVisibleChanged: {

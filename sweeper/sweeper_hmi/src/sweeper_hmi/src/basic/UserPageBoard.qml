@@ -67,7 +67,7 @@ Item {
 
   function setSelectedTask(task) {
     if (task.length === 4) {
-      imageArea.source = task[2]
+      imageArea.source = "file://" + task[2]
     }
   }
 }

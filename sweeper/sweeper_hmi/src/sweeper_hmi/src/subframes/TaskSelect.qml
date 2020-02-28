@@ -36,7 +36,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item1.setSelected(false)
@@ -60,7 +60,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 1
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -85,7 +85,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 2
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -110,7 +110,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 3
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -134,7 +134,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 4
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -158,7 +158,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 5
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -182,7 +182,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 6
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -206,7 +206,7 @@ Item {
 
     onSelectedTask: {
       var index = pageIndex * sizePerPage + 7
-      if (index < taskSize) {
+      if (index < taskList.length) {
         currentTask = taskList[index]
 
         item0.setSelected(false)
@@ -250,10 +250,10 @@ Item {
       hoverEnabled: true
 
       onClicked: {
-        if (currentItem.length >= 2) {
-          DataManager.setCleaningTask(currentItem[0], currentItem[1])
+        if (currentTask.length >= 2) {
+          DataManager.setCleaningTask(currentTask[0], currentTask[1])
         }
-        taskSlecked(currentItem)
+        taskSlecked(currentTask)
       }
     }
 
@@ -262,19 +262,6 @@ Item {
   onVisibleChanged: {
     if (visible && taskList.length === 0) {
       taskList = DataManager.getCleanningRoute()
-      taskSize = taskList.length
-      var remainder = (taskList.length % 8);
-      if (remainder !== 0) {
-        for (var i = 0; i < 8 - remainder; ++i) {
-          var task = []
-          task.push("")
-          task.push("")
-          task.push("")
-          task.push("")
-          taskList.push(task)
-        }
-      }
-
       setPage(0)
     }
   }
@@ -284,31 +271,46 @@ Item {
 
     var taskIndex = sizePerPage * pageIndex
 
-    if (taskIndex + 7 < taskList.length) {
+    if (taskIndex < taskList.length) {
       item0.setTaskItem(taskList[taskIndex])
       item0.setSelected(true)
-
-      item1.setTaskItem(taskList[taskIndex + 1])
-      item1.setSelected(false)
-
-      item2.setTaskItem(taskList[taskIndex + 2])
-      item2.setSelected(false)
-
-      item3.setTaskItem(taskList[taskIndex + 3])
-      item3.setSelected(false)
-
-      item4.setTaskItem(taskList[taskIndex + 4])
-      item4.setSelected(false)
-
-      item5.setTaskItem(taskList[taskIndex + 5])
-      item5.setSelected(false)
-
-      item6.setTaskItem(taskList[taskIndex + 6])
-      item6.setSelected(false)
-
-      item7.setTaskItem(taskList[taskIndex + 7])
-      item7.setSelected(false)
+      currentTask = taskList[taskIndex]
     }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item1.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item2.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item3.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item4.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item5.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item6.setTaskItem(taskList[taskIndex])
+    }
+    ++ taskIndex
+    if (taskIndex < taskList.length) {
+      item7.setTaskItem(taskList[taskIndex])
+    }
+    item1.setSelected(false)
+    item2.setSelected(false)
+    item3.setSelected(false)
+    item4.setSelected(false)
+    item5.setSelected(false)
+    item6.setSelected(false)
+    item7.setSelected(false)
 
     update()
   }

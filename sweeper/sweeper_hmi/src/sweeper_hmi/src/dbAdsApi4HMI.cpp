@@ -1458,7 +1458,7 @@ sleep 2s
         virtual std::vector<SiteJobItem> GetSiteJobsInfo(void)
         {
             std::vector<SiteJobItem> siteJobs;
-            ros::ServiceClient client = s_nodeHandles[0]->serviceClient<srv_get_site_job_info>("srv_get_site_job_info");
+            ros::ServiceClient client = s_nodeHandles[0]->serviceClient<srv_get_site_job_info>("/srv_get_site_job_info");
             srv_get_site_job_info srv;
             srv.request.type = "all";
             if (client.call(srv))
@@ -1477,6 +1477,12 @@ sleep 2s
             {
                 ROS_ERROR("Failed to call service srv_get_site_job_info");
             }
+
+            for(auto& it : siteJobs)
+            {
+                std::cout << it << std::endl << std::endl;
+            }
+
             return siteJobs;
         }
 
@@ -1614,6 +1620,21 @@ sleep 2s
 
 namespace dbAds
 {
+    std::ostream & operator<<(std::ostream &out, const SiteJobItem &obj)
+    {
+        return out << "作业地点:" << obj.m_SiteName << std::endl
+            << "作业任务:" << obj.m_JobName << std::endl
+            //<< "地图名字:" << obj.m_MapName << std::endl
+            //<< "地图文件:" << obj.m_MapFilePath << std::endl
+            << "路边文件"  << obj.m_RoadSideFilePath << std::endl
+            << "图   片:" << obj.m_ImgFilePath << std::endl
+            //<< "规划里程:" << obj.m_PlanMileage << std::endl
+            //<< "作业时间:" << obj.m_EstimateTime << std::endl
+            //<< "规划面积:" << obj.m_PlanArea << std::endl
+            //<< "参考线点:" << size 
+            ;
+    }
+
     std::ostream& operator <<(std::ostream&out, IApi4HMI::CFaultInfo& fault)
     {
         //return out;

@@ -28,6 +28,8 @@ namespace dbAds
 
         //自动驾驶页面：参考线经纬度，左、右车道线经纬度
         std::string m_RoadSideFilePath;
+        
+        friend std::ostream & operator<<(std::ostream &out, const SiteJobItem &obj);
     };
 
     class ISelfCheck

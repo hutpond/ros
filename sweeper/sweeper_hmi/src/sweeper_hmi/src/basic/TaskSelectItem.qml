@@ -75,11 +75,11 @@ Item {
   }
 
   function setTaskItem(task) {
-    if (tast.length >= 3) {
+    if (task.length >= 3) {
       taskItem = task
       siteName.text = task[0]
       routeName.text = task[1]
-      routeImage.source = task[2]
+      routeImage.source = "file://" + task[2]
     }
   }
 
