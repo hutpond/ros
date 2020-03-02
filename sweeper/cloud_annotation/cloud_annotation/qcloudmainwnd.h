@@ -5,6 +5,7 @@
 
 class QPointsShowWidget;
 class QCloudPoints;
+class QTextBrowser;
 
 class QCloudMainWnd : public QMainWindow
 {
@@ -25,8 +26,12 @@ protected slots:
   // &edit
   void reset();
 
+  void onPlotMessage(const QString &);
+
 private:
   QPointsShowWidget *m_pWdgPointsShow;
   QCloudPoints *m_pObjPointsData;
+
+  QTextBrowser *m_pTextBrowser;
 };
 #endif // QCLOUDMAINWND_H

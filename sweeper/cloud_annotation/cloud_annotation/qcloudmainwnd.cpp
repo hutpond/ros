@@ -6,6 +6,7 @@
 #include <QToolBar>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QTextBrowser>
 
 #include "qpointsshowwidget.h"
 #include "qcloudpoints.h"
@@ -21,6 +22,8 @@ QCloudMainWnd::QCloudMainWnd(QWidget *parent)
 
   m_pWdgPointsShow = new QPointsShowWidget(*m_pObjPointsData, this);
   this->setCentralWidget(m_pWdgPointsShow);
+
+  connect(m_pWdgPointsShow, &QPointsShowWidget::message, this, &QCloudMainWnd::onPlotMessage);
 }
 
 QCloudMainWnd::~QCloudMainWnd()
@@ -63,7 +66,12 @@ void QCloudMainWnd::createToolBar()
 void QCloudMainWnd::createDockWidget()
 {
   this->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget(QStringLiteral("HdMap")));
-  this->addDockWidget(Qt::BottomDockWidgetArea, new QDockWidget(QStringLiteral("Console")));
+
+  // bottom
+  m_pTextBrowser = new QTextBrowser;
+  QDockWidget *dockWidget = new QDockWidget(QStringLiteral("Console"));
+  dockWidget->setWidget(m_pTextBrowser);
+  this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
 }
 
 void QCloudMainWnd::open()
@@ -79,4 +87,11 @@ void QCloudMainWnd::open()
 void QCloudMainWnd::reset()
 {
   m_pWdgPointsShow->reset();
+}
+
+void QCloudMainWnd::onPlotMessage(const QString &msg)
+{
+  QString text = m_pTextBrowser->toPlainText() + "\n" + msg;
+  m_pTextBrowser->setPlainText(text);
+//  m_pTextBrowser
 }

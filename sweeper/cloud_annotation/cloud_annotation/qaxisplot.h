@@ -4,6 +4,9 @@
 #include "qdrawbase.h"
 #include "globalfunction.h"
 
+#include <vector>
+#include <QFont>
+
 class QAxisPlot : public QDrawBase
 {
 public:

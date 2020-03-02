@@ -62,10 +62,15 @@ private:
 
 class QPointsShowWidget : public QOpenGLWidget
 {
+  Q_OBJECT
+
 public:
   explicit QPointsShowWidget(QCloudPoints &, QWidget *);
 
   void reset();
+
+signals:
+  void message(const QString &);
 
 protected:
   virtual void initializeGL() override;
@@ -127,6 +132,10 @@ protected:
   // select point
   void get3Dpos(int, int, QVector3D *);
 
+  // axis
+  void drawCoordinates();
+  void getAlphbetDotMatrix(char, GLubyte []);
+
 private:
   QCloudPoints &m_rObjCloudPoints;
 
@@ -168,6 +177,9 @@ private:
   };
   std::vector<Light> lights_;
   bool lighting_enabled_;
+
+  // text
+  GLuint base_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H
