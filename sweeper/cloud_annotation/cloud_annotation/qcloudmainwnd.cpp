@@ -91,7 +91,11 @@ void QCloudMainWnd::reset()
 
 void QCloudMainWnd::onPlotMessage(const QString &msg)
 {
-  QString text = m_pTextBrowser->toPlainText() + "\n" + msg;
+  QString text = m_pTextBrowser->toPlainText();
+  if (!text.isEmpty()) {
+    text.push_back('\n');
+  }
+  text += msg;
   m_pTextBrowser->setPlainText(text);
-//  m_pTextBrowser
+  m_pTextBrowser->moveCursor(QTextCursor::End);
 }

@@ -69,7 +69,7 @@ GLint drawDevicePixels(GLsizei width, GLsizei height,
 }
 
 GLint drawDeviceText(const char* str, const char* fontname, int fontsize,
-                     QVector3D pos, QColor, ANCHOR align, double gap)
+                     QVector3D pos, QColor clr, ANCHOR align, double gap)
 {
   double vp[3];
 
@@ -81,8 +81,8 @@ GLint drawDeviceText(const char* str, const char* fontname, int fontsize,
   GLdouble bcol[4];
   glGetDoublev(GL_COLOR_CLEAR_VALUE, bcol);
 
-  //glColor4d(color.r, color.g, color.b, color.a);
-  //glClearColor(color.r, color.g, color.b, color.a);
+//  glColor4d(clr.red(), clr.green(), clr.blue(), clr.alpha());
+//  glClearColor(clr.red(), clr.green(), clr.blue(), clr.alpha());
 
   GLint ret = GL2PS_SUCCESS;
 

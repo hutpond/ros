@@ -19,7 +19,10 @@ void QCloudPoints::openFile(const QString &fileName)
   begin_point_ = pcl::PointXYZ(1000, 1000, 1000);
   end_point_ = pcl::PointXYZ(-1000, -1000, -1000);
   const size_t size_points = cloud_points_->size();
+  select_flag_.resize(size_points);
   for (size_t i = 0; i < size_points; ++i) {
+    select_flag_[i].reset(new int);
+    *select_flag_[i] = 0;
     auto &point = cloud_points_->at(i);
 
     if (begin_point_.x > point.x) {

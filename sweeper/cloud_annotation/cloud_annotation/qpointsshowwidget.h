@@ -3,6 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <QVector3D>
+#include <QMatrix4x4>
 
 class QCloudPoints;
 
@@ -131,10 +132,17 @@ protected:
 
   // select point
   void get3Dpos(int, int, QVector3D *);
+  void selectObject(GLint, GLint);
+  void draw(GLenum);
 
   // axis
   void drawCoordinates();
   void getAlphbetDotMatrix(char, GLubyte []);
+  void drawText(const QString &);
+
+  // world <=> view
+  bool worldToView(const QVector3D &, QVector3D &);
+  bool viewToWorld(const QVector3D &,  QVector3D &);
 
 private:
   QCloudPoints &m_rObjCloudPoints;
@@ -180,6 +188,10 @@ private:
 
   // text
   GLuint base_;
+
+  // matrix
+  QMatrix4x4 matrix_model_;
+  QMatrix4x4 matrix_project_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H
