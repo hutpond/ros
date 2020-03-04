@@ -134,6 +134,8 @@ protected:
   void get3Dpos(int, int, QVector3D *);
   void selectObject(GLint, GLint);
   void draw(GLenum);
+  void selectRay(int, int, QVector3D &, QVector3D &);
+  void selectPoints(int, int);
 
   // axis
   void drawCoordinates();
@@ -190,8 +192,12 @@ private:
   GLuint base_;
 
   // matrix
-  QMatrix4x4 matrix_model_;
-  QMatrix4x4 matrix_project_;
+  QMatrix4x4 model_matrix_;
+  QMatrix4x4 projection_matrix_;
+  GLdouble modelview[16];
+  GLdouble projection[16];
+  QVector3D ray_start_;
+  QVector3D ray_direction_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H
