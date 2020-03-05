@@ -60,6 +60,11 @@ private:
 };
 
 
+enum class ClickType {
+  None = -1,
+  RoadSide = 0,
+  CrossWalk
+};
 
 class QPointsShowWidget : public QOpenGLWidget
 {
@@ -68,7 +73,17 @@ class QPointsShowWidget : public QOpenGLWidget
 public:
   explicit QPointsShowWidget(QCloudPoints &, QWidget *);
 
-  void reset();
+public slots:
+  void onReset();
+  void onShowFront();
+  void onShowBack();
+  void onShowTop();
+  void onShowBottom();
+  void onShowLeft();
+  void onShowRight();
+
+  void onRoadSideClck();
+  void onCrossWalkClck();
 
 signals:
   void message(const QString &);
@@ -131,7 +146,7 @@ protected:
   void setLightComponent(GLenum property, double intensity, unsigned light=0);
 
   // select point
-  void get3Dpos(int, int, QVector3D *);
+  bool getClickedPoint(int, int, QVector3D &);
   void selectObject(GLint, GLint);
   void draw(GLenum);
   void selectRay(int, int, QVector3D &, QVector3D &);
@@ -145,7 +160,6 @@ protected:
   // world <=> view
   bool worldToView(const QVector3D &, QVector3D &);
   bool viewToWorld(const QVector3D &,  QVector3D &);
-  bool viewToWorldWithMatrix(const QVector3D &,  QVector3D &);
 
 private:
   QCloudPoints &m_rObjCloudPoints;
@@ -193,13 +207,13 @@ private:
   GLuint base_;
 
   // matrix
-  QMatrix4x4 model_matrix_;
-  QMatrix4x4 project_matrix_;
   GLint viewport_[4];
   GLdouble modelview_[16];
   GLdouble projection_[16];
-  QVector3D ray_start_;
-  QVector3D ray_direction_;
+
+  // click point
+  ClickType click_type_;
+  QMap<ClickType, QList<QVector3D>> clicked_points_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H

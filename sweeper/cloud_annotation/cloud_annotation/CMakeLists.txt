@@ -24,11 +24,8 @@ add_executable(cloud_annotation
   qcloudpoints.h
   qpointsshowwidget.cpp
   qpointsshowwidget.h
-  globalfunction.cpp
-  globalfunction.h
-  gl2ps.c
-  gl2ps.h
-  )
+  cloud_annotation.qrc
+)
 
 target_link_libraries(cloud_annotation PRIVATE Qt5::Widgets)
 target_link_libraries(cloud_annotation PRIVATE Qt5::OpenGL)

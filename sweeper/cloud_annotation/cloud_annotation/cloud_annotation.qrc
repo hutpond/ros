@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/ccViewIso1.png</file>
+        <file>image/ccViewXneg.png</file>
+        <file>image/ccViewXpos.png</file>
+        <file>image/ccViewYneg.png</file>
+        <file>image/ccViewYpos.png</file>
+        <file>image/ccViewZneg.png</file>
+        <file>image/ccViewZpos.png</file>
+    </qresource>
+</RCC>

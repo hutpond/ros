@@ -16,6 +16,8 @@ public:
   ~QCloudMainWnd();
 
 protected:
+  virtual void resizeEvent(QResizeEvent *) final;
+
   void createMenuBar();
   void createToolBar();
   void createDockWidget();

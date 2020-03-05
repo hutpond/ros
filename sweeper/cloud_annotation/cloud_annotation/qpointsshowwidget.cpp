@@ -18,7 +18,7 @@ QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
   bgcolor_ = QColor(0xA0, 0xA0, 0xA0, 0x0);
 
   ortho_ = true;
-  reset();
+  onReset();
 
   setFocusPolicy(Qt::StrongFocus);
   assignMouse(
@@ -40,16 +40,78 @@ QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
   lighting_enabled_ = false;
   disableLighting();
   lights_ = std::vector<Light>(8);
+
+  click_type_ = ClickType::None;
 }
 
-void QPointsShowWidget::reset()
+void QPointsShowWidget::onReset()
 {
-  xRot_ = yRot_ = zRot_ = 0.0;
+  xRot_ = 30;
+  yRot_ = 0;
+  zRot_ = -30;
+
   xShift_ = yShift_ = zShift_ = xVPShift_ = yVPShift_ = 0.0;
   xScale_ = yScale_ = zScale_ = 1.0;
-  zoom_ = 1;
-
+  zoom_ = 1.2;
   this->update();
+}
+
+void QPointsShowWidget::onShowFront()
+{
+  xRot_ = 0;
+  yRot_ = 0;
+  zRot_ = 0;
+  this->update();
+}
+
+void QPointsShowWidget::onShowBack()
+{
+  xRot_ = 0;
+  yRot_ = 0;
+  zRot_ = 180;
+  this->update();
+}
+
+void QPointsShowWidget::onShowTop()
+{
+  xRot_ = 90;
+  yRot_ = 0;
+  zRot_ = 0;
+  this->update();
+}
+
+void QPointsShowWidget::onShowBottom()
+{
+  xRot_ = -90;
+  yRot_ = 0;
+  zRot_ = 0;
+  this->update();
+}
+
+void QPointsShowWidget::onShowLeft()
+{
+  xRot_ = 0;
+  yRot_ = 0;
+  zRot_ = 90;
+  this->update();
+}
+
+void QPointsShowWidget::onShowRight()
+{
+  xRot_ = 0;
+  yRot_ = 0;
+  zRot_ = -90;
+  this->update();
+}
+
+void QPointsShowWidget::onRoadSideClck()
+{
+  click_type_ = ClickType::RoadSide;
+}
+
+void QPointsShowWidget::onCrossWalkClck()
+{
+  click_type_ = ClickType::CrossWalk;
 }
 
 void QPointsShowWidget::initializeGL()
@@ -84,12 +146,12 @@ void QPointsShowWidget::resizeGL(int w, int h)
 
 void QPointsShowWidget::paintGL()
 {
-//  glClearColor(bgcolor_.red() / float(0xFF),
-//               bgcolor_.green() / float(0xFF),
-//               bgcolor_.blue() / float(0xFF),
-//               bgcolor_.alpha() / float(0xFF)
-//               );
-//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(bgcolor_.red() / float(0xFF),
+               bgcolor_.green() / float(0xFF),
+               bgcolor_.blue() / float(0xFF),
+               bgcolor_.alpha() / float(0xFF)
+               );
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //  glMatrixMode( GL_MODELVIEW );
 //  glPushMatrix();
@@ -115,7 +177,7 @@ void QPointsShowWidget::paintGL()
 //  glFlush();
 }
 
-void QPointsShowWidget::draw(GLenum mode)
+void QPointsShowWidget::draw(GLenum)
 {
   pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
   pcl::PointXYZ end = m_rObjCloudPoints.end_point();
@@ -134,10 +196,8 @@ void QPointsShowWidget::draw(GLenum mode)
   float height = qMax<float>(1, this->height());
   float ratio = height / width;
 
-  if (mode != GL_SELECT) {
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-  }
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
 
   glScalef( zoom_ * xScale_, zoom_ * yScale_, zoom_ * zScale_ );
   glRotatef( xRot_ -90, 1.0, 0.0, 0.0 );
@@ -146,26 +206,15 @@ void QPointsShowWidget::draw(GLenum mode)
   glTranslatef(xShift_ - center.x, yShift_ - center.y, zShift_ - center.z);
   glTranslatef(xShift_, yShift_, zShift_);
 
-  model_matrix_.setToIdentity();
-  model_matrix_.rotate( xRot_-90, 1.0, 0.0, 0.0 );
-  model_matrix_.rotate( yRot_, 0.0, 1.0, 0.0 );
-  model_matrix_.rotate( zRot_, 0.0, 0.0, 1.0 );
-  model_matrix_.scale( zoom_ * xScale_, zoom_ * yScale_, zoom_ * zScale_ );
-  model_matrix_.translate(xShift_ - center.x, yShift_ - center.y, zShift_ - center.z);
-  model_matrix_.translate(xShift_, yShift_, zShift_);
-
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  project_matrix_.setToIdentity();
 
   if (radius > 0.1) {
     if (ortho_) {
       glOrtho(-radius, radius, -radius * ratio, radius * ratio, 0, 20 * radius);
-      project_matrix_.ortho(-radius, radius, -radius * ratio, radius * ratio, 0, 20 * radius);
     }
     else {
       glFrustum( -radius, radius, -radius * ratio, radius * ratio, 5 * radius, 25 * radius );
-      project_matrix_.frustum( -radius, radius, -radius * ratio, radius * ratio, 5 * radius, 25 * radius );
     }
   }
   else {
@@ -177,46 +226,33 @@ void QPointsShowWidget::draw(GLenum mode)
     }
   }
   glTranslatef( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
-  project_matrix_.translate( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
 
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview_);
   glGetDoublev(GL_PROJECTION_MATRIX, projection_);
 
-//  if (lighting_enabled_)
-//    glEnable(GL_NORMALIZE);
-
-  glPointSize(1.0f);
-
-//  glInitNames();
-//  glPushName(0);
-
   /// cloud points
-  auto &flags = m_rObjCloudPoints.selectFlag();
+  glPointSize(1.0f);
   auto points = m_rObjCloudPoints.points();
   const size_t sizePoints = points->size();
   glBegin(GL_POINTS);
   for (size_t i = 0; i < sizePoints; ++i) {
-    if (mode == GL_SELECT) {
-      glLoadName(i+1);
-    }
     auto &point = points->at(i);
     float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
     glColor3f(factor,
               factor,
               1.0f - factor);
-
-    QVector3D pt3d = QVector3D(point.x, point.y, point.z);
-    if (ray_direction_.length() > 0) {
-      double dis = pt3d.distanceToLine(ray_start_, ray_direction_);
-      if (dis < 0.01) {
-        glColor3f(1.0, 0, 0);
-      }
-    }
-    if (*flags[i] == 1) {
-      glColor3f(1.0, 0, 0);
-    }
-
     glVertex3f(point.x, point.y, point.z);
+  }
+  glEnd();
+
+  /// clicked points
+  glPointSize(5.0f);
+  glBegin(GL_POINTS);
+  glColor3f(1.0, 0, 0);
+  for (const auto &clicked_points : clicked_points_) {
+    for (const auto &point : clicked_points) {
+      glVertex3f(point.x(), point.y(), point.z());
+    }
   }
   glEnd();
 }
@@ -296,7 +332,7 @@ void QPointsShowWidget::drawText(const QString &text)
   glRasterPos3d(beg.x, beg.y, beg.z);
 
   QVector3D pos(beg.x, beg.y, beg.z);
-  drawDeviceText("East", "Courier", 20, pos, QColor(255, 0, 0), BottomLeft, 0);
+  //drawDeviceText("East", "Courier", 20, pos, QColor(255, 0, 0), BottomLeft, 0);
 
   glAlphaFunc(func,v);
   glEnable(GL_ALPHA_TEST);
@@ -398,32 +434,13 @@ void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
 {
   lastMouseMovePosition_ = e->localPos();
 
-  pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
-  pcl::PointXYZ end = m_rObjCloudPoints.end_point();
-  QString text = QString("{(%1, %2, %3) (%4, %5, %6)}   ").
-      arg(beg.x, 0, 'f', 2).arg(beg.y, 0, 'f', 2).arg(beg.z, 0, 'f', 2).
-      arg(end.x, 0, 'f', 2).arg(end.y, 0, 'f', 2).arg(end.z, 0, 'f', 2);
-
-  QVector3D winpos(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), 0);
-  QVector3D worldpos;
-  this->viewToWorld(winpos, worldpos);
-  text += QString("{(%1, %2, %3) (%4, %5, %6)}   ").
-      arg(winpos.x(), 0, 'f', 0).arg(winpos.y(), 0, 'f', 0).arg(winpos.z(), 0, 'f', 1).
-      arg(worldpos.x(), 0, 'f', 2).arg(worldpos.y(), 0, 'f', 2).arg(worldpos.z(), 0, 'f', 2);
-
-  winpos.setZ(1.0);
-  this->viewToWorld(winpos, worldpos);
-  text += QString("{(%1, %2, %3) (%4, %5, %6)}").
-      arg(winpos.x(), 0, 'f', 0).arg(winpos.y(), 0, 'f', 0).arg(winpos.z(), 0, 'f', 1).
-      arg(worldpos.x(), 0, 'f', 2).arg(worldpos.y(), 0, 'f', 2).arg(worldpos.z(), 0, 'f', 2);
-
-  //emit message(text);
-
-  this->selectRay(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(),
-                  ray_start_, ray_direction_);
-  this->update();
-  //  selectObject(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
-//  selectPoints(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
+  if (click_type_ != ClickType::None) {
+    QVector3D point;
+    if (this->getClickedPoint(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), point)) {
+      clicked_points_[click_type_].push_back(point);
+      this->update();
+    }
+  }
   mpressed_ = true;
 }
 
@@ -796,39 +813,32 @@ bool QPointsShowWidget::viewToWorld(const QVector3D &view, QVector3D &world)
   return (res == GL_FALSE) ? false : true;
 }
 
-bool QPointsShowWidget::viewToWorldWithMatrix(const QVector3D &view, QVector3D &world)
+bool QPointsShowWidget::getClickedPoint(int x, int y, QVector3D &click_pt)
 {
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  QVector4D view4D = QVector4D(
-        view.x() / float(viewport[2]),
-      (viewport[3] - view.y()) / float(viewport[3]),
-      view.z(), 1.0);
+  QVector3D start;
+  QVector3D direction;
+  this->selectRay(x, y, start, direction);
+  if (direction.length() <= 1e-6) {
+    return false;
+  }
 
-  QMatrix4x4 matrix = model_matrix_ * project_matrix_;
-  QVector4D world4D = matrix.map(view4D);
-  world = world4D.toVector3D();
-  return true;
-}
+  bool has_clicked = false;
+  click_pt.setZ(-10000);
+  auto points = m_rObjCloudPoints.points();
+  const int size_point = points->size();
+  for (int i = 0; i < size_point; ++i) {
+    auto &point = points->at(i);
+    QVector3D v3d_point(point.x, point.y, point.z);
+    double distance = v3d_point.distanceToLine(start, direction);
+    if (distance < 0.02) {
+      has_clicked = true;
+      if (click_pt.z() < point.z) {
+        click_pt = v3d_point;
+      }
+    }
+  }
 
-
-void QPointsShowWidget::get3Dpos(int x, int y, QVector3D *pp) {
-    GLint viewport[4];
-    GLfloat winX, winY, winZ;
-    GLdouble object_x, object_y, object_z;
-    int mouse_x = x;
-    int mouse_y = y;
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    winX = (float)mouse_x;
-    winY = (float)viewport[3] - (float)mouse_y - 1.0f;
-    glReadBuffer(GL_BACK);
-
-    glReadPixels(mouse_x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
-    gluUnProject((GLdouble)winX, (GLdouble)winY, (GLdouble)winZ, modelview_, projection_, viewport, &object_x, &object_y, &object_z);
-    pp->setX(object_x);
-    pp->setY(object_y);
-    pp->setZ(object_z);
+  return has_clicked;
 }
 
 void QPointsShowWidget::getAlphbetDotMatrix(char ch, GLubyte dot[]) {
