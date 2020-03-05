@@ -82,9 +82,9 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent *) override;
   virtual void wheelEvent(QWheelEvent *) override;
 
-  void setRotationMouse(MouseState bstate, double accel, QPoint diff);
-  void setScaleMouse(MouseState bstate, double accel, QPoint diff);
-  void setShiftMouse(MouseState bstate, double accel, QPoint diff);
+  void setRotationMouse(MouseState bstate, double accel, QPointF diff);
+  void setScaleMouse(MouseState bstate, double accel, QPointF diff);
+  void setShiftMouse(MouseState bstate, double accel, QPointF diff);
 
   void	setRotation( double xVal, double yVal, double zVal );
   void	setShift( double xVal, double yVal, double zVal );
@@ -145,6 +145,7 @@ protected:
   // world <=> view
   bool worldToView(const QVector3D &, QVector3D &);
   bool viewToWorld(const QVector3D &,  QVector3D &);
+  bool viewToWorldWithMatrix(const QVector3D &,  QVector3D &);
 
 private:
   QCloudPoints &m_rObjCloudPoints;
@@ -162,7 +163,7 @@ private:
   GLdouble xVPShift_, yVPShift_;
 
   // mouse
-  QPoint lastMouseMovePosition_;
+  QPointF lastMouseMovePosition_;
   bool mpressed_;
 
   MouseState xrot_mstate_,
@@ -193,9 +194,10 @@ private:
 
   // matrix
   QMatrix4x4 model_matrix_;
-  QMatrix4x4 projection_matrix_;
-  GLdouble modelview[16];
-  GLdouble projection[16];
+  QMatrix4x4 project_matrix_;
+  GLint viewport_[4];
+  GLdouble modelview_[16];
+  GLdouble projection_[16];
   QVector3D ray_start_;
   QVector3D ray_direction_;
 };

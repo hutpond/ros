@@ -6,6 +6,7 @@
 #include <QOpenGLFunctions_2_1>
 #include <QMouseEvent>
 #include <QDebug>
+#include <QMatrix4x4>
 #include "qcloudpoints.h"
 #include "globalfunction.h"
 #include "gl2ps.h"
@@ -53,67 +54,65 @@ void QPointsShowWidget::reset()
 
 void QPointsShowWidget::initializeGL()
 {
-  QOpenGLFunctions_2_1 *f_2_1 = QOpenGLContext::currentContext()->versionFunctions<
-      QOpenGLFunctions_2_1>();
-
-  f_2_1->initializeOpenGLFunctions();
-
-  f_2_1->glEnable(GL_BLEND);
-  f_2_1->glEnable(GL_DEPTH_TEST);
-  f_2_1->glShadeModel(GL_SMOOTH);
+  //glEnable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+//  glShadeModel(GL_SMOOTH);
 
   // Set up the lights
-  disableLighting();
+//  disableLighting();
 
-  GLfloat whiteAmb[4] = {1.0, 1.0, 1.0, 1.0};
-  setLightShift(0, 0, 3000);
-  f_2_1->glEnable(GL_COLOR_MATERIAL);
+//  GLfloat whiteAmb[4] = {1.0, 1.0, 1.0, 1.0};
+//  setLightShift(0, 0, 3000);
+//  glEnable(GL_COLOR_MATERIAL);
 
-  f_2_1->glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-  f_2_1->glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteAmb);
+//  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+//  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteAmb);
 
-  setMaterialComponent(GL_DIFFUSE, 1.0);
-  setMaterialComponent(GL_SPECULAR, 0.3);
-  setMaterialComponent(GL_SHININESS, 5.0);
-  setLightComponent(GL_DIFFUSE, 1.0);
-  setLightComponent(GL_SPECULAR, 1.0);
+//  setMaterialComponent(GL_DIFFUSE, 1.0);
+//  setMaterialComponent(GL_SPECULAR, 0.3);
+//  setMaterialComponent(GL_SHININESS, 5.0);
+//  setLightComponent(GL_DIFFUSE, 1.0);
+//  setLightComponent(GL_SPECULAR, 1.0);
 }
 
 void QPointsShowWidget::resizeGL(int w, int h)
 {
   glViewport(0, 0, w, h);
+  glGetIntegerv(GL_VIEWPORT, viewport_);
 }
 
 void QPointsShowWidget::paintGL()
 {
-  glClearColor(bgcolor_.red() / float(0xFF),
-               bgcolor_.green() / float(0xFF),
-               bgcolor_.blue() / float(0xFF),
-               bgcolor_.alpha() / float(0xFF)
-               );
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//  glClearColor(bgcolor_.red() / float(0xFF),
+//               bgcolor_.green() / float(0xFF),
+//               bgcolor_.blue() / float(0xFF),
+//               bgcolor_.alpha() / float(0xFF)
+//               );
+//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glMatrixMode( GL_MODELVIEW );
-  glPushMatrix();
-  applyLights();
+//  glMatrixMode( GL_MODELVIEW );
+//  glPushMatrix();
+//  applyLights();
 
 //  glRotatef( -90, 1.0, 0.0, 0.0 );
 //  glRotatef( 0.0, 0.0, 1.0, 0.0 );
 //  glRotatef( 0.0, 0.0, 0.0, 1.0 );
 
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   this->draw(GL_RENDER);
 
   /// axis
   this->drawCoordinates();
 
-  if (lighting_enabled_)
-    glDisable(GL_NORMALIZE);
+//  if (lighting_enabled_)
+//    glDisable(GL_NORMALIZE);
 
 //  glMatrixMode( GL_MODELVIEW );
 //  glPopMatrix();
 
-  glFlush();
+//  glFlush();
 }
 
 void QPointsShowWidget::draw(GLenum mode)
@@ -122,71 +121,74 @@ void QPointsShowWidget::draw(GLenum mode)
   pcl::PointXYZ end = m_rObjCloudPoints.end_point();
 
   pcl::PointXYZ center = pcl::PointXYZ(
-        beg.x + (end.x - beg.x) / 2,
-        beg.y + (end.y - beg.y) / 2,
-        beg.z + (end.z - beg.z) / 2
+        (end.x + beg.x) / 2,
+        (end.y + beg.y) / 2,
+        (end.z + beg.z) / 2
         );
   double radius = std::sqrt(
         (end.x - beg.x) * (end.x - beg.x) +
         (end.y - beg.y) * (end.y - beg.y) +
         (end.z - beg.z) * (end.z - beg.z)
         );
+  float width = qMax<float>(1, this->width());
+  float height = qMax<float>(1, this->height());
+  float ratio = height / width;
 
-  glMatrixMode( GL_MODELVIEW );
-  glLoadIdentity();
-
-  glRotatef( xRot_-90, 1.0, 0.0, 0.0 );
-  glRotatef( yRot_, 0.0, 1.0, 0.0 );
-  glRotatef( zRot_, 0.0, 0.0, 1.0 );
+  if (mode != GL_SELECT) {
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+  }
 
   glScalef( zoom_ * xScale_, zoom_ * yScale_, zoom_ * zScale_ );
-
+  glRotatef( xRot_ -90, 1.0, 0.0, 0.0 );
+  glRotatef( yRot_, 0.0, 1.0, 0.0 );
+  glRotatef( zRot_, 0.0, 0.0, 1.0 );
   glTranslatef(xShift_ - center.x, yShift_ - center.y, zShift_ - center.z);
   glTranslatef(xShift_, yShift_, zShift_);
 
-  // matrix model
   model_matrix_.setToIdentity();
-  model_matrix_.rotate(xRot_-90, 1.0, 0.0, 0.0);
-  model_matrix_.rotate(yRot_, 0.0, 1.0, 0.0);
-  model_matrix_.rotate(zRot_, 0.0, 0.0, 1.0);
-  model_matrix_.scale(zoom_ * xScale_, zoom_ * yScale_, zoom_ * zScale_);
+  model_matrix_.rotate( xRot_-90, 1.0, 0.0, 0.0 );
+  model_matrix_.rotate( yRot_, 0.0, 1.0, 0.0 );
+  model_matrix_.rotate( zRot_, 0.0, 0.0, 1.0 );
+  model_matrix_.scale( zoom_ * xScale_, zoom_ * yScale_, zoom_ * zScale_ );
   model_matrix_.translate(xShift_ - center.x, yShift_ - center.y, zShift_ - center.z);
   model_matrix_.translate(xShift_, yShift_, zShift_);
 
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  projection_matrix_.setToIdentity();
+  project_matrix_.setToIdentity();
 
   if (radius > 0.1) {
     if (ortho_) {
-      glOrtho(-radius, +radius, -radius, +radius, 0, 20 * radius);
-      projection_matrix_.ortho(-radius, +radius, -radius, +radius, 0, 20 * radius);
+      glOrtho(-radius, radius, -radius * ratio, radius * ratio, 0, 20 * radius);
+      project_matrix_.ortho(-radius, radius, -radius * ratio, radius * ratio, 0, 20 * radius);
     }
     else {
-      glFrustum( -radius, +radius, -radius, +radius, 5 * radius, 20 * radius );
-      projection_matrix_.frustum( -radius, +radius, -radius, +radius, 5 * radius, 20 * radius );
+      glFrustum( -radius, radius, -radius * ratio, radius * ratio, 5 * radius, 25 * radius );
+      project_matrix_.frustum( -radius, radius, -radius * ratio, radius * ratio, 5 * radius, 25 * radius );
     }
   }
   else {
     if (ortho_) {
       glOrtho( -1.0, 1.0, -1.0, 1.0, 10.0, 100.0 );
-      projection_matrix_.ortho( -1.0, 1.0, -1.0, 1.0, 10.0, 100.0 );
     }
     else {
       glFrustum( -1.0, 1.0, -1.0, 1.0, 10.0, 100.0 );
-      projection_matrix_.frustum( -1.0, 1.0, -1.0, 1.0, 10.0, 100.0 );
     }
   }
   glTranslatef( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
-  projection_matrix_.translate( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
+  project_matrix_.translate( xVPShift_ * 2 * radius , yVPShift_ * 2 * radius , -7 * radius );
 
-  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-  glGetDoublev(GL_PROJECTION_MATRIX, projection);
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview_);
+  glGetDoublev(GL_PROJECTION_MATRIX, projection_);
 
-  if (lighting_enabled_)
-    glEnable(GL_NORMALIZE);
+//  if (lighting_enabled_)
+//    glEnable(GL_NORMALIZE);
 
   glPointSize(1.0f);
+
+//  glInitNames();
+//  glPushName(0);
 
   /// cloud points
   auto &flags = m_rObjCloudPoints.selectFlag();
@@ -195,7 +197,7 @@ void QPointsShowWidget::draw(GLenum mode)
   glBegin(GL_POINTS);
   for (size_t i = 0; i < sizePoints; ++i) {
     if (mode == GL_SELECT) {
-      glPushName(i+1);
+      glLoadName(i+1);
     }
     auto &point = points->at(i);
     float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
@@ -206,7 +208,7 @@ void QPointsShowWidget::draw(GLenum mode)
     QVector3D pt3d = QVector3D(point.x, point.y, point.z);
     if (ray_direction_.length() > 0) {
       double dis = pt3d.distanceToLine(ray_start_, ray_direction_);
-      if (dis < 1) {
+      if (dis < 0.01) {
         glColor3f(1.0, 0, 0);
       }
     }
@@ -215,10 +217,6 @@ void QPointsShowWidget::draw(GLenum mode)
     }
 
     glVertex3f(point.x, point.y, point.z);
-
-    if (mode == GL_SELECT) {
-      glPopName();
-    }
   }
   glEnd();
 }
@@ -314,8 +312,8 @@ void QPointsShowWidget::selectObject(GLint x, GLint y)
 
   //进入选择模式
   glRenderMode(GL_SELECT);
-  glInitNames();  //初始化名字栈
-  glPushName(0);  //在名字栈中放入一个初始化名字，这里为‘0’
+//  glInitNames();  //初始化名字栈
+//  glPushName(0);  //在名字栈中放入一个初始化名字，这里为‘0’
 
   glMatrixMode(GL_PROJECTION);    //进入投影阶段准备拾取
   glPushMatrix();     //保存以前的投影矩阵
@@ -324,12 +322,12 @@ void QPointsShowWidget::selectObject(GLint x, GLint y)
   gluPickMatrix(
         x,           // 设定我们选择框的大小，建立拾取矩阵，就是上面的公式
         viewport[3]-y,    // viewport[3]保存的是窗口的高度，窗口坐标转换为OpenGL坐标（OPengl窗口坐标系）
-        4,4,              // 选择框的大小为2，2
+        5,5,              // 选择框的大小为2，2
         viewport          // 视口信息，包括视口的起始位置和大小
       );
 
   //投影处理，并归一化处理
-  glOrtho(-2, 2, -2, 2, -2, 2);     //拾取矩阵乘以投影矩阵，这样就可以让选择框放大为和视体一样大
+  //glOrtho(-2, 2, -2, 2, -2, 2);     //拾取矩阵乘以投影矩阵，这样就可以让选择框放大为和视体一样大
 
   draw(GL_SELECT);    // 该函数中渲染物体，并且给物体设定名字
   glMatrixMode(GL_PROJECTION);
@@ -339,7 +337,7 @@ void QPointsShowWidget::selectObject(GLint x, GLint y)
   if(hits > 0) {
     QString text = QString::number(hits);
     int modelselect = 0; //离眼睛最近的物件的名字（ID）
-    int n=0; double minz=selectBuff[1];
+    int n=0; double minz=(double)selectBuff[1] / UINT_MAX;
     for(int i=1;i<hits;i++)
     {
       if (selectBuff[1+i*4]<minz) {n=i;minz=selectBuff[1+i*4];}
@@ -352,47 +350,33 @@ void QPointsShowWidget::selectObject(GLint x, GLint y)
 
 void QPointsShowWidget::selectRay(int x, int y, QVector3D &start, QVector3D &dir)
 {
-  // matrix
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-
   // ray
   GLdouble winX = x;
-  GLdouble winY = (viewport[3] - y);
+  GLdouble winY = (viewport_[3] - y);
   GLdouble posX, posY, posZ;
 
   //获取像素对应的前裁剪面的点坐标
   float winZ = 0;
-  bool bResult = gluUnProject(winX, winY, winZ, modelview, projection, viewport,
+  bool bResult = gluUnProject(winX, winY, winZ, modelview_, projection_, viewport_,
                               &posX, &posY, &posZ);
   start = QVector3D(posX, posY, posZ);
 
-  glReadPixels( winX, viewport[3] - winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-  bResult = gluUnProject(winX, winY, winZ, modelview, projection, viewport,
-                         &posX, &posY, &posZ);
-
   //获取像素对应的后裁剪面的点坐标
   winZ = 1.0;
-  bResult = gluUnProject(winX, winY, winZ, modelview, projection, viewport,
+  bResult = gluUnProject(winX, winY, winZ, modelview_, projection_, viewport_,
                          &posX, &posY, &posZ);
-  dir = QVector3D(posX, posY, posZ) - start;
+  dir = QVector3D(posX, posY, posZ);
+  dir = dir - start;
+  dir.normalize();
 }
 
 void QPointsShowWidget::selectPoints(int x, int y)
 {
-  QRect rect(0, 0, 5, 5);
-  rect.moveCenter(QPoint(x, y));
-
-  GLdouble modelMatrix[16];
-  GLdouble projMatrix[16];
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
-  float *data = model_matrix_.data();
-  float *data2 = projection_matrix_.data();
-  for (int i = 0; i < 16; ++i) {
-    modelMatrix[i] = data[i];
-    projMatrix[i] = data2[i];
-  }
+
+  QRect rect(0, 0, 5, 5);
+  rect.moveCenter(QPoint(x, y));
 
   GLdouble winx, winy, winz;
   auto &flags = m_rObjCloudPoints.selectFlag();
@@ -400,7 +384,7 @@ void QPointsShowWidget::selectPoints(int x, int y)
   const size_t sizePoints = points->size();
   for (size_t i = 0; i < sizePoints; ++i) {
     auto &point = points->at(i);
-    int res = gluProject(point.x, point.x, point.z, modelMatrix, projMatrix, viewport,
+    int res = gluProject(point.x, point.x, point.z, modelview_, projection_, viewport,
                          &winx, &winy, &winz);
     if (res == GL_FALSE) {
       continue;
@@ -412,13 +396,34 @@ void QPointsShowWidget::selectPoints(int x, int y)
 
 void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
 {
-  lastMouseMovePosition_ = e->pos();
+  lastMouseMovePosition_ = e->localPos();
 
-//  this->selectRay(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(),
-//                  ray_start_, ray_direction_);
-//  this->update();
-//  selectObject(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
-  selectPoints(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
+  pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
+  pcl::PointXYZ end = m_rObjCloudPoints.end_point();
+  QString text = QString("{(%1, %2, %3) (%4, %5, %6)}   ").
+      arg(beg.x, 0, 'f', 2).arg(beg.y, 0, 'f', 2).arg(beg.z, 0, 'f', 2).
+      arg(end.x, 0, 'f', 2).arg(end.y, 0, 'f', 2).arg(end.z, 0, 'f', 2);
+
+  QVector3D winpos(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), 0);
+  QVector3D worldpos;
+  this->viewToWorld(winpos, worldpos);
+  text += QString("{(%1, %2, %3) (%4, %5, %6)}   ").
+      arg(winpos.x(), 0, 'f', 0).arg(winpos.y(), 0, 'f', 0).arg(winpos.z(), 0, 'f', 1).
+      arg(worldpos.x(), 0, 'f', 2).arg(worldpos.y(), 0, 'f', 2).arg(worldpos.z(), 0, 'f', 2);
+
+  winpos.setZ(1.0);
+  this->viewToWorld(winpos, worldpos);
+  text += QString("{(%1, %2, %3) (%4, %5, %6)}").
+      arg(winpos.x(), 0, 'f', 0).arg(winpos.y(), 0, 'f', 0).arg(winpos.z(), 0, 'f', 1).
+      arg(worldpos.x(), 0, 'f', 2).arg(worldpos.y(), 0, 'f', 2).arg(worldpos.z(), 0, 'f', 2);
+
+  //emit message(text);
+
+  this->selectRay(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(),
+                  ray_start_, ray_direction_);
+  this->update();
+  //  selectObject(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
+//  selectPoints(lastMouseMovePosition_.x(), lastMouseMovePosition_.y());
   mpressed_ = true;
 }
 
@@ -437,11 +442,11 @@ void QPointsShowWidget::mouseMoveEvent(QMouseEvent *e)
 
   MouseState bstate(e->buttons(), e->modifiers());
 
-  QPoint diff = e->pos() - lastMouseMovePosition_;
+  QPointF diff = e->localPos() - lastMouseMovePosition_;
 
   setRotationMouse(bstate, 1.5, diff);
-  setScaleMouse(bstate, 5, diff);
-  setShiftMouse(bstate, 2, diff);
+  setScaleMouse(bstate, 2, diff);
+  setShiftMouse(bstate, 1, diff);
   this->update();
 
   lastMouseMovePosition_ = e->pos();
@@ -480,7 +485,7 @@ void QPointsShowWidget::assignMouse(MouseState xrot, MouseState yrot, MouseState
   yshift_mstate_ =  yshift;
 }
 
-void QPointsShowWidget::setRotationMouse(MouseState bstate, double accel, QPoint diff)
+void QPointsShowWidget::setRotationMouse(MouseState bstate, double accel, QPointF diff)
 {
   // Rotation
   double w = qMax<double>(1,width());
@@ -503,7 +508,7 @@ void QPointsShowWidget::setRotationMouse(MouseState bstate, double accel, QPoint
   setRotation(new_xrot, new_yrot, new_zrot);
 }
 
-void QPointsShowWidget::setScaleMouse(MouseState bstate, double accel, QPoint diff)
+void QPointsShowWidget::setScaleMouse(MouseState bstate, double accel, QPointF diff)
 {
   // Scale
   double w = qMax<double>(1,width());
@@ -529,7 +534,7 @@ void QPointsShowWidget::setScaleMouse(MouseState bstate, double accel, QPoint di
     setZoom(qMax<double>(0.0,zoom() - relyz));
 }
 
-void QPointsShowWidget::setShiftMouse(MouseState bstate, double accel, QPoint diff)
+void QPointsShowWidget::setShiftMouse(MouseState bstate, double accel, QPointF diff)
 {
   // Shift
   double w = qMax<double>(1,width());
@@ -772,27 +777,40 @@ bool QPointsShowWidget::worldToView(const QVector3D &world, QVector3D &view)
   double x, y, z;
   int res = gluProject(
         world.x(), world.y(), world.z(),
-        modelview, projection, viewport,
+        modelview_, projection_, viewport,
         &x, &y, &z);
-  view = QVector3D(x, y, z);
+  view = QVector3D(x, viewport[3] - y, z);
 
   return (res == GL_FALSE) ? false : true;
 }
 
 bool QPointsShowWidget::viewToWorld(const QVector3D &view, QVector3D &world)
 {
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-
   double x, y, z;
   int res = gluUnProject(
-        view.x(), view.y(), view.z(),
-        modelview, projection, viewport,
-        &x, &y, &z);
+        view.x(), viewport_[3] - view.y(), view.z(),
+      modelview_, projection_, viewport_,
+      &x, &y, &z);
   world = QVector3D(x, y, z);
 
   return (res == GL_FALSE) ? false : true;
 }
+
+bool QPointsShowWidget::viewToWorldWithMatrix(const QVector3D &view, QVector3D &world)
+{
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  QVector4D view4D = QVector4D(
+        view.x() / float(viewport[2]),
+      (viewport[3] - view.y()) / float(viewport[3]),
+      view.z(), 1.0);
+
+  QMatrix4x4 matrix = model_matrix_ * project_matrix_;
+  QVector4D world4D = matrix.map(view4D);
+  world = world4D.toVector3D();
+  return true;
+}
+
 
 void QPointsShowWidget::get3Dpos(int x, int y, QVector3D *pp) {
     GLint viewport[4];
@@ -807,7 +825,7 @@ void QPointsShowWidget::get3Dpos(int x, int y, QVector3D *pp) {
     glReadBuffer(GL_BACK);
 
     glReadPixels(mouse_x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
-    gluUnProject((GLdouble)winX, (GLdouble)winY, (GLdouble)winZ, modelview, projection, viewport, &object_x, &object_y, &object_z);
+    gluUnProject((GLdouble)winX, (GLdouble)winY, (GLdouble)winZ, modelview_, projection_, viewport, &object_x, &object_y, &object_z);
     pp->setX(object_x);
     pp->setY(object_y);
     pp->setZ(object_z);
