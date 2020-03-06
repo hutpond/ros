@@ -6,25 +6,34 @@
 #include <QSharedPointer>
 #include<pcl/io/io.h>
 
+#include "GlobalDefine.h"
+
 class QCloudPoints : public QObject
 {
   Q_OBJECT
 public:
-  explicit QCloudPoints(QObject *parent = nullptr);
+  static QCloudPoints & instance();
 
   void openFile(const QString &);
   pcl::PointCloud<pcl::PointXYZ>::ConstPtr points() const;
   pcl::PointXYZ begin_point() {return begin_point_;}
   pcl::PointXYZ end_point() {return end_point_;}
-  QVector<QSharedPointer<int>> & selectFlag() {return select_flag_;}
+
+  void addRoadSegment(int);
+  void addRoad(int, int);
+  void addRoadPoint(int, int, int, const Point &);
 
 signals:
+
+private:
+  explicit QCloudPoints(QObject *parent = nullptr);
 
 private:
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_points_;
   pcl::PointXYZ begin_point_;
   pcl::PointXYZ end_point_;
-  QVector<QSharedPointer<int>> select_flag_;
+
+  HdMap hdmap_;
 };
 
 #endif // QCLOUDPOINTS_H

@@ -11,12 +11,12 @@
 
 #include "qpointsshowwidget.h"
 #include "qcloudpoints.h"
+#include "QHdMapWidget.h"
 
 QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   : QMainWindow(parent)
 {
-  m_pObjPointsData = new QCloudPoints(this);
-  m_pWdgPointsShow = new QPointsShowWidget(*m_pObjPointsData, this);
+  m_pWdgPointsShow = new QPointsShowWidget(this);
 
   this->setCentralWidget(m_pWdgPointsShow);
 
@@ -101,13 +101,22 @@ void QCloudMainWnd::createToolBar()
 
   // left clicked
   QActionGroup *group= new QActionGroup(this);
-  action = leftToolBar->addAction(QStringLiteral("路沿"), m_pWdgPointsShow, &QPointsShowWidget::onRoadSideClck);
+  action = leftToolBar->addAction(QIcon(":/image/none_clicked.svg"), "",
+                                  m_pWdgPointsShow, &QPointsShowWidget::onNoneClick);
+  action->setToolTip(QStringLiteral("取消选点操作"));
+  action->setCheckable(true);
+  action->setChecked(true);
+  group->addAction(action);
+
+  action = leftToolBar->addAction(QIcon(":/image/road_side.svg"), "",
+                                  m_pWdgPointsShow, &QPointsShowWidget::onRoadSideClick);
   action->setToolTip(QStringLiteral("选择路边沿点"));
   action->setCheckable(true);
   action->setChecked(false);
   group->addAction(action);
 
-  action = leftToolBar->addAction(QStringLiteral(""), m_pWdgPointsShow, &QPointsShowWidget::onCrossWalkClck);
+  action = leftToolBar->addAction(QIcon(":/image/crosswalk.svg"), "",
+                                  m_pWdgPointsShow, &QPointsShowWidget::onCrossWalkClick);
   action->setToolTip(QStringLiteral("选择人行道位置"));
   action->setCheckable(true);
   action->setChecked(false);
@@ -118,11 +127,13 @@ void QCloudMainWnd::createToolBar()
 
 void QCloudMainWnd::createDockWidget()
 {
-  this->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget(QStringLiteral("HdMap")));
+  QDockWidget *dockWidget = new QDockWidget(QStringLiteral("HdMap"));
+  dockWidget->setWidget(new QHdMapWidget);
+  this->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
 
   // bottom
   m_pTextBrowser = new QTextBrowser;
-  QDockWidget *dockWidget = new QDockWidget(QStringLiteral("Console"));
+  dockWidget = new QDockWidget(QStringLiteral("Console"));
   dockWidget->setWidget(m_pTextBrowser);
   this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
 }
@@ -132,7 +143,7 @@ void QCloudMainWnd::open()
   QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
 
-  m_pObjPointsData->openFile(fileName);
+  QCloudPoints::instance().openFile(fileName);
   m_pWdgPointsShow->update();
 }
 

@@ -8,12 +8,10 @@
 #include <QDebug>
 #include <QMatrix4x4>
 #include "qcloudpoints.h"
-#include "globalfunction.h"
 #include "gl2ps.h"
 
-QPointsShowWidget::QPointsShowWidget(QCloudPoints &points, QWidget *parent)
-  : m_rObjCloudPoints(points)
-  , QOpenGLWidget(parent)
+QPointsShowWidget::QPointsShowWidget(QWidget *parent)
+  : QOpenGLWidget(parent)
 {
   bgcolor_ = QColor(0xA0, 0xA0, 0xA0, 0x0);
 
@@ -104,12 +102,17 @@ void QPointsShowWidget::onShowRight()
   this->update();
 }
 
-void QPointsShowWidget::onRoadSideClck()
+void QPointsShowWidget::onNoneClick()
+{
+  click_type_ = ClickType::None;
+}
+
+void QPointsShowWidget::onRoadSideClick()
 {
   click_type_ = ClickType::RoadSide;
 }
 
-void QPointsShowWidget::onCrossWalkClck()
+void QPointsShowWidget::onCrossWalkClick()
 {
   click_type_ = ClickType::CrossWalk;
 }
@@ -179,8 +182,8 @@ void QPointsShowWidget::paintGL()
 
 void QPointsShowWidget::draw(GLenum)
 {
-  pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
-  pcl::PointXYZ end = m_rObjCloudPoints.end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
+  pcl::PointXYZ end = QCloudPoints::instance().end_point();
 
   pcl::PointXYZ center = pcl::PointXYZ(
         (end.x + beg.x) / 2,
@@ -232,7 +235,7 @@ void QPointsShowWidget::draw(GLenum)
 
   /// cloud points
   glPointSize(1.0f);
-  auto points = m_rObjCloudPoints.points();
+  auto points = QCloudPoints::instance().points();
   const size_t sizePoints = points->size();
   glBegin(GL_POINTS);
   for (size_t i = 0; i < sizePoints; ++i) {
@@ -259,8 +262,8 @@ void QPointsShowWidget::draw(GLenum)
 
 void QPointsShowWidget::drawCoordinates()
 {
-  pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
-  pcl::PointXYZ end = m_rObjCloudPoints.end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
+  pcl::PointXYZ end = QCloudPoints::instance().end_point();
 
   glLineWidth(1.0f);
 
@@ -315,8 +318,8 @@ void QPointsShowWidget::drawCoordinates()
 
 void QPointsShowWidget::drawText(const QString &text)
 {
-  pcl::PointXYZ beg = m_rObjCloudPoints.begin_point();
-  pcl::PointXYZ end = m_rObjCloudPoints.end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
+  pcl::PointXYZ end = QCloudPoints::instance().end_point();
 
   GLboolean b;
   GLint func;
@@ -415,8 +418,7 @@ void QPointsShowWidget::selectPoints(int x, int y)
   rect.moveCenter(QPoint(x, y));
 
   GLdouble winx, winy, winz;
-  auto &flags = m_rObjCloudPoints.selectFlag();
-  auto points = m_rObjCloudPoints.points();
+  auto points = QCloudPoints::instance().points();
   const size_t sizePoints = points->size();
   for (size_t i = 0; i < sizePoints; ++i) {
     auto &point = points->at(i);
@@ -425,8 +427,6 @@ void QPointsShowWidget::selectPoints(int x, int y)
     if (res == GL_FALSE) {
       continue;
     }
-
-    *flags[i] = (rect.contains(winx, winy)) ? 1 : 0;
   }
 }
 
@@ -824,7 +824,7 @@ bool QPointsShowWidget::getClickedPoint(int x, int y, QVector3D &click_pt)
 
   bool has_clicked = false;
   click_pt.setZ(-10000);
-  auto points = m_rObjCloudPoints.points();
+  auto points = QCloudPoints::instance().points();
   const int size_point = points->size();
   for (int i = 0; i < size_point; ++i) {
     auto &point = points->at(i);

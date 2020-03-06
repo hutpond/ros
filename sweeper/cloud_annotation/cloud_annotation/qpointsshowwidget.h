@@ -5,8 +5,6 @@
 #include <QVector3D>
 #include <QMatrix4x4>
 
-class QCloudPoints;
-
 class MouseState
 {
 public:
@@ -71,7 +69,7 @@ class QPointsShowWidget : public QOpenGLWidget
   Q_OBJECT
 
 public:
-  explicit QPointsShowWidget(QCloudPoints &, QWidget *);
+  explicit QPointsShowWidget(QWidget *);
 
 public slots:
   void onReset();
@@ -82,8 +80,9 @@ public slots:
   void onShowLeft();
   void onShowRight();
 
-  void onRoadSideClck();
-  void onCrossWalkClck();
+  void onNoneClick();
+  void onRoadSideClick();
+  void onCrossWalkClick();
 
 signals:
   void message(const QString &);
@@ -162,8 +161,6 @@ protected:
   bool viewToWorld(const QVector3D &,  QVector3D &);
 
 private:
-  QCloudPoints &m_rObjCloudPoints;
-
   // bkg color
   QColor bgcolor_;
 

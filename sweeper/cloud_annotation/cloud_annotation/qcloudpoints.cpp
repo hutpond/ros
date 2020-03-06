@@ -4,6 +4,12 @@
 #include<pcl/io/ply_io.h>
 #include<pcl/point_types.h>
 
+QCloudPoints & QCloudPoints::instance()
+{
+  static QCloudPoints points;
+  return points;
+}
+
 QCloudPoints::QCloudPoints(QObject *parent) : QObject(parent)
 {
   cloud_points_.reset(new pcl::PointCloud<pcl::PointXYZ>);
@@ -19,10 +25,7 @@ void QCloudPoints::openFile(const QString &fileName)
   begin_point_ = pcl::PointXYZ(1000, 1000, 1000);
   end_point_ = pcl::PointXYZ(-1000, -1000, -1000);
   const size_t size_points = cloud_points_->size();
-  select_flag_.resize(size_points);
   for (size_t i = 0; i < size_points; ++i) {
-    select_flag_[i].reset(new int);
-    *select_flag_[i] = 0;
     auto &point = cloud_points_->at(i);
 
     if (begin_point_.x > point.x) {
@@ -50,4 +53,44 @@ void QCloudPoints::openFile(const QString &fileName)
 pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
 {
   return cloud_points_;
+}
+
+void QCloudPoints::addRoadSegment(int type)
+{
+  RoadSegment road_segment;
+  road_segment.type = type;
+  hdmap_.road_segments.push_back(road_segment);
+}
+
+void QCloudPoints::addRoad(int index_segment, int index_road)
+{
+  if (index_segment < 0 && index_segment >= hdmap_.road_segments.size()) {
+    return;
+  }
+
+  auto &roads = hdmap_.road_segments[index_segment].roads;
+  Road road;
+  roads[index_road] = road;
+}
+
+void QCloudPoints::addRoadPoint(int index_segment, int index_road, int type, const Point &point)
+{
+  auto &segments = hdmap_.road_segments;
+  if (index_segment < 0 || index_segment >= segments.size()) {
+    return;
+  }
+
+  auto &roads = segments[index_segment].roads;
+  auto road = roads.find(index_road);
+  if (road != roads.end()) {
+    if (type == Road::LEFT) {
+      road->second.left_side.push_back(point);
+    }
+    else if (type == Road::RIGHT) {
+      road->second.right_side.push_back(point);
+    }
+    else {
+      road->second.reference.push_back(point);
+    }
+  }
 }

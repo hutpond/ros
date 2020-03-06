@@ -24,6 +24,11 @@ add_executable(cloud_annotation
   qcloudpoints.h
   qpointsshowwidget.cpp
   qpointsshowwidget.h
+  QHdMapWidget.cpp
+  QHdMapWidget.h
+  QAddSegmentDialog.cpp
+  QAddSegmentDialog.h
+  QAddSegmentDialog.ui
   cloud_annotation.qrc
 )
 
