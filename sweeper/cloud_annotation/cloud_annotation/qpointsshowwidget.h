@@ -4,6 +4,7 @@
 #include <QOpenGLWidget>
 #include <QVector3D>
 #include <QMatrix4x4>
+#include "GlobalDefine.h"
 
 class MouseState
 {
@@ -80,12 +81,11 @@ public slots:
   void onShowLeft();
   void onShowRight();
 
-  void onNoneClick();
-  void onRoadSideClick();
-  void onCrossWalkClick();
+  void onClickedSelect();
 
 signals:
   void message(const QString &);
+  void clickedPoint(const Point &);
 
 protected:
   virtual void initializeGL() override;
@@ -209,8 +209,7 @@ private:
   GLdouble projection_[16];
 
   // click point
-  ClickType click_type_;
-  QMap<ClickType, QList<QVector3D>> clicked_points_;
+  bool click_flag_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H

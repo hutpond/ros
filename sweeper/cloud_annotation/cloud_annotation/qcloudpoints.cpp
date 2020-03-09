@@ -55,42 +55,12 @@ pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
   return cloud_points_;
 }
 
-void QCloudPoints::addRoadSegment(int type)
+void QCloudPoints::setHdMap(const HdMap &hdmap)
 {
-  RoadSegment road_segment;
-  road_segment.type = type;
-  hdmap_.road_segments.push_back(road_segment);
+  hdmap_ = hdmap;
 }
 
-void QCloudPoints::addRoad(int index_segment, int index_road)
+const HdMap & QCloudPoints::hdMap() const
 {
-  if (index_segment < 0 && index_segment >= hdmap_.road_segments.size()) {
-    return;
-  }
-
-  auto &roads = hdmap_.road_segments[index_segment].roads;
-  Road road;
-  roads[index_road] = road;
-}
-
-void QCloudPoints::addRoadPoint(int index_segment, int index_road, int type, const Point &point)
-{
-  auto &segments = hdmap_.road_segments;
-  if (index_segment < 0 || index_segment >= segments.size()) {
-    return;
-  }
-
-  auto &roads = segments[index_segment].roads;
-  auto road = roads.find(index_road);
-  if (road != roads.end()) {
-    if (type == Road::LEFT) {
-      road->second.left_side.push_back(point);
-    }
-    else if (type == Road::RIGHT) {
-      road->second.right_side.push_back(point);
-    }
-    else {
-      road->second.reference.push_back(point);
-    }
-  }
+  return hdmap_;
 }

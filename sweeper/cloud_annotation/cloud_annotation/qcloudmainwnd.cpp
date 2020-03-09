@@ -25,7 +25,10 @@ QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   this->createDockWidget();
   this->setStatusBar(new QStatusBar);
 
-  connect(m_pWdgPointsShow, &QPointsShowWidget::message, this, &QCloudMainWnd::onPlotMessage);
+  connect(m_pWdgPointsShow, &QPointsShowWidget::message,
+          this, &QCloudMainWnd::onPlotMessage);
+  connect(m_pWdgPointsShow, SIGNAL(clickedPoint(const Point &)),
+          m_pWdgHdMap, SLOT(onAddPoint(const Point &)));
 }
 
 QCloudMainWnd::~QCloudMainWnd()
@@ -100,27 +103,11 @@ void QCloudMainWnd::createToolBar()
   leftToolBar->addSeparator();
 
   // left clicked
-  QActionGroup *group= new QActionGroup(this);
-  action = leftToolBar->addAction(QIcon(":/image/none_clicked.svg"), "",
-                                  m_pWdgPointsShow, &QPointsShowWidget::onNoneClick);
+  action = leftToolBar->addAction(QIcon(":/image/clicked_select.svg"), "",
+                                  m_pWdgPointsShow, &QPointsShowWidget::onClickedSelect);
   action->setToolTip(QStringLiteral("取消选点操作"));
   action->setCheckable(true);
-  action->setChecked(true);
-  group->addAction(action);
-
-  action = leftToolBar->addAction(QIcon(":/image/road_side.svg"), "",
-                                  m_pWdgPointsShow, &QPointsShowWidget::onRoadSideClick);
-  action->setToolTip(QStringLiteral("选择路边沿点"));
-  action->setCheckable(true);
   action->setChecked(false);
-  group->addAction(action);
-
-  action = leftToolBar->addAction(QIcon(":/image/crosswalk.svg"), "",
-                                  m_pWdgPointsShow, &QPointsShowWidget::onCrossWalkClick);
-  action->setToolTip(QStringLiteral("选择人行道位置"));
-  action->setCheckable(true);
-  action->setChecked(false);
-  group->addAction(action);
 
   this->addToolBar(Qt::LeftToolBarArea, leftToolBar);
 }
@@ -128,7 +115,8 @@ void QCloudMainWnd::createToolBar()
 void QCloudMainWnd::createDockWidget()
 {
   QDockWidget *dockWidget = new QDockWidget(QStringLiteral("HdMap"));
-  dockWidget->setWidget(new QHdMapWidget);
+  m_pWdgHdMap = new QHdMapWidget;
+  dockWidget->setWidget(m_pWdgHdMap);
   this->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
 
   // bottom

@@ -7,8 +7,6 @@
         <file>image/ccViewYpos.png</file>
         <file>image/ccViewZneg.png</file>
         <file>image/ccViewZpos.png</file>
-        <file>image/crosswalk.svg</file>
-        <file>image/none_clicked.svg</file>
-        <file>image/road_side.svg</file>
+        <file>image/clicked_select.svg</file>
     </qresource>
 </RCC>

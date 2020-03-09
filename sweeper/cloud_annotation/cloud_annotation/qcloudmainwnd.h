@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 class QPointsShowWidget;
+class QHdMapWidget;
 class QTextBrowser;
 
 class QCloudMainWnd : public QMainWindow
@@ -31,7 +32,7 @@ protected slots:
 
 private:
   QPointsShowWidget *m_pWdgPointsShow;
-
+  QHdMapWidget *m_pWdgHdMap;
   QTextBrowser *m_pTextBrowser;
 };
 #endif // QCLOUDMAINWND_H

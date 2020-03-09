@@ -39,7 +39,7 @@ QPointsShowWidget::QPointsShowWidget(QWidget *parent)
   disableLighting();
   lights_ = std::vector<Light>(8);
 
-  click_type_ = ClickType::None;
+  click_flag_ = false;
 }
 
 void QPointsShowWidget::onReset()
@@ -102,19 +102,10 @@ void QPointsShowWidget::onShowRight()
   this->update();
 }
 
-void QPointsShowWidget::onNoneClick()
+void QPointsShowWidget::onClickedSelect()
 {
-  click_type_ = ClickType::None;
-}
-
-void QPointsShowWidget::onRoadSideClick()
-{
-  click_type_ = ClickType::RoadSide;
-}
-
-void QPointsShowWidget::onCrossWalkClick()
-{
-  click_type_ = ClickType::CrossWalk;
+  click_flag_ = !click_flag_;
+  this->setCursor(click_flag_ ? Qt::CrossCursor : Qt::ArrowCursor);
 }
 
 void QPointsShowWidget::initializeGL()
@@ -248,14 +239,61 @@ void QPointsShowWidget::draw(GLenum)
   }
   glEnd();
 
-  /// clicked points
+  /// hdmap
+  const auto &hdmap = QCloudPoints::instance().hdMap();
+  for (const auto &segment : hdmap.road_segments) {
+    for (const auto &road : segment.roads) {
+      glPointSize(5.0f);
+      glBegin(GL_POINTS);
+      glColor3f(1.0, 0, 0);
+      for (const auto &point : road.second.left_side) {
+        glVertex3f(point.x, point.y, point.z);
+      }
+      for (const auto &point : road.second.right_side) {
+        glVertex3f(point.x, point.y, point.z);
+      }
+      for (const auto &point : road.second.reference) {
+        glVertex3f(point.x, point.y, point.z);
+      }
+      glEnd();
+
+      if (road.second.left_side.size() > 1) {
+        glLineWidth(3.0f);
+        glBegin(GL_LINE_STRIP);
+        glColor3f(1.0, 0.0, 1.0);
+        for (const auto &point : road.second.left_side) {
+          glVertex3f(point.x, point.y, point.z);
+        }
+        glEnd();
+      }
+
+      if (road.second.right_side.size() > 1) {
+        glLineWidth(3.0f);
+        glBegin(GL_LINE_STRIP);
+        glColor3f(1.0, 0.0, 1.0);
+        for (const auto &point : road.second.right_side) {
+          glVertex3f(point.x, point.y, point.z);
+        }
+        glEnd();
+      }
+
+      if (road.second.reference.size() > 1) {
+        glLineWidth(3.0f);
+        glBegin(GL_LINE_STRIP);
+        glColor3f(1.0, 0.0, 1.0);
+        for (const auto &point : road.second.reference) {
+          glVertex3f(point.x, point.y, point.z);
+        }
+        glEnd();
+      }
+    }
+  }
+
   glPointSize(5.0f);
   glBegin(GL_POINTS);
   glColor3f(1.0, 0, 0);
-  for (const auto &clicked_points : clicked_points_) {
-    for (const auto &point : clicked_points) {
-      glVertex3f(point.x(), point.y(), point.z());
-    }
+  for (const auto &light : hdmap.traffic_lights) {
+    glVertex3f(light.point.x, light.point.y, light.point.z);
   }
   glEnd();
 }
@@ -434,10 +472,14 @@ void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
 {
   lastMouseMovePosition_ = e->localPos();
 
-  if (click_type_ != ClickType::None) {
+  if (click_flag_ && e->button() == Qt::RightButton) {
     QVector3D point;
     if (this->getClickedPoint(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), point)) {
-      clicked_points_[click_type_].push_back(point);
+      Point pt_data;
+      pt_data.x = point.x();
+      pt_data.y = point.y();
+      pt_data.z = point.z();
+      emit clickedPoint(pt_data);
       this->update();
     }
   }
@@ -823,7 +865,7 @@ bool QPointsShowWidget::getClickedPoint(int x, int y, QVector3D &click_pt)
   }
 
   bool has_clicked = false;
-  click_pt.setZ(-10000);
+  double dis_to_start = 10000;
   auto points = QCloudPoints::instance().points();
   const int size_point = points->size();
   for (int i = 0; i < size_point; ++i) {
@@ -832,8 +874,9 @@ bool QPointsShowWidget::getClickedPoint(int x, int y, QVector3D &click_pt)
     double distance = v3d_point.distanceToLine(start, direction);
     if (distance < 0.02) {
       has_clicked = true;
-      if (click_pt.z() < point.z) {
+      if (start.distanceToPoint(v3d_point) < dis_to_start) {
         click_pt = v3d_point;
+        dis_to_start = start.distanceToPoint(v3d_point);
       }
     }
   }

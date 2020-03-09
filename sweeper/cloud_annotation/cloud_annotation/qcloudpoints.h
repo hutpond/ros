@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QVector>
 #include <QSharedPointer>
-#include<pcl/io/io.h>
+#include <pcl/io/io.h>
 
 #include "GlobalDefine.h"
 
@@ -19,9 +19,8 @@ public:
   pcl::PointXYZ begin_point() {return begin_point_;}
   pcl::PointXYZ end_point() {return end_point_;}
 
-  void addRoadSegment(int);
-  void addRoad(int, int);
-  void addRoadPoint(int, int, int, const Point &);
+  void setHdMap(const HdMap &);
+  const HdMap & hdMap() const;
 
 signals:
 

@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(/usr/include/pcl-1.8)
 include_directories(/usr/include/eigen3)
 
+set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 
 add_executable(cloud_annotation
@@ -29,6 +30,9 @@ add_executable(cloud_annotation
   QAddSegmentDialog.cpp
   QAddSegmentDialog.h
   QAddSegmentDialog.ui
+  QPointValue.cpp
+  QPointValue.h
+  QPointValue.ui
   cloud_annotation.qrc
 )
 
