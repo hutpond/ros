@@ -24,7 +24,10 @@ protected:
 
 protected slots:
   // &file
-  void open();
+  void newProject();
+  void openProject();
+  void loadPlyFile();
+  void closeProject();
   // &edit
   void reset();
 

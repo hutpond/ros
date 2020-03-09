@@ -49,10 +49,25 @@ void QCloudMainWnd::createMenuBar()
   menuBar->addMenu(tr("&Help"));
 
   // menu file
-  QAction *actionOpen = new QAction(tr("&Open"), this);
-  actionOpen->setStatusTip(tr("Open a cloud points file"));
-  connect(actionOpen, &QAction::triggered, this, &QCloudMainWnd::open);
-  menuFile->addAction(actionOpen);
+  QAction *actionNewProject = new QAction(tr("&New Project"), this);
+  actionNewProject->setStatusTip(tr("Create new project"));
+  connect(actionNewProject, &QAction::triggered, this, &QCloudMainWnd::newProject);
+  menuFile->addAction(actionNewProject);
+
+  QAction *actionOpenProject = new QAction(tr("&Open Project"), this);
+  actionOpenProject->setStatusTip(tr("Open a exist project"));
+  connect(actionOpenProject, &QAction::triggered, this, &QCloudMainWnd::openProject);
+  menuFile->addAction(actionOpenProject);
+
+  QAction *actionLoadFile = new QAction(tr("&Load Cloud File"), this);
+  actionLoadFile->setStatusTip(tr("Load cloud file of ply"));
+  connect(actionLoadFile, &QAction::triggered, this, &QCloudMainWnd::loadPlyFile);
+  menuFile->addAction(actionLoadFile);
+
+  QAction *actionCloseProject = new QAction(tr("&Close Project"), this);
+  actionCloseProject->setStatusTip(tr("Close the opening project"));
+  connect(actionCloseProject, &QAction::triggered, this, &QCloudMainWnd::closeProject);
+  menuFile->addAction(actionCloseProject);
 
   QAction *actionExit = new QAction(tr("&Exit"), this);
   actionExit->setStatusTip(tr("Exit the program"));
@@ -61,7 +76,7 @@ void QCloudMainWnd::createMenuBar()
 
   // menu edit
   QAction *actionReset = new QAction(tr("&Reset"), this);
-  actionOpen->setStatusTip(tr("Reset the state of Cloud Points"));
+  actionReset->setStatusTip(tr("Reset the state of Cloud Points"));
   connect(actionReset, &QAction::triggered, this, &QCloudMainWnd::reset);
   menuEdit->addAction(actionReset);
 }
@@ -126,13 +141,35 @@ void QCloudMainWnd::createDockWidget()
   this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
 }
 
-void QCloudMainWnd::open()
+void QCloudMainWnd::newProject()
+{
+  QString pathName = QFileDialog::getExistingDirectory(
+        this, tr("Open Directory"),
+        getenv("HOME"),
+        QFileDialog::ShowDirsOnly
+        | QFileDialog::DontResolveSymlinks);
+  if (pathName.isEmpty()) {
+    return;
+  }
+}
+
+void QCloudMainWnd::openProject()
+{
+
+}
+
+void QCloudMainWnd::loadPlyFile()
 {
   QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
 
   QCloudPoints::instance().openFile(fileName);
   m_pWdgPointsShow->update();
+}
+
+void QCloudMainWnd::closeProject()
+{
+
 }
 
 void QCloudMainWnd::reset()
