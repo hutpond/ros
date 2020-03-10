@@ -186,6 +186,7 @@ class QHdMapWidget : public QWidget
 
 public:
   explicit QHdMapWidget(QWidget *parent = nullptr);
+  void clear();
 
 public slots:
   void onAddPoint(const Point &);
@@ -196,6 +197,7 @@ protected:
   void createMenuMap();
   void createMenuSegment();
   void createMenuDelete();
+  void createMenuRoadSide();
   void createMenuPoints();
 
   void updateHdMap();
@@ -209,6 +211,9 @@ protected:
 
   void onDeleteCurrentItem();
   void onDeleteAllItems();
+
+  void onUpPoint();
+  void onDownPoint();
 
   bool deleteRoadSegment(QTreeWidgetItem *, QTreeWidgetItem *);
   bool deleteRoad(QTreeWidgetItem *, QTreeWidgetItem *);
@@ -226,6 +231,7 @@ private:
   QMenu *menu_map_;
   QMenu *menu_segment_;
   QMenu *menu_delete_;
+  QMenu *menu_road_side_;
   QMenu *menu_points_;
 
   QPointValue *point_val_widget_;

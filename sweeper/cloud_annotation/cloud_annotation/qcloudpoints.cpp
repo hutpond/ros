@@ -64,3 +64,14 @@ const HdMap & QCloudPoints::hdMap() const
 {
   return hdmap_;
 }
+
+void QCloudPoints::clear()
+{
+  cloud_points_->clear();
+  hdmap_.road_segments.clear();
+  hdmap_.traffic_lights.clear();
+  hdmap_.stop_lines.clear();
+  hdmap_.signs.clear();
+  hdmap_.markings.clear();
+  hdmap_.crossings.clear();
+}

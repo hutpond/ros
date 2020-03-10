@@ -24,6 +24,7 @@ QHdMapWidget::QHdMapWidget(QWidget *parent)
   this->createMenuMap();
   this->createMenuSegment();
   this->createMenuDelete();
+  this->createMenuRoadSide();
   this->createMenuPoints();
 
   point_val_widget_ = new QPointValue(this);
@@ -33,6 +34,14 @@ QHdMapWidget::QHdMapWidget(QWidget *parent)
           this, SLOT(onItemSelectionChanged()));
   connect(point_val_widget_, SIGNAL(saveData()),
                      this, SLOT(onSavePointValue()));
+}
+
+void QHdMapWidget::clear()
+{
+  const int size_childs = root_item_->childCount();
+  for (int i = size_childs - 1; i >= 0; --i) {
+    root_item_->removeChild(root_item_->child(i));
+  }
 }
 
 void QHdMapWidget::resizeEvent(QResizeEvent *)
@@ -87,12 +96,29 @@ void QHdMapWidget::createMenuDelete()
 /**
  * @brief 右键菜单，清空点
  */
+void QHdMapWidget::createMenuRoadSide()
+{
+  menu_road_side_ = new QMenu(tree_hdmap_);
+
+  QAction *action = new QAction(tr("清空所有点"), menu_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
+  menu_road_side_->addAction(action);
+}
+
 void QHdMapWidget::createMenuPoints()
 {
   menu_points_ = new QMenu(tree_hdmap_);
 
-  QAction *action = new QAction(tr("清空所有点"), menu_points_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
+  QAction *action = new QAction(tr("删除"), menu_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
+  menu_points_->addAction(action);
+
+  action = new QAction(tr("上升"), menu_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onUpPoint);
+  menu_points_->addAction(action);
+
+  action = new QAction(tr("下降"), menu_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onDownPoint);
   menu_points_->addAction(action);
 }
 
@@ -124,12 +150,10 @@ void QHdMapWidget::onCustomContextMenuRequested(const QPoint &pos)
       break;
     }
     case ItemTypeRoadSide:
-    {
-      menu_points_->exec(mapToGlobal(pos));
+      menu_road_side_->exec(mapToGlobal(pos));
       break;
-    }
     case ItemTypePoint:
-
+      menu_points_->exec(mapToGlobal(pos));
       break;
     case ItemTypeMap:
       menu_map_->exec(mapToGlobal(pos));
@@ -399,6 +423,16 @@ void QHdMapWidget::onDeleteAllItems()
   for (int i = size_child - 1; i >= 0; --i) {
     item->removeChild(item->child(i));
   }
+}
+
+void QHdMapWidget::onUpPoint()
+{
+
+}
+
+void QHdMapWidget::onDownPoint()
+{
+
 }
 
 void QHdMapWidget::onItemSelectionChanged()

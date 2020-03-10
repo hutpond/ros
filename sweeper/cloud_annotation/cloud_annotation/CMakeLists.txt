@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(/usr/include/pcl-1.8)
+include_directories(/usr/include/pcl-1.7)
 include_directories(/usr/include/eigen3)
 
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
@@ -33,6 +34,9 @@ add_executable(cloud_annotation
   QPointValue.cpp
   QPointValue.h
   QPointValue.ui
+  QProjectDialog.cpp
+  QProjectDialog.h
+  QProjectDialog.ui
   cloud_annotation.qrc
 )
 

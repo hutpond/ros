@@ -12,6 +12,7 @@
 #include "qpointsshowwidget.h"
 #include "qcloudpoints.h"
 #include "QHdMapWidget.h"
+#include "QProjectDialog.h"
 
 QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   : QMainWindow(parent)
@@ -131,6 +132,7 @@ void QCloudMainWnd::createDockWidget()
 {
   QDockWidget *dockWidget = new QDockWidget(QStringLiteral("HdMap"));
   m_pWdgHdMap = new QHdMapWidget;
+  m_pWdgHdMap->setEnabled(false);
   dockWidget->setWidget(m_pWdgHdMap);
   this->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
 
@@ -143,23 +145,43 @@ void QCloudMainWnd::createDockWidget()
 
 void QCloudMainWnd::newProject()
 {
+  QProjectDialog dlg;
+  if (dlg.exec() == QDialog::Accepted) {
+    this->closeProject();
+
+    m_strProjectPath = dlg.projectPath();
+    m_strProjectName = dlg.projectName();
+
+    QDir dir(m_strProjectPath);
+    dir.mkpath(m_strProjectName);
+
+    m_pWdgHdMap->setEnabled(true);
+  }
+}
+
+void QCloudMainWnd::openProject()
+{
   QString pathName = QFileDialog::getExistingDirectory(
-        this, tr("Open Directory"),
+        this, tr("Open Project"),
         getenv("HOME"),
         QFileDialog::ShowDirsOnly
         | QFileDialog::DontResolveSymlinks);
   if (pathName.isEmpty()) {
     return;
   }
-}
 
-void QCloudMainWnd::openProject()
-{
-
+  this->closeProject();
+  int index = pathName.lastIndexOf('/');
+  m_strProjectPath = pathName.mid(0, index + 1);
+  m_strProjectName = pathName.mid(index + 1);
+  m_pWdgHdMap->setEnabled(true);
 }
 
 void QCloudMainWnd::loadPlyFile()
 {
+  if (m_strProjectName.isEmpty() || m_strProjectPath.isEmpty()) {
+    return;
+  }
   QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
 
@@ -169,7 +191,13 @@ void QCloudMainWnd::loadPlyFile()
 
 void QCloudMainWnd::closeProject()
 {
+  m_pWdgHdMap->setEnabled(false);
+  m_pTextBrowser->clear();
 
+  m_strProjectPath.clear();
+  m_strProjectName.clear();
+  m_pWdgHdMap->clear();
+  QCloudPoints::instance().clear();
 }
 
 void QCloudMainWnd::reset()

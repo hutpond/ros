@@ -37,5 +37,8 @@ private:
   QPointsShowWidget *m_pWdgPointsShow;
   QHdMapWidget *m_pWdgHdMap;
   QTextBrowser *m_pTextBrowser;
+
+  QString m_strProjectPath;
+  QString m_strProjectName;
 };
 #endif // QCLOUDMAINWND_H

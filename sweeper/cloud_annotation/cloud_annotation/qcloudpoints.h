@@ -21,6 +21,7 @@ public:
 
   void setHdMap(const HdMap &);
   const HdMap & hdMap() const;
+  void clear();
 
 signals:
 
