@@ -58,6 +58,7 @@ pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
 void QCloudPoints::setHdMap(const HdMap &hdmap)
 {
   hdmap_ = hdmap;
+  emit updateData();
 }
 
 const HdMap & QCloudPoints::hdMap() const

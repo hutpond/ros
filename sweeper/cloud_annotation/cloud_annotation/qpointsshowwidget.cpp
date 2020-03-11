@@ -40,6 +40,7 @@ QPointsShowWidget::QPointsShowWidget(QWidget *parent)
   lights_ = std::vector<Light>(8);
 
   click_flag_ = false;
+  show_cloud_point_flag_ = true;
 }
 
 void QPointsShowWidget::onReset()
@@ -106,6 +107,12 @@ void QPointsShowWidget::onClickedSelect()
 {
   click_flag_ = !click_flag_;
   this->setCursor(click_flag_ ? Qt::CrossCursor : Qt::ArrowCursor);
+}
+
+void QPointsShowWidget::onClickedShowPointCloud()
+{
+  show_cloud_point_flag_ = !show_cloud_point_flag_;
+  this->update();
 }
 
 void QPointsShowWidget::initializeGL()
@@ -225,19 +232,21 @@ void QPointsShowWidget::draw(GLenum)
   glGetDoublev(GL_PROJECTION_MATRIX, projection_);
 
   /// cloud points
-  glPointSize(1.0f);
-  auto points = QCloudPoints::instance().points();
-  const size_t sizePoints = points->size();
-  glBegin(GL_POINTS);
-  for (size_t i = 0; i < sizePoints; ++i) {
-    auto &point = points->at(i);
-    float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
-    glColor3f(factor,
-              factor,
-              1.0f - factor);
-    glVertex3f(point.x, point.y, point.z);
+  if (show_cloud_point_flag_) {
+    glPointSize(1.0f);
+    auto points = QCloudPoints::instance().points();
+    const size_t sizePoints = points->size();
+    glBegin(GL_POINTS);
+    for (size_t i = 0; i < sizePoints; ++i) {
+      auto &point = points->at(i);
+      float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
+      glColor3f(factor,
+                factor,
+                1.0f - factor);
+      glVertex3f(point.x, point.y, point.z);
+    }
+    glEnd();
   }
-  glEnd();
 
   /// hdmap
   const auto &hdmap = QCloudPoints::instance().hdMap();
@@ -480,7 +489,6 @@ void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
       pt_data.y = point.y();
       pt_data.z = point.z();
       emit clickedPoint(pt_data);
-      this->update();
     }
   }
   mpressed_ = true;

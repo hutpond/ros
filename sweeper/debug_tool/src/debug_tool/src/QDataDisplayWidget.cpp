@@ -128,7 +128,7 @@ void QDataDisplayWidget::setPlanningData(
   for (int i = 0; i < SIZE; ++i) {
     item = new QTreeWidgetItem(itemRoot);
     item->setText(0, QString("ID: %1, L: %2, S: %3, X: %4, Y: %5, LEFT: %6, RIGHT: %7").
-                  arg(planningData.reference_points[i].id, 2, 10, QLatin1Char(' ')).
+                  arg(static_cast<uint8_t>(planningData.reference_points[i].id), 2, 10, QLatin1Char(' ')).
                   arg(planningData.reference_points[i].l, 1).
                   arg(planningData.reference_points[i].s, 6, 'f', 2).
                   arg(planningData.reference_points[i].x, 6, 'f', 2).

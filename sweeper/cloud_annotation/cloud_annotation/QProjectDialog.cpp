@@ -10,11 +10,27 @@ QProjectDialog::QProjectDialog(QWidget *parent) :
 {
   ui->setupUi(this);
   ui->lineEdit_2->setReadOnly(true);
-  connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(onBtnBrowse()));
-  connect(ui->lineEdit, SIGNAL(textChanged(const QString &)),
-          this, SLOT(onTextChanged(const QString &)));
+  ui->lineEdit_3->setReadOnly(true);
+  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
-  ui->lineEdit_2->setText(getenv("HOME"));
+  connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(onBtnPathBrowse()));
+  connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(onBtnPointBrowse()));
+
+  connect(ui->lineEdit, SIGNAL(textChanged(const QString &)),
+          this, SLOT(onTextChanged()));
+  connect(ui->lineEdit_4, SIGNAL(textChanged(const QString &)),
+          this, SLOT(onTextChanged()));
+  connect(ui->lineEdit_5, SIGNAL(textChanged(const QString &)),
+          this, SLOT(onTextChanged()));
+  connect(ui->lineEdit_6, SIGNAL(textChanged(const QString &)),
+          this, SLOT(onTextChanged()));
+
+  QString path = getenv("HOME");
+  if (!path.endsWith('/')) {
+    path.append('/');
+  }
+  path += "Documents/HdMap/";
+  ui->lineEdit_2->setText(path);
   ui->lineEdit->setText(this->getProjectName());
 }
 
@@ -52,7 +68,27 @@ QString QProjectDialog::getProjectName()
   return projectName;
 }
 
-void QProjectDialog::onBtnBrowse()
+QString QProjectDialog::cloudPointName()
+{
+  return ui->lineEdit_3->text();
+}
+
+Point QProjectDialog::cloudPointOrigin(bool *ok)
+{
+  Point point;
+  bool okLon, okLat, okHeight;
+  point.x = ui->lineEdit_4->text().toDouble(&okLon);
+  point.y = ui->lineEdit_5->text().toDouble(&okLat);
+  point.z = ui->lineEdit_6->text().toDouble(&okHeight);
+
+  if (ok != nullptr) {
+    *ok = (okLon && okLat && okHeight);
+  }
+
+  return point;
+}
+
+void QProjectDialog::onBtnPathBrowse()
 {
   QString pathName = QFileDialog::getExistingDirectory(
         this, tr("Open Directory"),
@@ -61,22 +97,38 @@ void QProjectDialog::onBtnBrowse()
         | QFileDialog::DontResolveSymlinks);
   if (!pathName.isEmpty()) {
     ui->lineEdit_2->setText(pathName);
-    if (!pathName.endsWith('/')) {
-      pathName.append('/');
-    }
-    pathName += ui->lineEdit->text();
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
-          !QDir(pathName).exists());
   }
+  this->checkBtnEnabled();
+  this->checkBtnEnabled();
 }
 
-void QProjectDialog::onTextChanged(const QString &name)
+void QProjectDialog::onBtnPointBrowse()
+{
+  QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
+  if (!fileName.isEmpty()) {
+    ui->lineEdit_3->setText(fileName);
+  }
+  this->checkBtnEnabled();
+}
+
+void QProjectDialog::onTextChanged()
+{
+  this->checkBtnEnabled();
+}
+
+void QProjectDialog::checkBtnEnabled()
 {
   QString pathName = ui->lineEdit_2->text();
   if (!pathName.endsWith('/')) {
     pathName.append('/');
   }
-  pathName += name;
-  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
-        !QDir(pathName).exists());
+  pathName += ui->lineEdit->text();
+  bool ok;
+  this->cloudPointOrigin(&ok);
+
+  bool enabled = ( (!QDir(pathName).exists()) &&
+                   (!this->cloudPointName().isEmpty()) &&
+                   (ok) );
+  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(enabled);
 }

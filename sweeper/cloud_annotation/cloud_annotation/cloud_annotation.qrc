@@ -8,5 +8,6 @@
         <file>image/ccViewZneg.png</file>
         <file>image/ccViewZpos.png</file>
         <file>image/clicked_select.svg</file>
+        <file>image/point_cloud_show.svg</file>
     </qresource>
 </RCC>

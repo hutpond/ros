@@ -82,6 +82,7 @@ public slots:
   void onShowRight();
 
   void onClickedSelect();
+  void onClickedShowPointCloud();
 
 signals:
   void message(const QString &);
@@ -210,6 +211,7 @@ private:
 
   // click point
   bool click_flag_;
+  bool show_cloud_point_flag_;
 };
 
 #endif // QPOINTSSHOWWIDGET_H

@@ -24,6 +24,7 @@ public:
   void clear();
 
 signals:
+  void updateData();
 
 private:
   explicit QCloudPoints(QObject *parent = nullptr);

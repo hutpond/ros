@@ -2,10 +2,20 @@
 #define QCLOUDMAINWND_H
 
 #include <QMainWindow>
+#include "GlobalDefine.h"
 
 class QPointsShowWidget;
 class QHdMapWidget;
 class QTextBrowser;
+
+struct ProjectInfo
+{
+  int version_;
+  QString path_name_;
+  QString project_name_;
+  QString point_cloud_file_;
+  Point point_cloud_origin_;
+};
 
 class QCloudMainWnd : public QMainWindow
 {
@@ -22,11 +32,18 @@ protected:
   void createToolBar();
   void createDockWidget();
 
+  QString projectPath();
+  QString projectSubName();
+  void saveProjectInfo();
+  bool parseProjectInfo();
+
+  void setWndTitle();
+
 protected slots:
   // &file
   void newProject();
   void openProject();
-  void loadPlyFile();
+  void saveProject();
   void closeProject();
   // &edit
   void reset();
@@ -38,7 +55,6 @@ private:
   QHdMapWidget *m_pWdgHdMap;
   QTextBrowser *m_pTextBrowser;
 
-  QString m_strProjectPath;
-  QString m_strProjectName;
+  ProjectInfo m_projectInfo;
 };
 #endif // QCLOUDMAINWND_H

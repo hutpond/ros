@@ -2,6 +2,7 @@
 #define QPROJECTDIALOG_H
 
 #include <QDialog>
+#include <GlobalDefine.h>
 
 namespace Ui {
 class QProjectDialog;
@@ -16,13 +17,17 @@ public:
   ~QProjectDialog();
   QString projectPath();
   QString projectName();
+  QString cloudPointName();
+  Point cloudPointOrigin(bool * = nullptr);
 
 protected:
   QString getProjectName();
+  void checkBtnEnabled();
 
 protected slots:
-  void onBtnBrowse();
-  void onTextChanged(const QString &);
+  void onBtnPathBrowse();
+  void onBtnPointBrowse();
+  void onTextChanged();
 
 private:
   Ui::QProjectDialog *ui;

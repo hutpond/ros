@@ -42,6 +42,7 @@ add_executable(cloud_annotation
 
 target_link_libraries(cloud_annotation PRIVATE Qt5::Widgets)
 target_link_libraries(cloud_annotation PRIVATE Qt5::OpenGL)
+target_link_libraries(cloud_annotation PRIVATE jsoncpp)
 target_link_libraries(cloud_annotation PRIVATE boost_system)
 target_link_libraries(cloud_annotation PRIVATE pcl_common)
 target_link_libraries(cloud_annotation PRIVATE pcl_io)

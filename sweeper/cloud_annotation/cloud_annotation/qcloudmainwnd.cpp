@@ -1,5 +1,6 @@
 #include "qcloudmainwnd.h"
 
+#include <fstream>
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
@@ -8,6 +9,7 @@
 #include <QFileDialog>
 #include <QTextBrowser>
 #include <QStatusBar>
+#include <jsoncpp/json/json.h>
 
 #include "qpointsshowwidget.h"
 #include "qcloudpoints.h"
@@ -30,6 +32,11 @@ QCloudMainWnd::QCloudMainWnd(QWidget *parent)
           this, &QCloudMainWnd::onPlotMessage);
   connect(m_pWdgPointsShow, SIGNAL(clickedPoint(const Point &)),
           m_pWdgHdMap, SLOT(onAddPoint(const Point &)));
+
+  connect(&QCloudPoints::instance(), SIGNAL(updateData()),
+          m_pWdgPointsShow, SLOT(update()));
+
+  m_projectInfo.version_ = 0;
 }
 
 QCloudMainWnd::~QCloudMainWnd()
@@ -60,10 +67,10 @@ void QCloudMainWnd::createMenuBar()
   connect(actionOpenProject, &QAction::triggered, this, &QCloudMainWnd::openProject);
   menuFile->addAction(actionOpenProject);
 
-  QAction *actionLoadFile = new QAction(tr("&Load Cloud File"), this);
-  actionLoadFile->setStatusTip(tr("Load cloud file of ply"));
-  connect(actionLoadFile, &QAction::triggered, this, &QCloudMainWnd::loadPlyFile);
-  menuFile->addAction(actionLoadFile);
+  QAction *actionSaveProject = new QAction(tr("&Save Project"), this);
+  actionSaveProject->setStatusTip(tr("Save project"));
+  connect(actionSaveProject, &QAction::triggered, this, &QCloudMainWnd::saveProject);
+  menuFile->addAction(actionSaveProject);
 
   QAction *actionCloseProject = new QAction(tr("&Close Project"), this);
   actionCloseProject->setStatusTip(tr("Close the opening project"));
@@ -125,6 +132,12 @@ void QCloudMainWnd::createToolBar()
   action->setCheckable(true);
   action->setChecked(false);
 
+  action = leftToolBar->addAction(QIcon(":/image/point_cloud_show.svg"), "",
+                                  m_pWdgPointsShow, &QPointsShowWidget::onClickedShowPointCloud);
+  action->setToolTip(QStringLiteral("是否显示点云"));
+  action->setCheckable(true);
+  action->setChecked(true);
+
   this->addToolBar(Qt::LeftToolBarArea, leftToolBar);
 }
 
@@ -149,21 +162,32 @@ void QCloudMainWnd::newProject()
   if (dlg.exec() == QDialog::Accepted) {
     this->closeProject();
 
-    m_strProjectPath = dlg.projectPath();
-    m_strProjectName = dlg.projectName();
+    m_projectInfo.path_name_ = dlg.projectPath();
+    m_projectInfo.project_name_ = dlg.projectName();
+    m_projectInfo.point_cloud_file_ = dlg.cloudPointName();
+    m_projectInfo.point_cloud_origin_ = dlg.cloudPointOrigin();
 
-    QDir dir(m_strProjectPath);
-    dir.mkpath(m_strProjectName);
+    QDir dir(m_projectInfo.path_name_);
+    dir.mkpath(m_projectInfo.project_name_);
+    this->saveProjectInfo();
 
+    QCloudPoints::instance().openFile(m_projectInfo.point_cloud_file_);
     m_pWdgHdMap->setEnabled(true);
+    this->setWndTitle();
   }
 }
 
 void QCloudMainWnd::openProject()
 {
+  QString path = getenv("HOME");
+  if (!path.endsWith('/')) {
+    path.append('/');
+  }
+  path += "Documents/HdMap/";
+
   QString pathName = QFileDialog::getExistingDirectory(
         this, tr("Open Project"),
-        getenv("HOME"),
+        path,
         QFileDialog::ShowDirsOnly
         | QFileDialog::DontResolveSymlinks);
   if (pathName.isEmpty()) {
@@ -172,21 +196,29 @@ void QCloudMainWnd::openProject()
 
   this->closeProject();
   int index = pathName.lastIndexOf('/');
-  m_strProjectPath = pathName.mid(0, index + 1);
-  m_strProjectName = pathName.mid(index + 1);
-  m_pWdgHdMap->setEnabled(true);
+  m_projectInfo.path_name_ = pathName.mid(0, index + 1);
+  m_projectInfo.project_name_ = pathName.mid(index + 1);
+
+  if (this->parseProjectInfo()) {
+    QCloudPoints::instance().openFile(m_projectInfo.point_cloud_file_);
+    QString fileName = this->projectSubName()+ ".hdmap";
+    m_pWdgHdMap->parseHdMapData(fileName);
+    m_pWdgHdMap->setEnabled(true);
+    this->setWndTitle();
+  }
+  else {
+    this->closeProject();
+  }
 }
 
-void QCloudMainWnd::loadPlyFile()
+void QCloudMainWnd::saveProject()
 {
-  if (m_strProjectName.isEmpty() || m_strProjectPath.isEmpty()) {
+  if (m_projectInfo.path_name_.isEmpty() || m_projectInfo.project_name_.isEmpty()) {
     return;
   }
-  QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
 
-  QCloudPoints::instance().openFile(fileName);
-  m_pWdgPointsShow->update();
+  QString fileName = this->projectSubName()+ ".hdmap";
+  m_pWdgHdMap->saveHdMapData(fileName);
 }
 
 void QCloudMainWnd::closeProject()
@@ -194,10 +226,84 @@ void QCloudMainWnd::closeProject()
   m_pWdgHdMap->setEnabled(false);
   m_pTextBrowser->clear();
 
-  m_strProjectPath.clear();
-  m_strProjectName.clear();
+  m_projectInfo.path_name_.clear();
+  m_projectInfo.project_name_.clear();
   m_pWdgHdMap->clear();
   QCloudPoints::instance().clear();
+  this->setWndTitle();
+}
+
+QString QCloudMainWnd::projectPath()
+{
+  QString pathName = m_projectInfo.path_name_;
+  if (!pathName.endsWith('/')) {
+    pathName.append('/');
+  }
+  pathName += m_projectInfo.project_name_;
+  if (!pathName.endsWith('/')) {
+    pathName.append('/');
+  }
+  return pathName;
+}
+
+QString QCloudMainWnd::projectSubName()
+{
+  QString name = this->projectPath();
+  name += m_projectInfo.project_name_;
+  return name;
+}
+
+void QCloudMainWnd::saveProjectInfo()
+{
+  Json::Value root;
+  root["version"] = m_projectInfo.version_;
+  root["point_cloud_file"] = m_projectInfo.point_cloud_file_.toStdString();
+  root["longitude"] = m_projectInfo.point_cloud_origin_.x;
+  root["latitude"] = m_projectInfo.point_cloud_origin_.y;
+  root["height"] = m_projectInfo.point_cloud_origin_.z;
+
+  QString fileName = this->projectSubName() + ".project";
+  std::ofstream out(fileName.toLocal8Bit().data());
+  Json::StreamWriterBuilder builder;
+  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+  writer->write(root, &out);
+  out.close();
+}
+
+bool QCloudMainWnd::parseProjectInfo()
+{
+  QString fileName = this->projectSubName()+ ".project";
+  FILE *pf = fopen(fileName.toLocal8Bit().data(), "r");
+  if (pf == NULL) {
+    return false;
+  }
+  fseek(pf , 0 , SEEK_END);
+  long size = ftell(pf);
+  rewind(pf);
+  char *buffer = (char*)malloc(size + 1);
+  memset(buffer, 0, size + 1);
+  if (buffer == NULL) {
+    return false;
+  }
+  fread(buffer,1, size, pf);
+  fclose(pf);
+
+  Json::Value root;
+  Json::Reader reader;
+  if (!reader.parse(buffer, root)) {
+    delete buffer;
+    return false;
+  }
+  delete buffer;
+
+  m_projectInfo.version_ = root["version"].asInt();
+  m_projectInfo.point_cloud_file_ = QString::fromStdString(
+        root["point_cloud_file"].asString());
+  m_projectInfo.point_cloud_origin_.x = root["longitude"].asDouble();
+  m_projectInfo.point_cloud_origin_.y = root["latitude"].asDouble();
+  m_projectInfo.point_cloud_origin_.z = root["height"].asDouble();
+
+  return true;
 }
 
 void QCloudMainWnd::reset()
@@ -214,4 +320,14 @@ void QCloudMainWnd::onPlotMessage(const QString &msg)
   text += msg;
   m_pTextBrowser->setPlainText(text);
   m_pTextBrowser->moveCursor(QTextCursor::End);
+}
+
+
+void QCloudMainWnd::setWndTitle()
+{
+  QString title("HdMap - 1.0");
+  if (!m_projectInfo.project_name_.isEmpty()) {
+    title += " - " + m_projectInfo.project_name_;
+  }
+  this->setWindowTitle(title);
 }
