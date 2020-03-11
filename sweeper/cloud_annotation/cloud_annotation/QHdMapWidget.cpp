@@ -426,6 +426,10 @@ void QHdMapWidget::createMenuMap()
   action = new QAction(tr("添加红绿灯"), menu_map_);
   connect(action, &QAction::triggered, this, &QHdMapWidget::onAddTrafficLight);
   menu_map_->addAction(action);
+
+  action = new QAction(tr("人行横道"), menu_map_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onAddCrossing);
+  menu_map_->addAction(action);
 }
 
 void QHdMapWidget::createMenuSegment()
@@ -458,11 +462,24 @@ void QHdMapWidget::createMenuDelete()
  */
 void QHdMapWidget::createMenuRoadSide()
 {
+  // road side
   menu_road_side_ = new QMenu(tree_hdmap_);
 
   QAction *action = new QAction(tr("清空所有点"), menu_road_side_);
   connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
   menu_road_side_->addAction(action);
+
+  // crossing
+  menu_item_with_points_ = new QMenu(tree_hdmap_);
+
+  action = new QAction(tr("删除"), menu_item_with_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
+  menu_item_with_points_->addAction(action);
+
+  action = new QAction(tr("清空所有点"), menu_item_with_points_);
+  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
+  menu_item_with_points_->addAction(action);
+
 }
 
 void QHdMapWidget::createMenuPoints()
@@ -497,6 +514,8 @@ void QHdMapWidget::onCustomContextMenuRequested(const QPoint &pos)
     case ItemTypeTrafficLight:
       menu_delete_->exec(mapToGlobal(pos));
       break;
+    case ItemTypeCrossings:
+      menu_item_with_points_->exec(mapToGlobal(pos));
     case ItemTypeRoad:
     {
       QTreeRoadItem *item_current = dynamic_cast<QTreeRoadItem *>(item);
@@ -592,7 +611,8 @@ void QHdMapWidget::onAddPoint(const Point &point)
     return;
   }
 
-  if (item->type() == ItemTypeRoadSide) {
+  int type = item->type();
+  if (type == ItemTypeRoadSide || type ==  ItemTypeCrossings) {
     int size_point = item->childCount();
     QTreePointItem *itemChild = new QTreePointItem(item);
     itemChild->setIndex(size_point);
@@ -601,7 +621,7 @@ void QHdMapWidget::onAddPoint(const Point &point)
 
     this->updateHdMap();
   }
-  else if (item->type() == ItemTypeTrafficLight) {
+  else if (type == ItemTypeTrafficLight) {
     QTreePointItem *itemChild = nullptr;
     if (item->childCount() == 0) {
       itemChild = new QTreePointItem(item);
@@ -616,6 +636,14 @@ void QHdMapWidget::onAddPoint(const Point &point)
       this->updateHdMap();
     }
   }
+  else if (type == ItemTypePoint) {
+    QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item);
+    if (item_point != nullptr) {
+      item_point->setPoint(point);
+
+      this->updateHdMap();
+    }
+  }
   item->setExpanded(true);
 }
 
@@ -625,6 +653,15 @@ void QHdMapWidget::onAddTrafficLight()
   QTreeTrafficLightItem *item = new QTreeTrafficLightItem(parent);
   item->setLightIndex(traffic_light_size_ ++);
   item->setText(0, QString("Traffic Light %1").arg(traffic_light_size_));
+  tree_hdmap_->expandItem(parent);
+}
+
+void QHdMapWidget::onAddCrossing()
+{
+  QTreeWidgetItem *parent = tree_hdmap_->currentItem();
+  QTreeCrossingItem *item = new QTreeCrossingItem(parent);
+  item->setIndex(crossings_size_ ++);
+  item->setText(0, QString("Crossing %1").arg(crossings_size_));
   tree_hdmap_->expandItem(parent);
 }
 
@@ -645,15 +682,19 @@ void QHdMapWidget::onDeleteCurrentItem()
 
   // reset inde and size
   bool ret = false;
-  if (item->type() == ItemTypeSegment) {
+  int type = item->type();
+  if (type == ItemTypeSegment) {
     ret = this->deleteRoadSegment(item, parent);
   }
-  else if (item->type() == ItemTypeRoad) {
+  else if (type == ItemTypeRoad) {
     ret = this->deleteRoad(item, parent);
   }
-  else if (item->type() == ItemTypeTrafficLight) {
+  else if (type == ItemTypeTrafficLight) {
     traffic_light_size_ = 0;
     ret = this->deleteSingleItem(item, parent);
+  }
+  else if (type == ItemTypeCrossings) {
+    ret = this->deleteCrossing(item, parent);
   }
   else if (item->type() == ItemTypePoint) {
     ret = this->deletePoint(item, parent);
@@ -789,6 +830,47 @@ bool QHdMapWidget::deletePoint(QTreeWidgetItem *item, QTreeWidgetItem *parent)
   }
 
   return true;
+}
+
+bool QHdMapWidget::deleteCrossing(QTreeWidgetItem *item, QTreeWidgetItem *parent)
+{
+  // return if size of childs is not zero
+  if (this->checkHasChildren(item)) {
+    return false;
+  }
+
+  // reset index and size
+  const int size_item = parent->childCount();
+  crossings_size_ = 0;
+  for (int i = 0; i < size_item; ++i) {
+    QTreeWidgetItem *child = parent->child(i);
+    if (child == item || child->type() != item->type()) {
+      continue;
+    }
+
+    QTreeCrossingItem *childCrossing = dynamic_cast<QTreeCrossingItem *>(child);
+    if (childCrossing == nullptr) {
+      continue;
+    }
+    childCrossing->setIndex(crossings_size_ ++);
+    childCrossing->setText(0, QString("Crossing %1").arg(crossings_size_));
+  }
+
+  return true;
+
+}
+
+bool QHdMapWidget::checkHasChildren(QTreeWidgetItem *item)
+{
+  // return if size of childs is not zero
+  if (item->childCount() > 0) {
+    QMessageBox::warning(
+          this, QStringLiteral("删除"),
+          QStringLiteral("请先清空所有子节点"),
+          QMessageBox::Cancel);
+    return true;
+  }
+  return false;
 }
 
 /**

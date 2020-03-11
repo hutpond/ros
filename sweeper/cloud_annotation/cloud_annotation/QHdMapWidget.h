@@ -104,6 +104,23 @@ private:
   int index_;
 };
 
+class QTreeCrossingItem : public QTreeMapItem
+{
+public:
+  QTreeCrossingItem(QTreeWidgetItem *parent)
+    : QTreeMapItem(parent, ItemTypeCrossings) {
+    point_count_ = 0;
+  }
+  void addPointCount() {
+    ++ point_count_;
+  }
+  void reducePointCount() {
+    -- point_count_;
+  }
+private:
+  int point_count_;
+};
+
 class QTreeRoadItem : public QTreeWidgetItem
 {
 public:
@@ -200,6 +217,7 @@ protected:
   void onAddRoad();
 
   void onAddTrafficLight();
+  void onAddCrossing();
 
   void onDeleteCurrentItem();
   void onDeleteAllItems();
@@ -211,6 +229,8 @@ protected:
   bool deleteRoad(QTreeWidgetItem *, QTreeWidgetItem *);
   bool deleteSingleItem(QTreeWidgetItem *, QTreeWidgetItem *);
   bool deletePoint(QTreeWidgetItem *, QTreeWidgetItem *);
+  bool deleteCrossing(QTreeWidgetItem *, QTreeWidgetItem *);
+  bool checkHasChildren(QTreeWidgetItem *);
 
 protected slots:
   void onItemSelectionChanged();
@@ -231,6 +251,7 @@ private:
   QMenu *menu_delete_;
   QMenu *menu_road_side_;
   QMenu *menu_points_;
+  QMenu *menu_item_with_points_;
 
   QPointValue *point_val_widget_;
 };
