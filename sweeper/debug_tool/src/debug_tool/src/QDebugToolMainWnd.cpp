@@ -28,7 +28,7 @@ static const char *VIEW_TOOL_BAR = "VIEW";
 static const char *SETTINT_TOOL_BAR = "SETTING";
 static const char *HELP_TOOL_BAR = "HELP";
 
-static const char *WND_TITLE = "Debug Tool V4.1.4";
+static const char *WND_TITLE = "Debug Tool V4.1.5";
 
 QStatusBar * QDebugToolMainWnd::s_pStatusBar = Q_NULLPTR;
 QTextBrowser * QDebugToolMainWnd::s_pTextBrowser = Q_NULLPTR;
@@ -51,6 +51,7 @@ QDebugToolMainWnd::QDebugToolMainWnd(QWidget *parent)
   connect(m_pWdgEditTool, &QEditToolsWidget::selectTool,
           m_pWdgPlanning[OldPlanning], &QPlanningWidget::onSelectTool);
   m_pWdgPlanning[OldPlanning]->onSelectTool(QEditToolsWidget::Move, true);
+  m_pWdgPlanning[OldPlanning]->setTowDisplays(false);
   m_nCurrentIndex = OldPlanning;
 
   m_pWdgPlanning[NewPlanning] = new QNewPlanningWidget(this->centralWidget());
@@ -132,6 +133,9 @@ void QDebugToolMainWnd::createMenu()
   m_pActionOldPlanning->setChecked(true);
 
   menu = menuBar()->addMenu(tr("View"));
+  m_pActionTowDisplays = menu->addAction(tr("Tow Displays"), this, SLOT(onActionTowDisplays()));
+  m_pActionTowDisplays->setCheckable(true);
+  m_pActionTowDisplays->setChecked(false);
   menu->addAction(tr("Zoom In +"), this, SLOT(onActionViewZoomIn()));
   menu->addAction(tr("Zoom Out -"), this, SLOT(onActionViewZoomOut()));
   menu->addAction(tr("Reset R"), this, SLOT(onActionViewReset()));
@@ -284,6 +288,11 @@ void QDebugToolMainWnd::createViewToolBar()
   pWdgAction->setMinimumSize(TOOL_BAR_ACTION_SIZE - 4, TOOL_BAR_ACTION_SIZE - 4);
   pWdgAction->setStyleSheet("background-color: rgb(255, 200, 200);");
   pToolBar->insertSeparator(m_pActionReplaySpeed);
+}
+
+void QDebugToolMainWnd::onActionTowDisplays()
+{
+  m_pWdgPlanning[OldPlanning]->setTowDisplays(m_pActionTowDisplays->isChecked());
 }
 
 /*******************************************************

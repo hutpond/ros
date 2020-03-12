@@ -688,7 +688,7 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
       return val.cost < val2.cost;
     });
   }
-  int decision = static_cast<int>(m_planningData.decision);
+  int decision = static_cast<int>(m_planningData.overall_decision);
   size_candidates = qBound<int>(0, size_candidates, 10);
   if (decision >= 0 && decision < 4) {
     for (int i = 0; i < size_candidates; ++ i) {

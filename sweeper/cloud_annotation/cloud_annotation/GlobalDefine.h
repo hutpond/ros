@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <map>
+#include <cmath>
+#include <QLineF>
 
 struct Point
 {
@@ -86,6 +88,11 @@ struct TrafficLight
   }
 };
 
+struct Crossing
+{
+  std::vector<Point> points;
+};
+
 struct Marking
 {
   enum MARKING_TYPE {
@@ -109,18 +116,18 @@ struct Marking
   }
 };
 
-struct HdMap
+struct HdMapRaw
 {
   std::vector<RoadSegment> road_segments;
   std::vector<TrafficLight> traffic_lights;
   std::vector<Point> stop_lines;
 //  std::vector<Curb> curbs;
 //  std::vector<Boundary> boundaries;
-  std::vector<Point> crossings;
+  std::vector<Crossing> crossings;
   std::vector<Marking> markings;
   std::vector<Point> signs;
 
-  HdMap & operator = (const HdMap &hdmap) {
+  HdMapRaw & operator = (const HdMapRaw &hdmap) {
     this->road_segments.clear();
     for (const auto &segment : hdmap.road_segments) {
       this->road_segments.push_back(segment);
@@ -152,6 +159,85 @@ struct HdMap
     }
   }
 };
+
+struct MapPoint
+{
+  int id;
+
+  double lat;
+  double lon;
+  double alt;
+
+  double east;
+  double north;
+  double up;
+
+  double pitch;
+  double roll;
+  double yaw;
+
+  double left_w;
+  double right_w;
+
+  double curvature;
+  double slope;
+  int dir;   // -1: left  0: line 1: right
+  int side;  // -1: left  1: right
+  int bush;  // 0: has not 1: has
+  bool insert;
+  bool select;
+
+  MapPoint()
+    : lat(0.0), lon(0.0), alt(0.0)
+    , east(0.0), north(0.0), up(0.0)
+    , pitch(0.0), roll(0.0), yaw(0.0)
+    , left_w(0.0), right_w(0.0)
+    , curvature(0.0), slope(0.0)
+    , dir(1), side(1), bush(false)
+    , insert(false), select(false)
+  {}
+
+  double distance(const MapPoint &point) {
+    return std::sqrt(
+          std::pow(this->east - point.east, 2) +
+          std::pow(this->north - point.north, 2) +
+          std::pow(this->up - point.up, 2)
+          );
+  }
+
+  MapPoint & operator=(const MapPoint &rh) {
+    this->id = rh.id;
+
+    this->lat = rh.lat;
+    this->lon = rh.lon;
+    this->alt = rh.alt;
+
+    this->east = rh.east;
+    this->north = rh.north;
+    this->up = rh.up;
+
+    this->pitch = rh.pitch;
+    this->roll = rh.roll;
+    this->yaw = rh.yaw;
+
+    this->left_w = rh.left_w;
+    this->right_w = rh.right_w;
+
+    this->curvature = rh.curvature;
+    this->dir = rh.dir;
+    this->side = rh.side;
+    this->bush = rh.bush;
+
+    return *this;
+  }
+
+  double angle() {
+    QLineF line(0, 0, 0, 10);
+    QLineF line2(0, 0, this->east, this->north);
+    return line.angleTo(line2);
+  }
+};
+
 
 
 #endif // GLOBALDEFINE_H

@@ -53,6 +53,7 @@ public:
   void startReplay(const QString &);
   void stopDisplay();
   void setShowAllTargets(bool);
+  void setTowDisplays(bool);
 
 protected:
   virtual void resizeEvent(QResizeEvent *);
@@ -79,6 +80,10 @@ protected:
   std::vector<std::string> m_listPlanningFiles;
   std::vector<std::string>::iterator m_itFile;  // 文件名链表迭代器
   int m_nTimerId;         // replay定时器id
+
+  bool m_bTowDisplays;
+  QRect m_rectLeftDisplays;
+  QRect m_rectRightDisplays;
 
   int m_nShowType;
   int m_nShowView;

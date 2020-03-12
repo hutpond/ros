@@ -17,7 +17,7 @@
 #include "QPlanningWidget.h"
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
-#include "qstatewidget.h"
+#include "QDecisionState.h"
 
 QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   : QWidget(parent)
@@ -25,7 +25,7 @@ QPlanningParamWidget::QPlanningParamWidget(QWidget *parent)
   m_pLblMousePosName = new QLabel(tr("坐标"), this);
   m_pLblMousePosValue = new QLabel(this);
 
-  m_pWdgState = new QStateWidget(this);
+  m_pWdgState = new QDecisionState(this);
 
   for (int i = 0; i < DecisionCount; ++i) {
     m_pLblDecisionValue[i] = new QLabel(this);
@@ -113,36 +113,6 @@ void QPlanningParamWidget::setPlanningData(const debug_tool::ads_PlanningData4De
                                            const debug_tool::ads_PlanningData4Debug &/*data_cost*/)
 {
   m_pWdgState->setData(data);
-
-  // 决策状态
-  int nIndex = static_cast<int>(data.decision);
-
-  nIndex = static_cast<int>(data.ultrasonic_decision);
-  if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue[DecisionUltraSonic]->hide();
-  }
-  else {
-    m_pLblDecisionValue[DecisionUltraSonic]->setText(tr("超声波"));
-    m_pLblDecisionValue[DecisionUltraSonic]->show();
-  }
-
-  nIndex = static_cast<int>(data.radar_decision);
-  if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue[DecisionRadar73]->hide();
-  }
-  else {
-    m_pLblDecisionValue[DecisionRadar73]->setText(tr("雷达"));
-    m_pLblDecisionValue[DecisionRadar73]->show();
-  }
-
-  nIndex = static_cast<int>(data.track_target_decision);
-  if (nIndex >= 0 && nIndex < 4) {
-    m_pLblDecisionValue[DecisionTrack]->hide();
-  }
-  else {
-    m_pLblDecisionValue[DecisionTrack]->setText(tr("障碍物"));
-    m_pLblDecisionValue[DecisionTrack]->show();
-  }
 
   m_pLblScenarioType->setText(
         data.scenario_type == 0 ? "Scenario: Normal" : "Scenario: Yield"
@@ -255,14 +225,8 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   xPos = SPACE_X;
   yPos += ITEM_H + SPACE_Y;
 
-  m_pWdgState->setGeometry(xPos, yPos, WIDTH, ITEM_H * 3);
-  yPos += ITEM_H * 3 + SPACE_X;
-
-  xPos = SPACE_X;
-  for (int i = DecisionUltraSonic; i < DecisionCount; ++i) {
-    m_pLblDecisionValue[i]->setGeometry(xPos, yPos, ITEM_VALUE_W, ITEM_H);
-    yPos += ITEM_H + SPACE_Y;
-  }
+  m_pWdgState->setGeometry(xPos, yPos, WIDTH, ITEM_H * 9);
+  yPos += ITEM_H * 9 + SPACE_X;
 
   xPos = SPACE_X;
   m_pLblScenarioType->setGeometry(xPos, yPos, ITEM_NAME_W + ITEM_VALUE_W, ITEM_H);
@@ -285,11 +249,7 @@ void QPlanningParamWidget::resizeEvent(QResizeEvent *)
   m_pSliderPlay->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H);
 
   yPos += ITEM_H + SPACE_Y;
-  m_pWdgCostValue->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 8);
-
-//  xPos = SPACE_X;
-//  yPos += ITEM_H * 8 + SPACE_Y;
-//  m_pTextBrowser->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 3);
+  m_pWdgCostValue->setGeometry(xPos, yPos, WIDTH - 2 * SPACE_X, ITEM_H * 7);
 }
 
 void QPlanningParamWidget::showReplayControls(bool show)

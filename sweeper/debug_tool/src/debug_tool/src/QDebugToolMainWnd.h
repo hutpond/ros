@@ -52,6 +52,7 @@ protected slots:
   void onActionPlanningLiveDisplay();
   void onActionPlanningReplay();
 
+  void onActionTowDisplays();
   void onActionViewZoomIn();
   void onActionViewZoomOut();
   void onActionViewReset();
@@ -71,6 +72,7 @@ private:
   QAction *m_pActionNewPlanning;
   QAction *m_pActionReplaySpeed;
   QAction *m_pActionShowTargets;
+  QAction *m_pActionTowDisplays;
 
   bool m_bFlagShowAllTargets;
 

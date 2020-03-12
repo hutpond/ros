@@ -33,23 +33,25 @@ void QBaseWidget::resizeEvent(QResizeEvent *)
   const int HEIGHT = this->height();
 
   const int WDG_SHWO_W = WIDTH * W_PERCENT / 200;
-  if (m_pWdgShow[1] != Q_NULLPTR) {
-    for (int i = 0; i < 2; ++i) {
-      m_pWdgShow[i]->setGeometry(
-            i * WDG_SHWO_W,
-            0,
-            WDG_SHWO_W,
-            HEIGHT
-            );
-    }
+  m_rectLeftDisplays = QRect(
+        0,
+        0,
+        WDG_SHWO_W,
+        HEIGHT
+        );
+  m_rectRightDisplays = QRect(
+        WDG_SHWO_W,
+        0,
+        WDG_SHWO_W,
+        HEIGHT
+        );
+
+  if (m_bTowDisplays && m_pWdgShow[1] != Q_NULLPTR) {
+    m_pWdgShow[0]->setGeometry(m_rectLeftDisplays);
+    m_pWdgShow[1]->setGeometry(m_rectRightDisplays);
   }
   else {
-    m_pWdgShow[0]->setGeometry(
-          0,
-          0,
-          WDG_SHWO_W * 2,
-          HEIGHT
-          );
+    m_pWdgShow[0]->setGeometry(m_rectLeftDisplays.united(m_rectRightDisplays));
   }
   if (m_pWdgPlotting != Q_NULLPTR) {
     m_pWdgPlotting->setGeometry(
@@ -221,6 +223,22 @@ void QBaseWidget::setShowAllTargets(bool show)
   m_pWdgShow[0]->setShowAllTargets(show);
   if (m_pWdgShow[1] != Q_NULLPTR) {
     m_pWdgShow[1]->setShowAllTargets(show);
+  }
+}
+
+void QBaseWidget::setTowDisplays(bool all)
+{
+  m_bTowDisplays = all;
+  if (m_bTowDisplays && m_pWdgShow[1] != Q_NULLPTR) {
+    m_pWdgShow[0]->setGeometry(m_rectLeftDisplays);
+    m_pWdgShow[1]->setGeometry(m_rectRightDisplays);
+    m_pWdgShow[1]->show();
+  }
+  else {
+    m_pWdgShow[0]->setGeometry(m_rectLeftDisplays.united(m_rectRightDisplays));
+    if (m_pWdgShow[1] != Q_NULLPTR) {
+      m_pWdgShow[1]->hide();
+    }
   }
 }
 

@@ -75,6 +75,7 @@ add_executable(debug_tool
   src/qstateitem.cpp
   src/qstatewidget.cpp
   src/QFrameTimeWidget.cpp
+  src/QDecisionState.cpp
   src/debugtool.qrc
   )
 

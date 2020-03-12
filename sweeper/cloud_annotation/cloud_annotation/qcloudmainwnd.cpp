@@ -19,9 +19,11 @@
 QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   : QMainWindow(parent)
 {
+  QTabWidget *tab_widget = new QTabWidget(this);
   m_pWdgPointsShow = new QPointsShowWidget(this);
+  tab_widget->addTab(m_pWdgPointsShow, QStringLiteral("Point Cloud"));
 
-  this->setCentralWidget(m_pWdgPointsShow);
+  this->setCentralWidget(tab_widget);
 
   this->createMenuBar();
   this->createToolBar();

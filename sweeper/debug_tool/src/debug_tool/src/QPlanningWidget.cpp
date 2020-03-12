@@ -437,10 +437,16 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
 
   // decision
   Json::Value decisionState;
-  decisionState["decision"] = static_cast<int>(planningData.decision);
+  decisionState["overall_decision"] = static_cast<int>(planningData.overall_decision);
+  decisionState["preprocess_decision"] = static_cast<int>(planningData.preprocess_decision);
+  decisionState["safe_stop_decision"] = static_cast<int>(planningData.safe_stop_decision);
+  decisionState["traffic_light_decision"] = static_cast<int>(planningData.traffic_light_decision);
   decisionState["radar_decision"] = static_cast<int>(planningData.radar_decision);
   decisionState["ultrasonic_decision"] = static_cast<int>(planningData.ultrasonic_decision);
-  decisionState["track_target_decision"] = static_cast<int>(planningData.track_target_decision);
+  decisionState["lidar_target_decision"] = static_cast<int>(planningData.lidar_target_decision);
+  decisionState["front_target_decision"] = static_cast<int>(planningData.front_target_decision);
+  decisionState["route_decision"] = static_cast<int>(planningData.route_decision);
+  decisionState["rear_target_decision"] = static_cast<int>(planningData.rear_target_decision);
 
   // cost
   Json::Value costWeight;
@@ -782,10 +788,16 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // decision
-  planningData.decision = static_cast<uint8_t>(decisionState["decision"].asInt());
+  planningData.overall_decision = static_cast<uint8_t>(decisionState["overall_decision"].asInt());
+  planningData.preprocess_decision = static_cast<uint8_t>(decisionState["preprocess_decision"].asInt());
+  planningData.safe_stop_decision = static_cast<uint8_t>(decisionState["safe_stop_decision"].asInt());
+  planningData.traffic_light_decision = static_cast<uint8_t>(decisionState["traffic_light_decision"].asInt());
   planningData.radar_decision = static_cast<uint8_t>(decisionState["radar_decision"].asInt());
   planningData.ultrasonic_decision = static_cast<uint8_t>(decisionState["ultrasonic_decision"].asInt());
-  planningData.track_target_decision = static_cast<uint8_t>(decisionState["track_target_decision"].asInt());
+  planningData.lidar_target_decision = static_cast<uint8_t>(decisionState["lidar_target_decision"].asInt());
+  planningData.front_target_decision = static_cast<uint8_t>(decisionState["front_target_decision"].asInt());
+  planningData.route_decision = static_cast<uint8_t>(decisionState["route_decision"].asInt());
+  planningData.rear_target_decision = static_cast<uint8_t>(decisionState["rear_target_decision"].asInt());
 
   // cost
   planningData.safety_cost_weight = costWeight["safety_cost_weight"].asDouble();
@@ -1105,7 +1117,9 @@ void QPlanningWidget::changeShowView()
     case FullView:
       m_pWdgFullView->hide();
       m_pWdgShow[0]->show();
-      m_pWdgShow[1]->show();
+      if (m_bTowDisplays) {
+        m_pWdgShow[1]->show();
+      }
       m_nShowView = LocalViewVehicle;
       break;
     default:

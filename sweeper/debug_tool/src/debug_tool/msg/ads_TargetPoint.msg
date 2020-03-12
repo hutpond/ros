@@ -6,8 +6,6 @@ float64    l
 float64    angle
 float64    width
 float64    length
-float64    sl_width
-float64    sl_length
 float64    p1_x
 float64    p1_y
 float64    p2_x

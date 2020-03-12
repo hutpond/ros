@@ -279,13 +279,25 @@ void QDataDisplayWidget::setPlanningData(
   itemRoot->setText(0, "DECISION_STATE");
 
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("DECISION: %1").arg(planningData.decision));
+  item->setText(0, QString("overall: %1").arg(planningData.overall_decision));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("RADAR_DECISION: %1").arg(planningData.radar_decision));
+  item->setText(0, QString("preprocess: %1").arg(planningData.preprocess_decision));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("ULTRASONIC_DECISION: %1").arg(planningData.ultrasonic_decision));
+  item->setText(0, QString("safe_stop: %1").arg(planningData.safe_stop_decision));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("TRACK_TARGET_DECISION: %1").arg(planningData.track_target_decision));
+  item->setText(0, QString("traffic_light: %1").arg(planningData.traffic_light_decision));
+  item = new QTreeWidgetItem();
+  item->setText(0, QString("radar: %1").arg(planningData.radar_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("ultrasonic: %1").arg(planningData.ultrasonic_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("lidar_target: %1").arg(planningData.lidar_target_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("front_target: %1").arg(planningData.front_target_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("route: %1").arg(planningData.route_decision));
+  item = new QTreeWidgetItem(itemRoot);
+  item->setText(0, QString("rear_target: %1").arg(planningData.rear_target_decision));
 
   // planning cost weight
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);

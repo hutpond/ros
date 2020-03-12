@@ -10,6 +10,6 @@ int8       DEVICE_SOURCE                       #0-UNKNOW 1-RADAR 2-LIDAR 3-CAMER
 int8       MOTION_STATUS                       #preserved
 int8       TARGET_TYPE                         #UNKNOW = -1,PEDESTRIAN = 0,BIKE = 1,VEHICLE = 2,MOTORCYCLE=3,BUS=5,	TRUCK = 7 ,TRAFICLIGHT=9,GARBAGE=10
 geometry_msgs/Point32[] edge_points
-float32    DIRX#target x direction
+float32    DIRX                                #target x direction
 float32    DIRY                                #target y direction 
 

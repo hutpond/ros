@@ -11,10 +11,12 @@ QProjectDialog::QProjectDialog(QWidget *parent) :
   ui->setupUi(this);
   ui->lineEdit_2->setReadOnly(true);
   ui->lineEdit_3->setReadOnly(true);
+  ui->lineEdit_7->setReadOnly(true);
   ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
   connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(onBtnPathBrowse()));
   connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(onBtnPointBrowse()));
+  connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(onBtnReferenceBrowse()));
 
   connect(ui->lineEdit, SIGNAL(textChanged(const QString &)),
           this, SLOT(onTextChanged()));
@@ -73,6 +75,11 @@ QString QProjectDialog::cloudPointName()
   return ui->lineEdit_3->text();
 }
 
+QString QProjectDialog::referenceName()
+{
+  return ui->lineEdit_7->text();
+}
+
 Point QProjectDialog::cloudPointOrigin(bool *ok)
 {
   Point point;
@@ -99,7 +106,6 @@ void QProjectDialog::onBtnPathBrowse()
     ui->lineEdit_2->setText(pathName);
   }
   this->checkBtnEnabled();
-  this->checkBtnEnabled();
 }
 
 void QProjectDialog::onBtnPointBrowse()
@@ -108,6 +114,16 @@ void QProjectDialog::onBtnPointBrowse()
         tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.ply)"));
   if (!fileName.isEmpty()) {
     ui->lineEdit_3->setText(fileName);
+  }
+  this->checkBtnEnabled();
+}
+
+void QProjectDialog::onBtnReferenceBrowse()
+{
+  QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Cloud Points File"), getenv("HOME"), tr("Cloud Points Files (*.xord)"));
+  if (!fileName.isEmpty()) {
+    ui->lineEdit_7->setText(fileName);
   }
   this->checkBtnEnabled();
 }
@@ -129,6 +145,7 @@ void QProjectDialog::checkBtnEnabled()
 
   bool enabled = ( (!QDir(pathName).exists()) &&
                    (!this->cloudPointName().isEmpty()) &&
+                   (!this->referenceName().isEmpty()) &&
                    (ok) );
   ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(enabled);
 }

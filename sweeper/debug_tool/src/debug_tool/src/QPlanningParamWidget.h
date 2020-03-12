@@ -18,7 +18,7 @@ class QPushButton;
 class QSlider;
 class QTextBrowser;
 class QCostValueWidget;
-class QStateWidget;
+class QDecisionState;
 
 class QPlanningParamWidget : public QWidget
 {
@@ -65,7 +65,7 @@ private:
   QLabel *m_pLblMousePosName;
   QLabel *m_pLblMousePosValue;
 
-  QStateWidget *m_pWdgState;
+  QDecisionState *m_pWdgState;
   QLabel *m_pLblDecisionValue[DecisionCount];
 
   QLabel *m_pLblScenarioType;

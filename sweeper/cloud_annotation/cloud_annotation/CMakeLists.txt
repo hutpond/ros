@@ -37,6 +37,10 @@ add_executable(cloud_annotation
   QProjectDialog.cpp
   QProjectDialog.h
   QProjectDialog.ui
+
+  QOpenDriveObject.cpp
+  QOpenDriveObject.h
+
   cloud_annotation.qrc
 )
 

@@ -530,7 +530,7 @@ void QHdMapWidget::onAddRoadSegment()
         item->setIndex(0);
 
         QTreeMapItem *item_child = new QTreeMapItem(
-              item, ItemTypeRoad, 0, "Outline");
+              item, ItemTypeRoadSide, Road::OUTLINE, "Outline");
         item_child->setIndex(0);
 
         tree_hdmap_->expandItem(parent);
@@ -679,7 +679,15 @@ void QHdMapWidget::onDeleteCurrentItem()
 bool QHdMapWidget::checkHasChildren(QTreeWidgetItem *item)
 {
   int size_child = 0;
-  if (item->type() == ItemTypeRoad) {
+  QTreeMapItem *item_map = dynamic_cast<QTreeMapItem *>(item);
+  if (item_map == nullptr) {
+    return true;
+  }
+  int type = item->type();
+  int map_type = item_map->mapType();
+
+  if (type == ItemTypeRoad ||
+      (type == ItemTypeSegment && map_type == RoadSegment::SQUARE)) {
     const int size_road = item->childCount();
     for (int i = 0; i < size_road; ++i) {
       size_child += item->child(i)->childCount();
@@ -767,7 +775,7 @@ void QHdMapWidget::onSavePointValue()
 
 void QHdMapWidget::updateHdMap()
 {
-  HdMap hdmap;
+  HdMapRaw hdmap;
   const int size_item = root_item_->childCount();
   for (int i = 0; i < size_item; ++i) {
     // item
@@ -780,18 +788,47 @@ void QHdMapWidget::updateHdMap()
       QTreeMapItem *item_segment = dynamic_cast<QTreeMapItem *>(item);
       segment.type = item_segment->type();
 
-      // road
-      const int size_road = item_segment->childCount();
-      int index_road = 0;
-      for (int j = 0; j < size_road; ++j) {
-        Road road;
-        QTreeMapItem *item_road = dynamic_cast<QTreeMapItem *>(item_segment->child(j));
+      if (segment.type == RoadSegment::ROAD) { // road
+        const int size_road = item_segment->childCount();
+        int index_road = 0;
+        for (int j = 0; j < size_road; ++j) {
+          Road road;
+          QTreeMapItem *item_road = dynamic_cast<QTreeMapItem *>(item_segment->child(j));
 
-        // road side
-        const int size_road_side = item_road->childCount();
-        for (int k = 0; k < size_road_side; ++k) {
-          QTreeMapItem *item_road_side = dynamic_cast<QTreeMapItem *>(
-                item_road->child(k));
+          // road side
+          const int size_road_side = item_road->childCount();
+          for (int k = 0; k < size_road_side; ++k) {
+            QTreeMapItem *item_road_side = dynamic_cast<QTreeMapItem *>(
+                  item_road->child(k));
+
+            // point
+            const int size_point = item_road_side->childCount();
+            for (int l = 0; l < size_point; ++l) {
+              QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
+                    item_road_side->child(l));
+              Point point = item_point->point();
+              if (item_road_side->mapType() == Road::LEFT) {
+                road.left_side.push_back(point);
+              }
+              else if (item_road_side->mapType() == Road::RIGHT) {
+                road.right_side.push_back(point);
+              }
+              else if (item_road_side->mapType() == Road::CENTRAL) {
+                road.reference.push_back(point);
+              }
+            }
+          }
+
+          if ((road.left_side.size() + road.right_side.size() + road.reference.size()) > 0) {
+            segment.roads[index_road ++] = road;
+          }
+        }
+      }
+      else if (segment.type == RoadSegment::SQUARE) {
+        const int size_road = item_segment->childCount();
+        if (size_road == 1) {
+          Road road;
+          QTreeMapItem *item_road_side = dynamic_cast<QTreeMapItem *>(item_segment->child(0));
 
           // point
           const int size_point = item_road_side->childCount();
@@ -799,20 +836,12 @@ void QHdMapWidget::updateHdMap()
             QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
                   item_road_side->child(l));
             Point point = item_point->point();
-            if (item_road_side->mapType() == Road::LEFT) {
-              road.left_side.push_back(point);
-            }
-            else if (item_road_side->mapType() == Road::RIGHT) {
-              road.right_side.push_back(point);
-            }
-            else if (item_road_side->mapType() == Road::CENTRAL) {
-              road.reference.push_back(point);
-            }
+            road.left_side.push_back(point);
           }
-        }
 
-        if ((road.left_side.size() + road.right_side.size() + road.reference.size()) > 0) {
-          segment.roads[index_road ++] = road;
+          if ((road.left_side.size() + road.right_side.size() + road.reference.size()) > 0) {
+            segment.roads[0] = road;
+          }
         }
       }
 
@@ -832,6 +861,22 @@ void QHdMapWidget::updateHdMap()
 
           hdmap.traffic_lights.push_back(light);
         }
+      }
+    }
+    else if (type == ItemTypeCrossings) {
+      Crossing crossing;
+
+      QTreeMapItem *item_crossing = dynamic_cast<QTreeMapItem *>(item);
+      int size_crossing = item_crossing->childCount();
+      for (int i = 0; i < size_crossing; ++i) {
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
+              item_crossing->child(i));
+        if (item_point != nullptr) {
+          crossing.points.push_back(item_point->point());
+        }
+      }
+      if (size_crossing > 0) {
+        hdmap.crossings.push_back(crossing);
       }
     }
   }

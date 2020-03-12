@@ -18,6 +18,7 @@ public:
   QString projectPath();
   QString projectName();
   QString cloudPointName();
+  QString referenceName();
   Point cloudPointOrigin(bool * = nullptr);
 
 protected:
@@ -27,6 +28,7 @@ protected:
 protected slots:
   void onBtnPathBrowse();
   void onBtnPointBrowse();
+  void onBtnReferenceBrowse();
   void onTextChanged();
 
 private:

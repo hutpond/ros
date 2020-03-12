@@ -298,6 +298,7 @@ void QPointsShowWidget::draw(GLenum)
     }
   }
 
+  // traffic lights
   glPointSize(5.0f);
   glBegin(GL_POINTS);
   glColor3f(1.0, 0, 0);
@@ -305,6 +306,25 @@ void QPointsShowWidget::draw(GLenum)
     glVertex3f(light.point.x, light.point.y, light.point.z);
   }
   glEnd();
+
+  // crossings
+  for (const auto &crossing : hdmap.crossings) {
+    glPointSize(5.0f);
+    glBegin(GL_POINTS);
+    glColor3f(1.0, 0, 0);
+    for (const auto &point : crossing.points) {
+      glVertex3f(point.x, point.y, point.z);
+    }
+    glEnd();
+
+    glLineWidth(3.0f);
+    glBegin(GL_LINE_LOOP);
+    glColor3f(1.0, 0.0, 1.0);
+    for (const auto &point : crossing.points) {
+      glVertex3f(point.x, point.y, point.z);
+    }
+    glEnd();
+  }
 }
 
 void QPointsShowWidget::drawCoordinates()

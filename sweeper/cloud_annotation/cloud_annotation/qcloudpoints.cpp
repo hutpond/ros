@@ -4,6 +4,8 @@
 #include<pcl/io/ply_io.h>
 #include<pcl/point_types.h>
 
+#include "QOpenDriveObject.h"
+
 QCloudPoints & QCloudPoints::instance()
 {
   static QCloudPoints points;
@@ -50,18 +52,35 @@ void QCloudPoints::openFile(const QString &fileName)
   }
 }
 
+void QCloudPoints::openOpenDriverFile(const QString &file_name)
+{
+  QOpenDriveObject obj;
+  QList<QSharedPointer<MapPoint>> reference, road_side;
+  obj.readOpenDriveFile(file_name, reference, road_side);
+
+  reference_.clear();
+  for (const auto point : reference) {
+    if (reference_.size() == 0) {
+      reference_.push_back(point);
+    }
+    else if (reference_[reference_.size() - 1]->distance(point) >= 0.5) {
+      reference_.push_back(point);
+    }
+  }
+}
+
 pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
 {
   return cloud_points_;
 }
 
-void QCloudPoints::setHdMap(const HdMap &hdmap)
+void QCloudPoints::setHdMap(const HdMapRaw &hdmap)
 {
   hdmap_ = hdmap;
   emit updateData();
 }
 
-const HdMap & QCloudPoints::hdMap() const
+const HdMapRaw & QCloudPoints::hdMap() const
 {
   return hdmap_;
 }
