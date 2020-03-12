@@ -12,8 +12,6 @@
 
 QHdMapWidget::QHdMapWidget(QWidget *parent)
   : QWidget(parent)
-  , road_segment_size_(0)
-  , traffic_light_size_(0)
 {
   tree_hdmap_ = new QTreeWidget(this);
   tree_hdmap_->setHeaderHidden(true);
@@ -23,11 +21,7 @@ QHdMapWidget::QHdMapWidget(QWidget *parent)
   root_item_ = new QTreeWidgetItem(tree_hdmap_, ItemTypeMap);
   root_item_->setText(0, "map");
 
-  this->createMenuMap();
-  this->createMenuSegment();
-  this->createMenuDelete();
-  this->createMenuRoadSide();
-  this->createMenuPoints();
+  this->createTreeMenu();
 
   point_val_widget_ = new QPointValue(this);
   this->setMinimumWidth(300);
@@ -61,40 +55,40 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
     if (type == ItemTypeSegment) {
       // segment
       Json::Value json_segment;
-      QTreeSegmentItem *item_segment = dynamic_cast<QTreeSegmentItem *>(item);
-      json_segment["type"] = item_segment->segmentType();
+      QTreeMapItem *item_segment = dynamic_cast<QTreeMapItem *>(item);
+      json_segment["type"] = item_segment->mapType();
 
       // road
       Json::Value json_roads;
       const int size_road = item_segment->childCount();
       for (int j = 0; j < size_road; ++j) {
         Json::Value json_road;
-        QTreeRoadItem *item_road = dynamic_cast<QTreeRoadItem *>(item_segment->child(j));
+        QTreeMapItem *item_road = dynamic_cast<QTreeMapItem *>(item_segment->child(j));
 
         // road side
         Json::Value json_left_side, json_right_side, json_reference;
         const int size_road_side = item_road->childCount();
         for (int k = 0; k < size_road_side; ++k) {
-          QTreeRoadSideItem *item_road_side = dynamic_cast<QTreeRoadSideItem *>(
+          QTreeMapItem *item_road_side = dynamic_cast<QTreeMapItem *>(
                 item_road->child(k));
 
           // point
           const int size_point = item_road_side->childCount();
           for (int l = 0; l < size_point; ++l) {
-            QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(
+            QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
                   item_road_side->child(l));
             Json::Value json_point;
             Point point = item_point->point();
             json_point["x"] = point.x;
             json_point["y"] = point.y;
             json_point["z"] = point.z;
-            if (item_road_side->roadtype() == Road::LEFT) {
+            if (item_road_side->mapType() == Road::LEFT) {
               json_left_side.append(json_point);
             }
-            else if (item_road_side->roadtype() == Road::RIGHT) {
+            else if (item_road_side->mapType() == Road::RIGHT) {
               json_right_side.append(json_point);
             }
-            else if (item_road_side->roadtype() == Road::CENTRAL) {
+            else if (item_road_side->mapType() == Road::CENTRAL) {
               json_reference.append(json_point);
             }
           }
@@ -110,9 +104,9 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
       json_segments.append(json_segment);
     }
     else if (type == ItemTypeTrafficLight) {
-      QTreeTrafficLightItem *item_light = dynamic_cast<QTreeTrafficLightItem *>(item);
+      QTreeMapItem *item_light = dynamic_cast<QTreeMapItem *>(item);
       if (item_light != nullptr && item_light->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_light->child(0));
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item_light->child(0));
         if (item_point != nullptr) {
           Json::Value json_light;
           Point point = item_point->point();
@@ -127,14 +121,13 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
     else if (type == ItemTypeStopLines) {
       QTreeMapItem *item_stop_line = dynamic_cast<QTreeMapItem *>(item);
       if (item_stop_line != nullptr && item_stop_line->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_stop_line->child(0));
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item_stop_line->child(0));
         if (item_point != nullptr) {
           Json::Value json_stop_line;
           Point point = item_point->point();
           json_stop_line["x"] = point.x;
           json_stop_line["y"] = point.y;
           json_stop_line["z"] = point.z;
-          json_stop_line["type"] = item_stop_line->mapType();
 
           json_stop_lines.append(json_stop_line);
         }
@@ -142,31 +135,35 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
     }
     else if (type == ItemTypeCrossings) {
       QTreeMapItem *item_crossing = dynamic_cast<QTreeMapItem *>(item);
-      if (item_crossing != nullptr && item_crossing->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_crossing->child(0));
-        if (item_point != nullptr) {
-          Json::Value json_crossing;
-          Point point = item_point->point();
-          json_crossing["x"] = point.x;
-          json_crossing["y"] = point.y;
-          json_crossing["z"] = point.z;
-          json_crossing["type"] = item_crossing->mapType();
+      if (item_crossing != nullptr && item_crossing->childCount() > 0) {
+        Json::Value json_crossing;
+        const int size_points = item_crossing->childCount();
+        for (int i = 0; i < size_points; ++i) {
+          QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
+                item_crossing->child(i));
+          if (item_point != nullptr) {
+            Json::Value json_point;
+            Point point = item_point->point();
+            json_point["x"] = point.x;
+            json_point["y"] = point.y;
+            json_point["z"] = point.z;
 
-          json_crossings.append(json_crossing);
+            json_crossing.append(json_point);
+          }
         }
+        json_crossings.append(json_crossing);
       }
     }
     else if (type == ItemTypeMarkings) {
       QTreeMapItem *item_marking = dynamic_cast<QTreeMapItem *>(item);
       if (item_marking != nullptr && item_marking->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_marking->child(0));
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item_marking->child(0));
         if (item_point != nullptr) {
           Json::Value json_marking;
           Point point = item_point->point();
           json_marking["x"] = point.x;
           json_marking["y"] = point.y;
           json_marking["z"] = point.z;
-          json_marking["type"] = item_marking->mapType();
 
           json_markings.append(json_marking);
         }
@@ -175,14 +172,13 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
     else if (type == ItemTypeSigns) {
       QTreeMapItem *item_sign = dynamic_cast<QTreeMapItem *>(item);
       if (item_sign != nullptr && item_sign->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_sign->child(0));
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item_sign->child(0));
         if (item_point != nullptr) {
           Json::Value json_sign;
           Point point = item_point->point();
           json_sign["x"] = point.x;
           json_sign["y"] = point.y;
           json_sign["z"] = point.z;
-          json_sign["type"] = item_sign->mapType();
 
           json_signs.append(json_sign);
         }
@@ -234,32 +230,32 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
   // segment
   Json::Value &json_segments = root["segment"];
   const int size_segments = json_segments.size();
-  road_segment_size_ = size_segments;
   for (int i = 0; i < size_segments; ++i) {
     Json::Value &json_roads = json_segments[i]["road"];
-    QTreeSegmentItem *item_segment = new QTreeSegmentItem(root_item_);
-    item_segment->setSegmentType(json_segments[i]["type"].asInt());
-    item_segment->setText(0, QString("Road Segment %1").arg(i + 1));
+    int map_type = json_segments[i]["type"].asInt();
+    QTreeMapItem *item_segment = new QTreeMapItem(
+          root_item_, ItemTypeSegment, map_type, "Road Segment");
+    item_segment->setIndex(i);
 
     // roads
     const int size_roads = json_roads.size();
     for (int j = 0; j < size_roads; ++j) {
-      item_segment->addRoadSize();
-      QTreeRoadItem *item_road = new QTreeRoadItem(item_segment);
-      item_road->setText(0, QString("Road %1").arg(j + 1));
-      item_road->setRoadIndex(j);
-      if (item_segment->segmentType() == RoadSegment::ROAD) {
+//      item_segment->addRoadSize();
+      QTreeMapItem *item_road = new QTreeMapItem(
+            item_segment, ItemTypeRoad, 0, "Road");
+      item_road->setIndex(j);
+      if (item_segment->mapType() == RoadSegment::ROAD) {
         // left
-        QTreeRoadSideItem *item_left_side = new QTreeRoadSideItem(item_road);
-        item_left_side->setRoadType(Road::LEFT);
-        item_left_side->setText(0, QString("Left Side"));
+        QTreeMapItem *item_left_side = new QTreeMapItem(
+              item_road, ItemTypeRoadSide, Road::LEFT, "Left Side");
+        item_left_side->setIndex(0);
 
         Json::Value &json_left_side = json_roads[j]["left"];
         const int size_left_points = json_left_side.size();
         for (int k = 0; k < size_left_points; ++k) {
           Json::Value &json_point = json_left_side[k];
-          QTreePointItem *item_point = new QTreePointItem(item_left_side);
-          item_point->setText(0, QString("Point %1").arg(k + 1));
+          QTreeMapItem *item_point = new QTreeMapItem(
+                item_left_side, ItemTypePoint, 0, "Point");
           item_point->setIndex(k);
           Point point;
           point.x = json_point["x"].asDouble();
@@ -269,16 +265,16 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
         }
 
         // right
-        QTreeRoadSideItem *item_right_side = new QTreeRoadSideItem(item_road);
-        item_right_side->setRoadType(Road::RIGHT);
-        item_right_side->setText(0, QString("Right Side"));
+        QTreeMapItem *item_right_side = new QTreeMapItem(
+              item_road, ItemTypeRoadSide, Road::RIGHT, "Right Side");
+        item_right_side->setIndex(0);
 
         Json::Value json_right_side = json_roads[j]["right"];
         const int size_right_points = json_right_side.size();
         for (int k = 0; k < size_right_points; ++k) {
           Json::Value &json_point = json_right_side[k];
-          QTreePointItem *item_point = new QTreePointItem(item_right_side);
-          item_point->setText(0, QString("Point %1").arg(k + 1));
+          QTreeMapItem *item_point = new QTreeMapItem(
+                item_right_side, ItemTypePoint, 0, "Point");
           item_point->setIndex(k);
           Point point;
           point.x = json_point["x"].asDouble();
@@ -287,17 +283,17 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
           item_point->setPoint(point);
         }
       }
-      else if (item_segment->segmentType() == RoadSegment::SQUARE) {
-        QTreeRoadSideItem *item_reference = new QTreeRoadSideItem(item_road);
-        item_reference->setRoadType(Road::OUTLINE);
-        item_reference->setText(0, QString("Outline"));
+      else if (item_segment->mapType() == RoadSegment::SQUARE) {
+        QTreeMapItem *item_reference = new QTreeMapItem(
+              item_road, ItemTypeRoadSide, Road::OUTLINE, "Outline");
+        item_reference->setIndex(0);
 
         Json::Value json_reference = json_roads[j]["reference"];
         const int size_points = json_reference.size();
         for (int k = 0; k < size_points; ++k) {
           Json::Value &json_point = json_reference[k];
-          QTreePointItem *item_point = new QTreePointItem(item_reference);
-          item_point->setText(0, QString("Point %1").arg(k + 1));
+          QTreeMapItem *item_point = new QTreeMapItem(
+                item_reference, ItemTypePoint, 0, "Point");
           item_point->setIndex(k);
           Point point;
           point.x = json_point["x"].asDouble();
@@ -312,13 +308,13 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
   // traffic light
   Json::Value &json_traffic_lights = root["light"];
   const int size_traffic_lights = json_traffic_lights.size();
-  traffic_light_size_ = size_traffic_lights;
   for (int i = 0; i < size_traffic_lights; ++i) {
-    QTreeTrafficLightItem *item_light = new QTreeTrafficLightItem(root_item_);
-    item_light->setText(0,  QString("Traffic Light %1").arg(i + 1));
+    QTreeMapItem *item_light = new QTreeMapItem(
+          root_item_, ItemTypeTrafficLight, 0, "Traffic Light");
+    item_light->setIndex(i);
 
-    QTreePointItem *item_point = new QTreePointItem(item_light);
-    item_point->setText(0, QString("Point"));
+    QTreeMapItem *item_point = new QTreeMapItem(
+          item_light, ItemTypePoint, 0, "Point");
     item_point->setIndex(0);
     Point point;
     point.x = json_traffic_lights[i]["x"].asDouble();
@@ -330,13 +326,13 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
   // stop line
   Json::Value &json_stop_lines = root["stop_line"];
   const int size_stop_lines = json_stop_lines.size();
-  stop_lines_size_ = size_stop_lines;
   for (int i = 0; i < size_stop_lines; ++i) {
-    QTreeMapItem *item_stop_lines = new QTreeMapItem(root_item_, ItemTypeStopLines);
+    QTreeMapItem *item_stop_lines = new QTreeMapItem(
+          root_item_, ItemTypeStopLines, 0, "Stop Line");
     item_stop_lines->setText(0,  QString("Stop Line %1").arg(i + 1));
 
-    QTreePointItem *item_point = new QTreePointItem(item_stop_lines);
-    item_point->setText(0, QString("Point"));
+    QTreeMapItem *item_point = new QTreeMapItem(
+          item_stop_lines, ItemTypePoint, 0, "Point");
     item_point->setIndex(0);
     Point point;
     point.x = json_stop_lines[i]["x"].asDouble();
@@ -348,31 +344,35 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
   // cross
   Json::Value &json_crossings = root["crossing"];
   const int size_crossings = json_crossings.size();
-  crossings_size_ = size_crossings;
   for (int i = 0; i < size_crossings; ++i) {
-    QTreeMapItem *item_crossing = new QTreeMapItem(root_item_, ItemTypeCrossings);
-    item_crossing->setText(0,  QString("Crossing %1").arg(i + 1));
+     QTreeMapItem *item_crossing = new QTreeMapItem(
+          root_item_, ItemTypeCrossings, 0, "Crossing");
+    item_crossing->setIndex(i);
 
-    QTreePointItem *item_point = new QTreePointItem(item_crossing);
-    item_point->setText(0, QString("Point"));
-    item_point->setIndex(0);
-    Point point;
-    point.x = json_stop_lines[i]["x"].asDouble();
-    point.y = json_stop_lines[i]["y"].asDouble();
-    point.z = json_stop_lines[i]["z"].asDouble();
-    item_point->setPoint(point);
+    const int size_points = json_crossings[i].size();
+    for (int j = 0; j < size_points; ++j) {
+      Json::Value &json_point = json_crossings[i][j];
+      QTreeMapItem *item_point = new QTreeMapItem(
+            item_crossing, ItemTypePoint, 0, "Point");
+      item_point->setIndex(j);
+      Point point;
+      point.x = json_point["x"].asDouble();
+      point.y = json_point["y"].asDouble();
+      point.z = json_point["z"].asDouble();
+      item_point->setPoint(point);
+    }
   }
 
   // markings
   Json::Value &json_markings = root["marking"];
   const int size_marking = json_markings.size();
-  markings_size_ = size_marking;
   for (int i = 0; i < size_marking; ++i) {
-    QTreeMapItem *item_marking = new QTreeMapItem(root_item_, ItemTypeMarkings);
-    item_marking->setText(0,  QString("Marking %1").arg(i + 1));
+    QTreeMapItem *item_marking = new QTreeMapItem(
+          root_item_, ItemTypeMarkings, 0, "Marking");
+    item_marking->setIndex(i);
 
-    QTreePointItem *item_point = new QTreePointItem(item_marking);
-    item_point->setText(0, QString("Point"));
+    QTreeMapItem *item_point = new QTreeMapItem(
+          item_marking, ItemTypePoint, 0, "Point");
     item_point->setIndex(0);
     Point point;
     point.x = json_stop_lines[i]["x"].asDouble();
@@ -381,16 +381,16 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
     item_point->setPoint(point);
   }
 
-  // markings
+  // signs
   Json::Value &json_signs = root["sign"];
   const int size_signs = json_signs.size();
-  signs_size_ = size_signs;
   for (int i = 0; i < size_signs; ++i) {
-    QTreeMapItem *item_sign = new QTreeMapItem(root_item_, ItemTypeSigns);
-    item_sign->setText(0,  QString("Sign %1").arg(i + 1));
+    QTreeMapItem *item_sign = new QTreeMapItem(
+          root_item_, ItemTypeSigns, 0, "Sign");
+    item_sign->setIndex(i);
 
-    QTreePointItem *item_point = new QTreePointItem(item_sign);
-    item_point->setText(0, QString("Point"));
+    QTreeMapItem *item_point = new QTreeMapItem(
+          item_sign, ItemTypePoint, 0, "Point");
     item_point->setIndex(0);
     Point point;
     point.x = json_stop_lines[i]["x"].asDouble();
@@ -415,8 +415,21 @@ void QHdMapWidget::resizeEvent(QResizeEvent *)
         0, HEIGHT * TREE_H_PF, WIDTH, HEIGHT * (1.0f - TREE_H_PF));
 }
 
-void QHdMapWidget::createMenuMap()
+int QHdMapWidget::childCount(int type)
 {
+  int size_child = 0;
+  const int size_item = root_item_->childCount();
+  for (int i = 0; i < size_item; ++i) {
+    if (root_item_->child(i)->type() == type) {
+      ++ size_child;
+    }
+  }
+  return size_child;
+}
+
+void QHdMapWidget::createTreeMenu()
+{
+  // menu map
   menu_map_ = new QMenu(tree_hdmap_);
 
   QAction *action = new QAction(tr("添加路段"), menu_map_);
@@ -430,63 +443,26 @@ void QHdMapWidget::createMenuMap()
   action = new QAction(tr("人行横道"), menu_map_);
   connect(action, &QAction::triggered, this, &QHdMapWidget::onAddCrossing);
   menu_map_->addAction(action);
-}
 
-void QHdMapWidget::createMenuSegment()
-{
-  menu_segment_ = new QMenu(tree_hdmap_);
+  // menu item
+  menu_item_ = new QMenu(tree_hdmap_);
 
-  QAction *action = new QAction(tr("添加路径"), menu_segment_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onAddRoad);
-  menu_segment_->addAction(action);
+  action_add_load_ = new QAction(tr("添加路径"), menu_item_);
+  connect(action_add_load_, &QAction::triggered, this, &QHdMapWidget::onAddRoad);
+  menu_item_->addAction(action_add_load_);
 
-  action = new QAction(tr("删除"), menu_segment_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
-  menu_segment_->addAction(action);
-}
+  action_delete_ = new QAction(tr("删除"), menu_item_);
+  connect(action_delete_, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
+  menu_item_->addAction(action_delete_);
 
-/**
- * @brief 右键菜单，通用，只有“删除”操作
- */
-void QHdMapWidget::createMenuDelete()
-{
-  menu_delete_ = new QMenu(tree_hdmap_);
+  action_delete_all_ = new QAction(tr("清空所有点"), menu_item_);
+  connect(action_delete_all_, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
+  menu_item_->addAction(action_delete_all_);
 
-  QAction *action = new QAction(tr("删除"), menu_delete_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
-  menu_delete_->addAction(action);
-}
-
-/**
- * @brief 右键菜单，清空点
- */
-void QHdMapWidget::createMenuRoadSide()
-{
-  // road side
-  menu_road_side_ = new QMenu(tree_hdmap_);
-
-  QAction *action = new QAction(tr("清空所有点"), menu_road_side_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
-  menu_road_side_->addAction(action);
-
-  // crossing
-  menu_item_with_points_ = new QMenu(tree_hdmap_);
-
-  action = new QAction(tr("删除"), menu_item_with_points_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
-  menu_item_with_points_->addAction(action);
-
-  action = new QAction(tr("清空所有点"), menu_item_with_points_);
-  connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteAllItems);
-  menu_item_with_points_->addAction(action);
-
-}
-
-void QHdMapWidget::createMenuPoints()
-{
+  // menu point
   menu_points_ = new QMenu(tree_hdmap_);
 
-  QAction *action = new QAction(tr("删除"), menu_points_);
+  action = new QAction(tr("删除"), menu_points_);
   connect(action, &QAction::triggered, this, &QHdMapWidget::onDeleteCurrentItem);
   menu_points_->addAction(action);
 
@@ -504,32 +480,30 @@ void QHdMapWidget::onCustomContextMenuRequested(const QPoint &pos)
   QTreeWidgetItem *item = tree_hdmap_->currentItem();
   switch (item->type()) {
     case ItemTypeSegment:
-    {
-      QTreeSegmentItem *item_current = dynamic_cast<QTreeSegmentItem *>(item);
-      if (item_current != nullptr && item_current->segmentType() == RoadSegment::ROAD) {
-        menu_segment_->exec(mapToGlobal(pos));
-      }
+      action_add_load_->setEnabled(true);
+      action_delete_->setEnabled(true);
+      action_delete_all_->setEnabled(false);
+      menu_item_->exec(mapToGlobal(pos));
       break;
-    }
-    case ItemTypeTrafficLight:
-      menu_delete_->exec(mapToGlobal(pos));
-      break;
-    case ItemTypeCrossings:
-      menu_item_with_points_->exec(mapToGlobal(pos));
     case ItemTypeRoad:
-    {
-      QTreeRoadItem *item_current = dynamic_cast<QTreeRoadItem *>(item);
-      if (item_current != nullptr) {
-        QTreeSegmentItem *item_parent = dynamic_cast<QTreeSegmentItem *>(
-              item_current->parent());
-        if (item_parent != nullptr && item_parent->segmentType() == RoadSegment::ROAD) {
-          menu_delete_->exec(mapToGlobal(pos));
-        }
-      }
+      action_add_load_->setEnabled(false);
+      action_delete_->setEnabled(true);
+      action_delete_all_->setEnabled(false);
+      menu_item_->exec(mapToGlobal(pos));
       break;
-    }
+      break;
     case ItemTypeRoadSide:
-      menu_road_side_->exec(mapToGlobal(pos));
+      action_add_load_->setEnabled(false);
+      action_delete_->setEnabled(false);
+      action_delete_all_->setEnabled(true);
+      menu_item_->exec(mapToGlobal(pos));
+      break;
+    case ItemTypeTrafficLight:
+    case ItemTypeCrossings:
+      action_add_load_->setEnabled(false);
+      action_delete_->setEnabled(true);
+      action_delete_all_->setEnabled(true);
+      menu_item_->exec(mapToGlobal(pos));
       break;
     case ItemTypePoint:
       menu_points_->exec(mapToGlobal(pos));
@@ -550,25 +524,24 @@ void QHdMapWidget::onAddRoadSegment()
     int type = dlg.type();
     QTreeWidgetItem *parent = tree_hdmap_->currentItem();
     if (RoadSegment::SQUARE == type) {
-      if (road_segment_size_ == 0) {
-        QTreeSegmentItem *item = new QTreeSegmentItem(parent);
-        item->setSegmentType(type);
-        item->setIndex(road_segment_size_ ++);
-        item->setText(0, QString("Square"));
+      if (this->childCount(ItemTypeSegment) == 0) {
+        QTreeMapItem *item = new QTreeMapItem(
+              parent, ItemTypeSegment, RoadSegment::SQUARE, "Square");
+        item->setIndex(0);
 
-        QTreeRoadItem *item_child = new QTreeRoadItem(item);
-        item_child->setRoadIndex(0);
-        item_child->setText(0, QStringLiteral("Outline"));
+        QTreeMapItem *item_child = new QTreeMapItem(
+              item, ItemTypeRoad, 0, "Outline");
+        item_child->setIndex(0);
 
         tree_hdmap_->expandItem(parent);
         tree_hdmap_->expandItem(item);
       }
     }
     else {
-      QTreeSegmentItem *item = new QTreeSegmentItem(parent);
-      item->setSegmentType(type);
-      item->setIndex(road_segment_size_ ++);
-      item->setText(0, QString("Road Segment %1").arg(road_segment_size_));
+      int index = this->childCount(ItemTypeSegment);
+      QTreeMapItem *item = new QTreeMapItem(
+            parent, ItemTypeSegment, RoadSegment::ROAD, "Road Segment");
+      item->setIndex(index);
       tree_hdmap_->expandItem(parent);
     }
   }
@@ -580,24 +553,24 @@ void QHdMapWidget::onAddRoadSegment()
 void QHdMapWidget::onAddRoad()
 {
   // return if type of segment is square
-  QTreeSegmentItem *parent = dynamic_cast<QTreeSegmentItem *>(tree_hdmap_->currentItem());
-  if (parent == nullptr || parent->segmentType() == RoadSegment::SQUARE) {
+  QTreeMapItem *parent = dynamic_cast<QTreeMapItem *>(tree_hdmap_->currentItem());
+  if (parent == nullptr || parent->mapType() == RoadSegment::SQUARE) {
     return;
   }
 
   // add road
-  QTreeRoadItem *item = new QTreeRoadItem(parent);
-  item->setRoadIndex(parent->roadSize());
-  parent->addRoadSize();
-  item->setText(0, QString("Road %1").arg(parent->roadSize()));
+  QTreeMapItem *item = new QTreeMapItem(
+        parent, ItemTypeRoad, 0, "Road");
+  item->setIndex(parent->childCount() - 1);
 
   // add left side and right side
-  QTreeRoadSideItem *childLeft = new QTreeRoadSideItem(item);
-  childLeft->setRoadType(Road::LEFT);
-  childLeft->setText(0, QString("Left Side"));
-  QTreeRoadSideItem *childRight = new QTreeRoadSideItem(item);
-  childRight->setRoadType(Road::RIGHT);
-  childRight->setText(0, QString("Right Side"));
+  QTreeMapItem *childLeft = new QTreeMapItem(
+        item, ItemTypeRoadSide, Road::LEFT, "Left Side");
+  childLeft->setIndex(0);
+
+  QTreeMapItem *childRight = new QTreeMapItem(
+        item, ItemTypeRoadSide, Road::RIGHT, "Right Side");
+  childRight->setIndex(0);
 
   // set current and expand
   tree_hdmap_->setCurrentItem(item);
@@ -612,56 +585,51 @@ void QHdMapWidget::onAddPoint(const Point &point)
   }
 
   int type = item->type();
-  if (type == ItemTypeRoadSide || type ==  ItemTypeCrossings) {
-    int size_point = item->childCount();
-    QTreePointItem *itemChild = new QTreePointItem(item);
-    itemChild->setIndex(size_point);
-    itemChild->setPoint(point);
-    itemChild->setText(0, QString("Point %1").arg(size_point + 1));
-
-    this->updateHdMap();
+  if (type == ItemTypePoint) { // replace
+    QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item);
+    item_point->setPoint(point);
   }
-  else if (type == ItemTypeTrafficLight) {
-    QTreePointItem *itemChild = nullptr;
+  else if (type == ItemTypeRoadSide || type ==  ItemTypeCrossings) {  // add
+    int size_point = item->childCount();
+    QTreeMapItem *item_point = new QTreeMapItem(
+          item, ItemTypePoint, 0, "Point");
+    item_point->setIndex(size_point);
+    item_point->setPoint(point);
+  }
+  else {  // replace or add
+    QTreeMapItem *item_point = nullptr;
     if (item->childCount() == 0) {
-      itemChild = new QTreePointItem(item);
-      itemChild->setText(0, QString("Point"));
+      QTreeMapItem *item_point = new QTreeMapItem(
+            item, ItemTypePoint, 0, "Point");
+      item_point->setIndex(0);
     }
     else {
-      itemChild = dynamic_cast<QTreePointItem *>(item->child(0));
+      item_point = dynamic_cast<QTreeMapItem *>(item->child(0));
     }
-    if (itemChild != nullptr) {
-      itemChild->setPoint(point);
-
-      this->updateHdMap();
-    }
+    item_point->setPoint(point);
   }
-  else if (type == ItemTypePoint) {
-    QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item);
-    if (item_point != nullptr) {
-      item_point->setPoint(point);
 
-      this->updateHdMap();
-    }
-  }
+  this->updateHdMap();
   item->setExpanded(true);
 }
 
 void QHdMapWidget::onAddTrafficLight()
 {
+  int index = this->childCount(ItemTypeTrafficLight);
   QTreeWidgetItem *parent = tree_hdmap_->currentItem();
-  QTreeTrafficLightItem *item = new QTreeTrafficLightItem(parent);
-  item->setLightIndex(traffic_light_size_ ++);
-  item->setText(0, QString("Traffic Light %1").arg(traffic_light_size_));
+  QTreeMapItem *item = new QTreeMapItem(
+        parent, ItemTypeTrafficLight, 0, "Traffic Light");
+  item->setIndex(index);
   tree_hdmap_->expandItem(parent);
 }
 
 void QHdMapWidget::onAddCrossing()
 {
+  int index = this->childCount(ItemTypeCrossings);
   QTreeWidgetItem *parent = tree_hdmap_->currentItem();
-  QTreeCrossingItem *item = new QTreeCrossingItem(parent);
-  item->setIndex(crossings_size_ ++);
-  item->setText(0, QString("Crossing %1").arg(crossings_size_));
+  QTreeMapItem *item = new QTreeMapItem(
+        parent, ItemTypeCrossings, 0, "Crossing");
+  item->setIndex(index);
   tree_hdmap_->expandItem(parent);
 }
 
@@ -680,190 +648,47 @@ void QHdMapWidget::onDeleteCurrentItem()
     return;
   }
 
+  // check child
+  if (this->checkHasChildren(item)) {
+    return;
+  }
+
   // reset inde and size
-  bool ret = false;
-  int type = item->type();
-  if (type == ItemTypeSegment) {
-    ret = this->deleteRoadSegment(item, parent);
+  QTreeMapItem *item_map = dynamic_cast<QTreeMapItem *>(item);
+  if (item_map == nullptr) {
+    return;
   }
-  else if (type == ItemTypeRoad) {
-    ret = this->deleteRoad(item, parent);
-  }
-  else if (type == ItemTypeTrafficLight) {
-    traffic_light_size_ = 0;
-    ret = this->deleteSingleItem(item, parent);
-  }
-  else if (type == ItemTypeCrossings) {
-    ret = this->deleteCrossing(item, parent);
-  }
-  else if (item->type() == ItemTypePoint) {
-    ret = this->deletePoint(item, parent);
+  const int size_item = parent->childCount();
+  for (int i = 0; i < size_item; ++i) {
+    QTreeMapItem *item_child = dynamic_cast<QTreeMapItem *>(parent->child(i));
+    if (item_child == nullptr) {
+      continue;
+    }
+    if (item_child->type() == item->type() && item_child->index() > item_map->index()) {
+      item_child->setIndex(item_child->index() - 1);
+    }
   }
 
   // remove select item and set current item
-  if (ret) {
-    parent->removeChild(item);
-    tree_hdmap_->setCurrentItem(parent);
+  parent->removeChild(item);
+  tree_hdmap_->setCurrentItem(parent);
 
-    this->updateHdMap();
-  }
-}
-
-bool QHdMapWidget::deleteRoadSegment(QTreeWidgetItem *item, QTreeWidgetItem *parent)
-{
-  // return if size of childs is not zero
-  if (item->childCount() > 0) {
-    QMessageBox::warning(
-          this, QStringLiteral("删除"),
-          QStringLiteral("请先清空所有子节点"),
-          QMessageBox::Cancel);
-    return false;
-  }
-
-  // reset index and size
-  const int size_item = parent->childCount();
-  road_segment_size_ = 0;
-  for (int i = 0; i < size_item; ++i) {
-    QTreeWidgetItem *child = parent->child(i);
-    if (child == item || child->type() != item->type()) {
-      continue;
-    }
-
-    QTreeSegmentItem *childSegment = dynamic_cast<QTreeSegmentItem *>(child);
-    if (childSegment == nullptr) {
-      continue;
-    }
-    childSegment->setIndex(road_segment_size_ ++);
-    childSegment->setText(0, QString("Road Segment %1").arg(road_segment_size_));
-  }
-
-  return true;
-}
-
-bool QHdMapWidget::deleteRoad(QTreeWidgetItem *item, QTreeWidgetItem *parent)
-{
-  // return if size of childs is not zero
-  const int size_child = item->childCount();
-  bool hasChild = false;
-  int size_points = 0;
-  for (int i = 0; i < size_child; ++i) {
-    QTreeWidgetItem *child = item->child(i);
-    size_points += child->childCount();
-  }
-  hasChild = (size_points > 0);
-  if (hasChild) {
-    QMessageBox::warning(
-          this, QStringLiteral("删除"),
-          QStringLiteral("请先清空所有子节点"),
-          QMessageBox::Cancel);
-    return false;
-  }
-
-  // reset index and size
-  QTreeSegmentItem *parentSegment = dynamic_cast<QTreeSegmentItem *>(parent);
-  parentSegment->reduceRoadSize();
-  int road_size = 0;
-  const int size_item = parent->childCount();
-  for (int i = 0; i < size_item; ++i) {
-    QTreeWidgetItem *child = parent->child(i);
-    if (child == item || child->type() != item->type()) {
-      continue;
-    }
-
-    QTreeRoadItem *childRoad = dynamic_cast<QTreeRoadItem *>(child);
-    if (childRoad == nullptr) {
-      continue;
-    }
-    childRoad->setRoadIndex(road_size ++);
-    childRoad->setText(0, QString("Road %1").arg(road_size));
-  }
-
-  return true;
-}
-
-/**
- * @brief 删除单节点
- * @param item
- * @param parent
- * @return
- */
-bool QHdMapWidget::deleteSingleItem(QTreeWidgetItem *item, QTreeWidgetItem *parent)
-{
-  // reset index and size
-  const int size_item = parent->childCount();
-  for (int i = 0; i < size_item; ++i) {
-    QTreeWidgetItem *child = parent->child(i);
-    if (child == item || child->type() != item->type()) {
-      continue;
-    }
-
-    if (child->type() == ItemTypeTrafficLight) {
-      QTreeTrafficLightItem *childLight = dynamic_cast<QTreeTrafficLightItem *>(child);
-      if (childLight == nullptr) {
-        continue;
-      }
-      childLight->setLightIndex(traffic_light_size_ ++);
-      childLight->setText(0, QString("Traffic Light %1").arg(traffic_light_size_));
-    }
-  }
-
-  return true;
-}
-
-bool QHdMapWidget::deletePoint(QTreeWidgetItem *item, QTreeWidgetItem *parent)
-{
-  // reset index and size
-  int index = 0;
-  const int size_item = parent->childCount();
-  for (int i = 0; i < size_item; ++i) {
-    QTreeWidgetItem *child = parent->child(i);
-    if (child == item || child->type() != item->type()) {
-      continue;
-    }
-
-    QTreePointItem *childPoint = dynamic_cast<QTreePointItem *>(child);
-    if (childPoint == nullptr) {
-      continue;
-    }
-    childPoint->setIndex(index ++);
-    childPoint->setText(0, QString("Point %1").arg(index));
-  }
-
-  return true;
-}
-
-bool QHdMapWidget::deleteCrossing(QTreeWidgetItem *item, QTreeWidgetItem *parent)
-{
-  // return if size of childs is not zero
-  if (this->checkHasChildren(item)) {
-    return false;
-  }
-
-  // reset index and size
-  const int size_item = parent->childCount();
-  crossings_size_ = 0;
-  for (int i = 0; i < size_item; ++i) {
-    QTreeWidgetItem *child = parent->child(i);
-    if (child == item || child->type() != item->type()) {
-      continue;
-    }
-
-    QTreeCrossingItem *childCrossing = dynamic_cast<QTreeCrossingItem *>(child);
-    if (childCrossing == nullptr) {
-      continue;
-    }
-    childCrossing->setIndex(crossings_size_ ++);
-    childCrossing->setText(0, QString("Crossing %1").arg(crossings_size_));
-  }
-
-  return true;
-
+  this->updateHdMap();
 }
 
 bool QHdMapWidget::checkHasChildren(QTreeWidgetItem *item)
 {
-  // return if size of childs is not zero
-  if (item->childCount() > 0) {
+  int size_child = 0;
+  if (item->type() == ItemTypeRoad) {
+    const int size_road = item->childCount();
+    for (int i = 0; i < size_road; ++i) {
+      size_child += item->child(i)->childCount();
+    }
+  }
+  else {
+    size_child = item->childCount();
+  }
+  if (size_child > 0) {
     QMessageBox::warning(
           this, QStringLiteral("删除"),
           QStringLiteral("请先清空所有子节点"),
@@ -886,7 +711,7 @@ void QHdMapWidget::onDeleteAllItems()
         this, QStringLiteral("清空"),
         QStringLiteral("是否清空所有点？"),
         QMessageBox::Ok | QMessageBox::Cancel);
-  if (ret == QDialog::Rejected) {
+  if (ret == QMessageBox::Cancel) {
     return;
   }
 
@@ -915,7 +740,7 @@ void QHdMapWidget::onItemSelectionChanged()
     return;
   }
 
-  QTreePointItem *itemPoint = dynamic_cast<QTreePointItem *>(item);
+  QTreeMapItem *itemPoint = dynamic_cast<QTreeMapItem *>(item);
   if (itemPoint != nullptr) {
     const auto &point = itemPoint->point();
     point_val_widget_->setPoint(point);
@@ -928,7 +753,7 @@ void QHdMapWidget::onSavePointValue()
   if (item == nullptr || item->type() != ItemTypePoint) {
     return;
   }
-  QTreePointItem *itemPoint = dynamic_cast<QTreePointItem *>(item);
+  QTreeMapItem *itemPoint = dynamic_cast<QTreeMapItem *>(item);
   if (itemPoint != nullptr) {
     bool ok;
     const auto &point = point_val_widget_->getPoint(ok);
@@ -952,7 +777,7 @@ void QHdMapWidget::updateHdMap()
     if (type == ItemTypeSegment) {
       // segment
       RoadSegment segment;
-      QTreeSegmentItem *item_segment = dynamic_cast<QTreeSegmentItem *>(item);
+      QTreeMapItem *item_segment = dynamic_cast<QTreeMapItem *>(item);
       segment.type = item_segment->type();
 
       // road
@@ -960,27 +785,27 @@ void QHdMapWidget::updateHdMap()
       int index_road = 0;
       for (int j = 0; j < size_road; ++j) {
         Road road;
-        QTreeRoadItem *item_road = dynamic_cast<QTreeRoadItem *>(item_segment->child(j));
+        QTreeMapItem *item_road = dynamic_cast<QTreeMapItem *>(item_segment->child(j));
 
         // road side
         const int size_road_side = item_road->childCount();
         for (int k = 0; k < size_road_side; ++k) {
-          QTreeRoadSideItem *item_road_side = dynamic_cast<QTreeRoadSideItem *>(
+          QTreeMapItem *item_road_side = dynamic_cast<QTreeMapItem *>(
                 item_road->child(k));
 
           // point
           const int size_point = item_road_side->childCount();
           for (int l = 0; l < size_point; ++l) {
-            QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(
+            QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(
                   item_road_side->child(l));
             Point point = item_point->point();
-            if (item_road_side->roadtype() == Road::LEFT) {
+            if (item_road_side->mapType() == Road::LEFT) {
               road.left_side.push_back(point);
             }
-            else if (item_road_side->roadtype() == Road::RIGHT) {
+            else if (item_road_side->mapType() == Road::RIGHT) {
               road.right_side.push_back(point);
             }
-            else if (item_road_side->roadtype() == Road::CENTRAL) {
+            else if (item_road_side->mapType() == Road::CENTRAL) {
               road.reference.push_back(point);
             }
           }
@@ -998,9 +823,9 @@ void QHdMapWidget::updateHdMap()
     }
     else if (type == ItemTypeTrafficLight) {
       TrafficLight light;
-      QTreeTrafficLightItem *item_light = dynamic_cast<QTreeTrafficLightItem *>(item);
+      QTreeMapItem *item_light = dynamic_cast<QTreeMapItem *>(item);
       if (item_light != nullptr && item_light->childCount() == 1) {
-        QTreePointItem *item_point = dynamic_cast<QTreePointItem *>(item_light->child(0));
+        QTreeMapItem *item_point = dynamic_cast<QTreeMapItem *>(item_light->child(0));
         if (item_point != nullptr) {
           light.type = item_light->type();
           light.point = item_point->point();

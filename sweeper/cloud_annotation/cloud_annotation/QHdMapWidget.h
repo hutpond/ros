@@ -26,157 +26,26 @@ enum TreeItemType{
 class QTreeMapItem : public QTreeWidgetItem
 {
 public:
-  QTreeMapItem(QTreeWidgetItem *parent, int type)
-    : QTreeWidgetItem(parent, type) {
-    index_ = 0;
+  QTreeMapItem(QTreeWidgetItem *parent, int type, int map_type, const QString &text)
+    : QTreeWidgetItem(parent, type)
+    , index_(0)
+    , map_type_(map_type)
+    , text_(text) {
   }
 
   void setIndex(int index) {
     index_ = index;
+    this->setText(0, QString("%1 %2").arg(text_).arg(index_ + 1));
   }
   int index() {
     return index_;
-  }
-  void setMapType(int map_type) {
-    map_type_ = map_type;
   }
   int mapType() {
     return map_type_;
   }
 
-private:
-  int index_;
-  int map_type_;
-};
-
-class QTreeSegmentItem : public QTreeWidgetItem
-{
-public:
-  QTreeSegmentItem(QTreeWidgetItem *parent)
-    : QTreeWidgetItem(parent, ItemTypeSegment) {
-    road_size_ = 0;
-  }
-
-  void setIndex(int index) {
-    segment_index_ = index;
-  }
-  int index() {
-    return segment_index_;
-  }
-  void setSegmentType(int type) {
-    segment_type_ = type;
-  }
-  int segmentType() {
-    return segment_type_;
-  }
-  void addRoadSize() {
-    ++ road_size_;
-  }
-  void reduceRoadSize() {
-    -- road_size_;
-  }
-  int roadSize() {
-    return road_size_;
-  }
-
-private:
-  int segment_type_;
-  int segment_index_;
-  int road_size_;
-};
-
-class QTreeTrafficLightItem : public QTreeWidgetItem
-{
-public:
-  QTreeTrafficLightItem(QTreeWidgetItem *parent)
-    : QTreeWidgetItem(parent, ItemTypeTrafficLight)
-  {
-  }
-
-  void setLightIndex(int index) {
-    index_ = index;
-  }
-  int lightIndex() {
-    return index_;
-  }
-
-private:
-  int index_;
-};
-
-class QTreeCrossingItem : public QTreeMapItem
-{
-public:
-  QTreeCrossingItem(QTreeWidgetItem *parent)
-    : QTreeMapItem(parent, ItemTypeCrossings) {
-    point_count_ = 0;
-  }
-  void addPointCount() {
-    ++ point_count_;
-  }
-  void reducePointCount() {
-    -- point_count_;
-  }
-private:
-  int point_count_;
-};
-
-class QTreeRoadItem : public QTreeWidgetItem
-{
-public:
-  QTreeRoadItem(QTreeWidgetItem *parent)
-    : QTreeWidgetItem(parent, ItemTypeRoad)
-  {
-  }
-
-  void setRoadIndex(int index) {
-    index_ = index;
-  }
-  int roadIndex() {
-    return index_;
-  }
-
-private:
-  int index_;
-};
-
-class QTreeRoadSideItem : public QTreeWidgetItem
-{
-public:
-  QTreeRoadSideItem(QTreeWidgetItem *parent)
-    : QTreeWidgetItem(parent, ItemTypeRoadSide)
-  {
-  }
-
-  void setRoadType(int type) {
-    road_type_ = type;
-  }
-  int roadtype() {
-    return road_type_;
-  }
-
-private:
-  int road_type_;
-};
-
-class QTreePointItem : public QTreeWidgetItem
-{
-public:
-  QTreePointItem(QTreeWidgetItem *parent)
-    : QTreeWidgetItem(parent, ItemTypePoint)
-  {
-  }
-
-  void setIndex(int index) {
-    index_ = index;
-  }
-  int index() {
-    return index_;
-  }
   void setPoint(const Point &point) {
-    point_.x = point.x;
-    point_.y = point.y;
-    point_.z = point.z;
+    point_ =  point;
   }
   Point point() {
     return point_;
@@ -184,6 +53,8 @@ public:
 
 private:
   int index_;
+  int map_type_;
+  QString text_;
   Point point_;
 };
 
@@ -203,12 +74,8 @@ public slots:
 protected:
   virtual void resizeEvent(QResizeEvent *) final;
 
-  void createMenuMap();
-  void createMenuSegment();
-  void createMenuDelete();
-  void createMenuRoadSide();
-  void createMenuPoints();
-
+  int childCount(int);
+  void createTreeMenu();
   void updateHdMap();
 
 protected:
@@ -225,11 +92,6 @@ protected:
   void onUpPoint();
   void onDownPoint();
 
-  bool deleteRoadSegment(QTreeWidgetItem *, QTreeWidgetItem *);
-  bool deleteRoad(QTreeWidgetItem *, QTreeWidgetItem *);
-  bool deleteSingleItem(QTreeWidgetItem *, QTreeWidgetItem *);
-  bool deletePoint(QTreeWidgetItem *, QTreeWidgetItem *);
-  bool deleteCrossing(QTreeWidgetItem *, QTreeWidgetItem *);
   bool checkHasChildren(QTreeWidgetItem *);
 
 protected slots:
@@ -239,19 +101,14 @@ protected slots:
 private:
   QTreeWidget *tree_hdmap_;
   QTreeWidgetItem *root_item_;
-  int road_segment_size_;
-  int traffic_light_size_;
-  int stop_lines_size_;
-  int crossings_size_;
-  int markings_size_;
-  int signs_size_;
 
   QMenu *menu_map_;
-  QMenu *menu_segment_;
-  QMenu *menu_delete_;
-  QMenu *menu_road_side_;
+  QMenu *menu_item_;
   QMenu *menu_points_;
-  QMenu *menu_item_with_points_;
+
+  QAction *action_add_load_;
+  QAction *action_delete_;
+  QAction *action_delete_all_;
 
   QPointValue *point_val_widget_;
 };
