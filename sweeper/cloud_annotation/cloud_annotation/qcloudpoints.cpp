@@ -124,7 +124,7 @@ void QCloudPoints::calcLlaFromEnu(QSharedPointer<MapPoint> point)
 
   point->lat = gps.latitude;
   point->lon = gps.longitude;
-//  point->alt = gps.altitude;
+  point->alt = gps.altitude;
 }
 
 void QCloudPoints::calcEnuFromLla(QSharedPointer<MapPoint> point)
@@ -140,5 +140,5 @@ void QCloudPoints::calcEnuFromLla(QSharedPointer<MapPoint> point)
 
   point->east = ned.y_east;
   point->north = ned.x_north;
-//  point->up = -ned.z_down;
+  point->up = -ned.z_down;
 }

@@ -514,14 +514,23 @@ void QPointsShowWidget::mousePressEvent(QMouseEvent *e)
 {
   lastMouseMovePosition_ = e->localPos();
 
-  if (click_flag_ && e->button() == Qt::RightButton) {
-    QVector3D point;
-    if (this->getClickedPoint(lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), point)) {
+  QVector3D point;
+  bool ret = this->getClickedPoint(
+        lastMouseMovePosition_.x(), lastMouseMovePosition_.y(), point);
+  if (ret) {
+    if (click_flag_ && e->button() == Qt::RightButton) {
       Point pt_data;
       pt_data.x = point.x();
       pt_data.y = point.y();
       pt_data.z = point.z();
       emit clickedPoint(pt_data);
+    }
+    if (e->button() == Qt::LeftButton) {
+      QString msg = QString("east: %1, north: %2, up: %3").
+          arg(point.x(), 0, 'f', 3).
+          arg(point.y(), 0, 'f', 3).
+          arg(point.z(), 0, 'f', 3);
+        emit message(msg);
     }
   }
   mpressed_ = true;

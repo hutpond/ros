@@ -786,7 +786,7 @@ void QHdMapWidget::updateHdMap()
       // segment
       RoadSegment segment;
       QTreeMapItem *item_segment = dynamic_cast<QTreeMapItem *>(item);
-      segment.type = item_segment->type();
+      segment.type = item_segment->mapType();
 
       if (segment.type == RoadSegment::ROAD) { // road
         const int size_road = item_segment->childCount();
