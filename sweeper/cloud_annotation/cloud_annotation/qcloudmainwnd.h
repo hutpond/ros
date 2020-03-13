@@ -14,6 +14,7 @@ struct ProjectInfo
   QString path_name_;
   QString project_name_;
   QString point_cloud_file_;
+  QString reference_file_;
   Point point_cloud_origin_;
 };
 
@@ -38,6 +39,7 @@ protected:
   bool parseProjectInfo();
 
   void setWndTitle();
+  void loadFiles();
 
 protected slots:
   // &file

@@ -67,6 +67,7 @@ public:
   void clear();
   void saveHdMapData(const QString &);
   bool parseHdMapData(const QString &);
+  void updateHdMap();
 
 public slots:
   void onAddPoint(const Point &);
@@ -76,7 +77,6 @@ protected:
 
   int childCount(int);
   void createTreeMenu();
-  void updateHdMap();
 
 protected:
   void onCustomContextMenuRequested(const QPoint &);

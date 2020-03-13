@@ -37,9 +37,14 @@ add_executable(cloud_annotation
   QProjectDialog.cpp
   QProjectDialog.h
   QProjectDialog.ui
+  QWaitingDialog.cpp
+  QWaitingDialog.h
+  QWaitingDialog.ui
 
   QOpenDriveObject.cpp
   QOpenDriveObject.h
+  gps.cpp
+  gps.h
 
   cloud_annotation.qrc
 )
@@ -51,6 +56,7 @@ target_link_libraries(cloud_annotation PRIVATE boost_system)
 target_link_libraries(cloud_annotation PRIVATE pcl_common)
 target_link_libraries(cloud_annotation PRIVATE pcl_io)
 target_link_libraries(cloud_annotation PRIVATE z)
+target_link_libraries(cloud_annotation PRIVATE pthread)
 target_link_libraries(cloud_annotation PRIVATE GL)
 target_link_libraries(cloud_annotation PRIVATE GLU)
 target_link_libraries(cloud_annotation PRIVATE glut)

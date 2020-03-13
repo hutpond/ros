@@ -165,6 +165,7 @@ void QPointsShowWidget::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   this->draw(GL_RENDER);
+  this->drawReference();
 
   /// axis
   this->drawCoordinates();
@@ -325,6 +326,18 @@ void QPointsShowWidget::draw(GLenum)
     }
     glEnd();
   }
+}
+
+void QPointsShowWidget::drawReference()
+{
+  const auto &reference = QCloudPoints::instance().reference();
+  glLineWidth(3.0f);
+  glBegin(GL_LINE_STRIP);
+  glColor3f(0.0, 0.0, 0.0);
+  for (const auto &point : reference) {
+    glVertex3f(point->east, point->north, point->up);
+  }
+  glEnd();
 }
 
 void QPointsShowWidget::drawCoordinates()

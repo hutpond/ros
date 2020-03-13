@@ -149,6 +149,7 @@ protected:
   bool getClickedPoint(int, int, QVector3D &);
   void selectObject(GLint, GLint);
   void draw(GLenum);
+  void drawReference();
   void selectRay(int, int, QVector3D &, QVector3D &);
   void selectPoints(int, int);
 

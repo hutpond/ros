@@ -9,5 +9,6 @@
         <file>image/ccViewZpos.png</file>
         <file>image/clicked_select.svg</file>
         <file>image/point_cloud_show.svg</file>
+        <file>image/loading.gif</file>
     </qresource>
 </RCC>

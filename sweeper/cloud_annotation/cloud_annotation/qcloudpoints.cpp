@@ -5,6 +5,7 @@
 #include<pcl/point_types.h>
 
 #include "QOpenDriveObject.h"
+#include "gps.h"
 
 QCloudPoints & QCloudPoints::instance()
 {
@@ -59,19 +60,30 @@ void QCloudPoints::openOpenDriverFile(const QString &file_name)
   obj.readOpenDriveFile(file_name, reference, road_side);
 
   reference_.clear();
-  for (const auto point : reference) {
+  for (const auto &point : reference) {
     if (reference_.size() == 0) {
       reference_.push_back(point);
     }
-    else if (reference_[reference_.size() - 1]->distance(point) >= 0.5) {
+    else if (reference_[reference_.size() - 1]->distance(*point) >= 0.5) {
       reference_.push_back(point);
     }
   }
+
+  for (auto point : reference_) {
+     this->calcEnuFromLla(point);
+  }
+
+  emit loadFinished();
 }
 
 pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
 {
   return cloud_points_;
+}
+
+void QCloudPoints::setOrigin(const Point &point)
+{
+  origin_point_ = point;
 }
 
 void QCloudPoints::setHdMap(const HdMapRaw &hdmap)
@@ -88,10 +100,45 @@ const HdMapRaw & QCloudPoints::hdMap() const
 void QCloudPoints::clear()
 {
   cloud_points_->clear();
+  reference_.clear();
   hdmap_.road_segments.clear();
   hdmap_.traffic_lights.clear();
   hdmap_.stop_lines.clear();
   hdmap_.signs.clear();
   hdmap_.markings.clear();
   hdmap_.crossings.clear();
+}
+
+void QCloudPoints::calcLlaFromEnu(QSharedPointer<MapPoint> point)
+{
+  GpsTran gps_tran(origin_point_.x, origin_point_.y, origin_point_.z);
+
+  GpsDataType gps;
+  NedDataType ned;
+
+  ned.y_east = point->east;
+  ned.x_north = point->north;
+  ned.z_down = - point->up;
+
+  gps_tran.fromNedToGps(gps, ned);
+
+  point->lat = gps.latitude;
+  point->lon = gps.longitude;
+//  point->alt = gps.altitude;
+}
+
+void QCloudPoints::calcEnuFromLla(QSharedPointer<MapPoint> point)
+{
+  GpsTran gps_tran(origin_point_.x, origin_point_.y, origin_point_.z);
+
+  GpsDataType gps;
+  NedDataType ned;
+  gps.longitude = point->lon;
+  gps.latitude  = point->lat;
+  gps.altitude  = point->alt;
+  gps_tran.fromGpsToNed(ned, gps);
+
+  point->east = ned.y_east;
+  point->north = ned.x_north;
+//  point->up = -ned.z_down;
 }
