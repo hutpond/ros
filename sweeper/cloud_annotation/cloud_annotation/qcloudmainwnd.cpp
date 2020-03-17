@@ -17,6 +17,8 @@
 #include "QHdMapWidget.h"
 #include "QProjectDialog.h"
 #include "QWaitingDialog.h"
+#include "QDisplayAreaDialog.h"
+#include "QLanelet2Data.h"
 
 QCloudMainWnd::QCloudMainWnd(QWidget *parent)
   : QMainWindow(parent)
@@ -58,6 +60,7 @@ void QCloudMainWnd::createMenuBar()
   // menu
   QMenu *menuFile = menuBar->addMenu(tr("&File"));
   QMenu *menuEdit = menuBar->addMenu(tr("&Edit"));
+  QMenu *menuDisplay = menuBar->addMenu(tr("&dispaly"));
   menuBar->addMenu(tr("&Help"));
 
   // menu file
@@ -86,11 +89,11 @@ void QCloudMainWnd::createMenuBar()
   connect(actionExit, &QAction::triggered, this, &QCloudMainWnd::close);
   menuFile->addAction(actionExit);
 
-  // menu edit
-  QAction *actionReset = new QAction(tr("&Reset"), this);
-  actionReset->setStatusTip(tr("Reset the state of Cloud Points"));
-  connect(actionReset, &QAction::triggered, this, &QCloudMainWnd::reset);
-  menuEdit->addAction(actionReset);
+  // menu view
+  QAction *actionArea = new QAction(tr("&Area"), this);
+  actionArea->setStatusTip(tr("Set display area"));
+  connect(actionArea, &QAction::triggered, this, &QCloudMainWnd::setDisplayArea);
+  menuDisplay->addAction(actionArea);
 }
 
 void QCloudMainWnd::createToolBar()
@@ -230,6 +233,11 @@ void QCloudMainWnd::saveProject()
 
   QString fileName = this->projectSubName()+ ".hdmap";
   m_pWdgHdMap->saveHdMapData(fileName);
+
+  fileName = this->projectSubName()+ ".osm";
+  HdMapRaw hdmap;
+  QLanelet2Data::instance().setMapData(hdmap);
+  QLanelet2Data::instance().saveOsmMapFile(fileName);
 }
 
 void QCloudMainWnd::closeProject()
@@ -321,9 +329,12 @@ bool QCloudMainWnd::parseProjectInfo()
   return true;
 }
 
-void QCloudMainWnd::reset()
+void QCloudMainWnd::setDisplayArea()
 {
-  m_pWdgPointsShow->onReset();
+  QDisplayAreaDialog dlg(this);
+  if (QDialog::Accepted == dlg.exec()) {
+    m_pWdgPointsShow->update();
+  }
 }
 
 void QCloudMainWnd::onPlotMessage(const QString &msg)

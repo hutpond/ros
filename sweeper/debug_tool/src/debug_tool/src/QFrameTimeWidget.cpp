@@ -76,6 +76,9 @@ void QFrameTimeWidget::setPlanningData(quint64 preMillSecond, const debug_tool::
   QVector<QPointF> points;
   for (int i = 1; i < m_listMillSecond.size(); ++i) {
     points << QPointF(i, m_listMillSecond[i].second - m_listMillSecond[i].first);
+    if (m_listMillSecond[i].first >= preMillSecond) {
+      break;
+    }
   }
   m_pPlotCurve->setSamples(points);
   if (this->isVisible()) {

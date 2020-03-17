@@ -51,6 +51,8 @@ void QCloudPoints::openFile(const QString &fileName)
       end_point_.z = point.z;
     }
   }
+  begin_point_display_ = begin_point_;
+  end_point_display_ = end_point_;
 }
 
 void QCloudPoints::openOpenDriverFile(const QString &file_name)
@@ -79,6 +81,12 @@ void QCloudPoints::openOpenDriverFile(const QString &file_name)
 pcl::PointCloud<pcl::PointXYZ>::ConstPtr QCloudPoints::points() const
 {
   return cloud_points_;
+}
+
+void QCloudPoints::setPointDisplay(pcl::PointXYZ begin, pcl::PointXYZ end)
+{
+  begin_point_display_ = begin;
+  end_point_display_ = end;
 }
 
 void QCloudPoints::setOrigin(const Point &point)

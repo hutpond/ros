@@ -8,12 +8,15 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(/usr/include/pcl-1.8)
 include_directories(/usr/include/pcl-1.7)
 include_directories(/usr/include/eigen3)
+include_directories(/usr/local/Lanelet2/include)
+
+link_directories(/usr/local/Lanelet2/lib)
 
 set(Qt5_DIR /opt/Qt5.12.4/5.12.4/gcc_64/lib/cmake/Qt5)
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
@@ -41,6 +44,12 @@ add_executable(cloud_annotation
   QWaitingDialog.h
   QWaitingDialog.ui
 
+  QDisplayAreaDialog.cpp
+  QDisplayAreaDialog.h
+  QDisplayAreaDialog.ui
+
+  QLanelet2Data.cpp
+  QLanelet2Data.h
   QOpenDriveObject.cpp
   QOpenDriveObject.h
   gps.cpp
@@ -53,6 +62,8 @@ target_link_libraries(cloud_annotation PRIVATE Qt5::Widgets)
 target_link_libraries(cloud_annotation PRIVATE Qt5::OpenGL)
 target_link_libraries(cloud_annotation PRIVATE jsoncpp)
 target_link_libraries(cloud_annotation PRIVATE boost_system)
+target_link_libraries(cloud_annotation PRIVATE boost_filesystem)
+target_link_libraries(cloud_annotation PRIVATE boost_serialization)
 target_link_libraries(cloud_annotation PRIVATE pcl_common)
 target_link_libraries(cloud_annotation PRIVATE pcl_io)
 target_link_libraries(cloud_annotation PRIVATE z)
@@ -60,3 +71,6 @@ target_link_libraries(cloud_annotation PRIVATE pthread)
 target_link_libraries(cloud_annotation PRIVATE GL)
 target_link_libraries(cloud_annotation PRIVATE GLU)
 target_link_libraries(cloud_annotation PRIVATE glut)
+
+target_link_libraries(cloud_annotation PRIVATE lanelet2_core)
+target_link_libraries(cloud_annotation PRIVATE lanelet2_io)

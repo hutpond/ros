@@ -181,8 +181,10 @@ void QPointsShowWidget::paintGL()
 
 void QPointsShowWidget::draw(GLenum)
 {
-  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
-  pcl::PointXYZ end = QCloudPoints::instance().end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().beginPoint();
+  pcl::PointXYZ end = QCloudPoints::instance().endPoint();
+  pcl::PointXYZ begDispaly = QCloudPoints::instance().beginPointDisplay();
+  pcl::PointXYZ endDispaly = QCloudPoints::instance().endPointDisplay();
 
   pcl::PointXYZ center = pcl::PointXYZ(
         (end.x + beg.x) / 2,
@@ -240,11 +242,15 @@ void QPointsShowWidget::draw(GLenum)
     glBegin(GL_POINTS);
     for (size_t i = 0; i < sizePoints; ++i) {
       auto &point = points->at(i);
-      float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
-      glColor3f(factor,
-                factor,
-                1.0f - factor);
-      glVertex3f(point.x, point.y, point.z);
+      if ( (point.x >= begDispaly.x && point.x <= endDispaly.x) &&
+           (point.y >= begDispaly.y && point.y <= endDispaly.y) &&
+           (point.z >= begDispaly.z && point.z <= endDispaly.z) ) {
+        float factor = std::min(1.0f, (point.z - beg.z) / (end.z - beg.z) * 2.0f);
+        glColor3f(factor,
+                  factor,
+                  1.0f - factor);
+        glVertex3f(point.x, point.y, point.z);
+      }
     }
     glEnd();
   }
@@ -342,8 +348,8 @@ void QPointsShowWidget::drawReference()
 
 void QPointsShowWidget::drawCoordinates()
 {
-  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
-  pcl::PointXYZ end = QCloudPoints::instance().end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().beginPoint();
+  pcl::PointXYZ end = QCloudPoints::instance().endPoint();
 
   glLineWidth(1.0f);
 
@@ -398,8 +404,8 @@ void QPointsShowWidget::drawCoordinates()
 
 void QPointsShowWidget::drawText(const QString &text)
 {
-  pcl::PointXYZ beg = QCloudPoints::instance().begin_point();
-  pcl::PointXYZ end = QCloudPoints::instance().end_point();
+  pcl::PointXYZ beg = QCloudPoints::instance().beginPoint();
+  pcl::PointXYZ end = QCloudPoints::instance().endPoint();
 
   GLboolean b;
   GLint func;

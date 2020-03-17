@@ -17,9 +17,13 @@ public:
   void openFile(const QString &);
   void openOpenDriverFile(const QString &);
   pcl::PointCloud<pcl::PointXYZ>::ConstPtr points() const;
-  pcl::PointXYZ begin_point() {return begin_point_;}
-  pcl::PointXYZ end_point() {return end_point_;}
+  pcl::PointXYZ beginPoint() {return begin_point_;}
+  pcl::PointXYZ endPoint() {return end_point_;}
   const QList<QSharedPointer<MapPoint>> & reference() const {return reference_;}
+
+  pcl::PointXYZ beginPointDisplay() {return begin_point_display_;}
+  pcl::PointXYZ endPointDisplay() {return end_point_display_;}
+  void setPointDisplay(pcl::PointXYZ, pcl::PointXYZ);
 
   void setOrigin(const Point &);
   void setHdMap(const HdMapRaw &);
@@ -42,6 +46,9 @@ private:
   pcl::PointXYZ begin_point_;
   pcl::PointXYZ end_point_;
   QList<QSharedPointer<MapPoint>> reference_;
+
+  pcl::PointXYZ begin_point_display_;
+  pcl::PointXYZ end_point_display_;
 
   Point origin_point_;
   HdMapRaw hdmap_;

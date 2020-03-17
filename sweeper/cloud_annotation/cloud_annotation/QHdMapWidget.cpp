@@ -524,18 +524,16 @@ void QHdMapWidget::onAddRoadSegment()
     int type = dlg.type();
     QTreeWidgetItem *parent = tree_hdmap_->currentItem();
     if (RoadSegment::SQUARE == type) {
-      if (this->childCount(ItemTypeSegment) == 0) {
-        QTreeMapItem *item = new QTreeMapItem(
-              parent, ItemTypeSegment, RoadSegment::SQUARE, "Square");
-        item->setIndex(0);
+      QTreeMapItem *item = new QTreeMapItem(
+            parent, ItemTypeSegment, RoadSegment::SQUARE, "Square");
+      item->setIndex(0);
 
-        QTreeMapItem *item_child = new QTreeMapItem(
-              item, ItemTypeRoadSide, Road::OUTLINE, "Outline");
-        item_child->setIndex(0);
+      QTreeMapItem *item_child = new QTreeMapItem(
+            item, ItemTypeRoadSide, Road::OUTLINE, "Outline");
+      item_child->setIndex(0);
 
-        tree_hdmap_->expandItem(parent);
-        tree_hdmap_->expandItem(item);
-      }
+      tree_hdmap_->expandItem(parent);
+      tree_hdmap_->expandItem(item);
     }
     else {
       int index = this->childCount(ItemTypeSegment);

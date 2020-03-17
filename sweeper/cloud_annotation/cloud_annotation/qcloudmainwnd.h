@@ -47,8 +47,8 @@ protected slots:
   void openProject();
   void saveProject();
   void closeProject();
-  // &edit
-  void reset();
+  // &display
+  void setDisplayArea();
 
   void onPlotMessage(const QString &);
 
