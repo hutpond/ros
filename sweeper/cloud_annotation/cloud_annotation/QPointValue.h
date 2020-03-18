@@ -1,25 +1,21 @@
 #ifndef QPOINTVALUE_H
 #define QPOINTVALUE_H
 
-#include <QWidget>
-#include <GlobalDefine.h>
+#include "QItemValueBase.h"
 
 namespace Ui {
 class QPointValue;
 }
 
-class QPointValue : public QWidget
+class QPointValue : public QItemValueBase
 {
   Q_OBJECT
 
 public:
   explicit QPointValue(QWidget *parent = nullptr);
   ~QPointValue();
-  void setPoint(const Point &);
-  Point getPoint(bool &);
-
-signals:
-  void saveData();
+  virtual void setPoint(const Point &) final;
+  virtual Point getPoint(bool &) final;
 
 private:
   Ui::QPointValue *ui;

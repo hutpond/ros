@@ -8,7 +8,7 @@
 
 class QTreeWidget;
 class QMenu;
-class QPointValue;
+class QItemValueBase;
 
 enum TreeItemType{
   ItemTypeSegment = 1,
@@ -78,6 +78,8 @@ protected:
   int childCount(int);
   void createTreeMenu();
 
+  void updateSelectedHdMap(QTreeMapItem *);
+
 protected:
   void onCustomContextMenuRequested(const QPoint &);
   void onAddRoadSegment();
@@ -110,7 +112,8 @@ private:
   QAction *action_delete_;
   QAction *action_delete_all_;
 
-  QPointValue *point_val_widget_;
+  int item_wdg_index_;
+  QItemValueBase *item_value_widget_[ItemTypeMap];
 };
 
 #endif // QHDMAPWIDGET_H

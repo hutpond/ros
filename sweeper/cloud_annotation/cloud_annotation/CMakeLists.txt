@@ -31,15 +31,19 @@ add_executable(cloud_annotation
   qpointsshowwidget.h
   QHdMapWidget.cpp
   QHdMapWidget.h
+
   QAddSegmentDialog.cpp
   QAddSegmentDialog.h
   QAddSegmentDialog.ui
+
   QPointValue.cpp
   QPointValue.h
   QPointValue.ui
+
   QProjectDialog.cpp
   QProjectDialog.h
   QProjectDialog.ui
+
   QWaitingDialog.cpp
   QWaitingDialog.h
   QWaitingDialog.ui
@@ -48,6 +52,12 @@ add_executable(cloud_annotation
   QDisplayAreaDialog.h
   QDisplayAreaDialog.ui
 
+  QSegmentValue.cpp
+  QSegmentValue.h
+  QSegmentValue.ui
+
+  QItemValueBase.cpp
+  QItemValueBase.h
   QLanelet2Data.cpp
   QLanelet2Data.h
   QOpenDriveObject.cpp

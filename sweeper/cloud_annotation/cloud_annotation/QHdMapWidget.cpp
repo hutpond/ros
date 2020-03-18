@@ -7,6 +7,7 @@
 #include <jsoncpp/json/json.h>
 
 #include "QAddSegmentDialog.h"
+#include "QSegmentValue.h"
 #include "QPointValue.h"
 #include "qcloudpoints.h"
 
@@ -23,13 +24,22 @@ QHdMapWidget::QHdMapWidget(QWidget *parent)
 
   this->createTreeMenu();
 
-  point_val_widget_ = new QPointValue(this);
-  this->setMinimumWidth(300);
+  item_wdg_index_ = -1;
+  for (int i = 0; i < ItemTypeMap; ++i) {
+    item_value_widget_[i] = nullptr;
+  }
+  item_value_widget_[ItemTypeSegment] = new QSegmentValue(this);
+  item_value_widget_[ItemTypeSegment]->hide();
+  item_value_widget_[ItemTypePoint] = new QPointValue(this);
+  item_value_widget_[ItemTypePoint]->hide();
+  connect(item_value_widget_[ItemTypeSegment], SIGNAL(saveData()),
+                     this, SLOT(onSavePointValue()));
+  connect(item_value_widget_[ItemTypePoint], SIGNAL(saveData()),
+                     this, SLOT(onSavePointValue()));
 
   connect(tree_hdmap_, SIGNAL(itemSelectionChanged()),
           this, SLOT(onItemSelectionChanged()));
-  connect(point_val_widget_, SIGNAL(saveData()),
-                     this, SLOT(onSavePointValue()));
+  this->setMinimumWidth(300);
 }
 
 void QHdMapWidget::clear()
@@ -411,8 +421,12 @@ void QHdMapWidget::resizeEvent(QResizeEvent *)
 
   const float TREE_H_PF = 0.8;
   tree_hdmap_->setGeometry(0, 0, WIDTH, HEIGHT * TREE_H_PF);
-  point_val_widget_->setGeometry(
-        0, HEIGHT * TREE_H_PF, WIDTH, HEIGHT * (1.0f - TREE_H_PF));
+  for (int i = 0; i < ItemTypeMap; ++i) {
+    if (item_value_widget_[i] != nullptr) {
+      item_value_widget_[i]->setGeometry(
+          0, HEIGHT * TREE_H_PF, WIDTH, HEIGHT * (1.0f - TREE_H_PF));
+    }
+  }
 }
 
 int QHdMapWidget::childCount(int type)
@@ -527,6 +541,11 @@ void QHdMapWidget::onAddRoadSegment()
       QTreeMapItem *item = new QTreeMapItem(
             parent, ItemTypeSegment, RoadSegment::SQUARE, "Square");
       item->setIndex(0);
+      Point point;
+      const auto &reference = QCloudPoints::instance().reference();
+      point.x = 0;
+      point.y = reference.size();
+      item->setPoint(point);
 
       QTreeMapItem *item_child = new QTreeMapItem(
             item, ItemTypeRoadSide, Road::OUTLINE, "Outline");
@@ -541,6 +560,12 @@ void QHdMapWidget::onAddRoadSegment()
             parent, ItemTypeSegment, RoadSegment::ROAD, "Road Segment");
       item->setIndex(index);
       tree_hdmap_->expandItem(parent);
+
+      Point point;
+      const auto &reference = QCloudPoints::instance().reference();
+      point.x = 0;
+      point.y = reference.size();
+      item->setPoint(point);
     }
   }
 }
@@ -741,33 +766,39 @@ void QHdMapWidget::onDownPoint()
 
 void QHdMapWidget::onItemSelectionChanged()
 {
-  QTreeWidgetItem *item = tree_hdmap_->currentItem();
-  if (item == nullptr || item->type() != ItemTypePoint) {
+  QTreeMapItem *item = dynamic_cast<QTreeMapItem *>(tree_hdmap_->currentItem());
+  if (item == nullptr) {
+    return;
+  }
+  this->updateSelectedHdMap(item);
+
+  if (item_wdg_index_ != -1) {
+    item_value_widget_[item_wdg_index_]->hide();
+  }
+  if (item_value_widget_[type] == nullptr) {
     return;
   }
 
-  QTreeMapItem *itemPoint = dynamic_cast<QTreeMapItem *>(item);
-  if (itemPoint != nullptr) {
-    const auto &point = itemPoint->point();
-    point_val_widget_->setPoint(point);
-  }
+  int type = item->type();
+  item_wdg_index_ = type;
+  item_value_widget_[item_wdg_index_]->show();
+  const auto &point = item->point();
+  item_value_widget_[item_wdg_index_]->setPoint(point);
 }
 
 void QHdMapWidget::onSavePointValue()
 {
-  QTreeWidgetItem *item = tree_hdmap_->currentItem();
-  if (item == nullptr || item->type() != ItemTypePoint) {
+  QTreeMapItem *item = dynamic_cast<QTreeMapItem *>(tree_hdmap_->currentItem());
+  if (item == nullptr) {
     return;
   }
-  QTreeMapItem *itemPoint = dynamic_cast<QTreeMapItem *>(item);
-  if (itemPoint != nullptr) {
-    bool ok;
-    const auto &point = point_val_widget_->getPoint(ok);
-    if (ok) {
-      itemPoint->setPoint(point);
 
-      this->updateHdMap();
-    }
+  int type = item->type();
+  bool ok;
+  const auto &point = item_value_widget_[type]->getPoint(ok);
+  if (ok) {
+    item->setPoint(point);
+    this->updateHdMap();
   }
 }
 
@@ -785,6 +816,8 @@ void QHdMapWidget::updateHdMap()
       RoadSegment segment;
       QTreeMapItem *item_segment = dynamic_cast<QTreeMapItem *>(item);
       segment.type = item_segment->mapType();
+      segment.central_start_index = item_segment->point().x;
+      segment.central_end_index = item_segment->point().y;
 
       if (segment.type == RoadSegment::ROAD) { // road
         const int size_road = item_segment->childCount();
@@ -880,4 +913,30 @@ void QHdMapWidget::updateHdMap()
   }
 
   QCloudPoints::instance().setHdMap(hdmap);
+}
+
+void QHdMapWidget::updateSelectedHdMap(QTreeMapItem *item)
+{
+  int type = item->type();
+  if (type == ItemTypeSegment) {
+
+  }
+  else if (type == ItemTypeTrafficLight) {
+
+  }
+  else if (type == ItemTypeStopLines) {
+
+  }
+  else if (type == ItemTypeCrossings) {
+
+  }
+  else if (type == ItemTypeMarkings) {
+
+  }
+  else if (type == ItemTypeSigns) {
+
+  }
+  else if (type == ItemTypeMap) {
+
+  }
 }

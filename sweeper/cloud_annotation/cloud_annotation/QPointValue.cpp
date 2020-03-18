@@ -2,7 +2,7 @@
 #include "ui_QPointValue.h"
 
 QPointValue::QPointValue(QWidget *parent) :
-  QWidget(parent),
+  QItemValueBase(parent),
   ui(new Ui::QPointValue)
 {
   ui->setupUi(this);

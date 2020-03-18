@@ -59,6 +59,8 @@ struct RoadSegment
     SQUARE
   };
   int type;
+  int central_start_index;
+  int central_end_index;
   std::map<int, Road> roads;
 
   RoadSegment & operator = (const RoadSegment &segment) {
