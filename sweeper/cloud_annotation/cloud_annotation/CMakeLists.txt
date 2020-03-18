@@ -74,3 +74,4 @@ target_link_libraries(cloud_annotation PRIVATE glut)
 
 target_link_libraries(cloud_annotation PRIVATE lanelet2_core)
 target_link_libraries(cloud_annotation PRIVATE lanelet2_io)
+target_link_libraries(cloud_annotation PRIVATE lanelet2_projection)

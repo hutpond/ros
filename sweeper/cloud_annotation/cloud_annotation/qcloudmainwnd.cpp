@@ -184,6 +184,9 @@ void QCloudMainWnd::newProject()
     QCloudPoints::instance().openOpenDriverFile(m_projectInfo.reference_file_);
     m_pWdgHdMap->setEnabled(true);
     m_pWdgHdMap->updateHdMap();
+
+    QLanelet2Data::instance().setOrigin(m_projectInfo.point_cloud_origin_);
+
     this->setWndTitle();
   }
 }
@@ -218,6 +221,8 @@ void QCloudMainWnd::openProject()
     QString fileName = this->projectSubName()+ ".hdmap";
     m_pWdgHdMap->parseHdMapData(fileName);
     m_pWdgHdMap->setEnabled(true);
+
+    QLanelet2Data::instance().setOrigin(m_projectInfo.point_cloud_origin_);
     this->setWndTitle();
   }
   else {
