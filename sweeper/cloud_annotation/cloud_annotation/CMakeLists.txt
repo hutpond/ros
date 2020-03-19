@@ -31,6 +31,10 @@ add_executable(cloud_annotation
   qpointsshowwidget.h
   QHdMapWidget.cpp
   QHdMapWidget.h
+  GlobalDefine.cpp
+  GlobalDefine.h
+  QValueDialog.cpp
+  QValueDialog.h
 
   QAddSegmentDialog.cpp
   QAddSegmentDialog.h

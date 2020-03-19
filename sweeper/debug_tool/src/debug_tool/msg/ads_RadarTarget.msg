@@ -10,3 +10,4 @@ int32   status
 float64 w
 float64 l
 int32   devid
+

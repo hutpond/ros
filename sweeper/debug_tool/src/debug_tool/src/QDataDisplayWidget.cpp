@@ -287,9 +287,9 @@ void QDataDisplayWidget::setPlanningData(
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("traffic_light: %1").arg(planningData.traffic_light_decision));
   item = new QTreeWidgetItem();
-  item->setText(0, QString("radar: %1").arg(planningData.radar_decision));
+  item->setText(0, QString("radar: %1").arg(planningData.radar_target_decision));
   item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("ultrasonic: %1").arg(planningData.ultrasonic_decision));
+  item->setText(0, QString("ultrasonic: %1").arg(planningData.ultrasonic_target_decision));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("lidar_target: %1").arg(planningData.lidar_target_decision));
   item = new QTreeWidgetItem(itemRoot);
@@ -316,8 +316,6 @@ void QDataDisplayWidget::setPlanningData(
   // planning path
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "TRAJECTORY");
-  item = new QTreeWidgetItem(itemRoot);
-  item->setText(0, QString("decision: %1").arg(static_cast<int>(planningData.planning_output.decision)));
   item = new QTreeWidgetItem(itemRoot);
   item->setText(0, QString("velocity: %1").arg(planningData.planning_output.velocity));
   item = new QTreeWidgetItem(itemRoot);
@@ -364,7 +362,7 @@ void QDataDisplayWidget::setPlanningData(
 
   itemRoot = new QTreeWidgetItem(m_pTreeWidget);
   itemRoot->setText(0, "PLANNING_TRAJECTORY");
-  const auto &val_planning_trajectory = planningData.planning_trajectory;
+  const auto &val_planning_trajectory = planningData.planning_output.trajectory;
   const auto &val_planning_trajectory_spines = val_planning_trajectory.splines;
   int size_trajectory_splines = static_cast<int>(val_planning_trajectory_spines.size());
   item = new QTreeWidgetItem(itemRoot);

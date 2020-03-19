@@ -441,8 +441,8 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   decisionState["preprocess_decision"] = static_cast<int>(planningData.preprocess_decision);
   decisionState["safe_stop_decision"] = static_cast<int>(planningData.safe_stop_decision);
   decisionState["traffic_light_decision"] = static_cast<int>(planningData.traffic_light_decision);
-  decisionState["radar_decision"] = static_cast<int>(planningData.radar_decision);
-  decisionState["ultrasonic_decision"] = static_cast<int>(planningData.ultrasonic_decision);
+  decisionState["radar_decision"] = static_cast<int>(planningData.radar_target_decision);
+  decisionState["ultrasonic_decision"] = static_cast<int>(planningData.ultrasonic_target_decision);
   decisionState["lidar_target_decision"] = static_cast<int>(planningData.lidar_target_decision);
   decisionState["front_target_decision"] = static_cast<int>(planningData.front_target_decision);
   decisionState["route_decision"] = static_cast<int>(planningData.route_decision);
@@ -487,17 +487,22 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     planningTrajectoryCandidates.append(item);
   }
 
-  // planning trajectory
-  Json::Value planningTrajectory, planningTrajectorySplines, planningTrajectoryPoints;
-  planningTrajectory["id"] = static_cast<int>(planningData.planning_trajectory.id);
-  planningTrajectory["cost"] = planningData.planning_trajectory.cost;
-  planningTrajectory["safety_cost"] = planningData.planning_trajectory.safety_cost;
-  planningTrajectory["lateral_cost"] = planningData.planning_trajectory.lateral_cost;
-  planningTrajectory["smoothness_cost"] = planningData.planning_trajectory.smoothness_cost;
-  planningTrajectory["consistency_cost"] = planningData.planning_trajectory.consistency_cost;
-  planningTrajectory["garbage_cost"] = planningData.planning_trajectory.garbage_cost;
+  // planning output
+  Json::Value planningOutput;
+  planningOutput["velocity"] = planningData.planning_output.velocity;
+  planningOutput["pose_position_x"] = planningData.planning_output.pose.position.x;
+  planningOutput["pose_position_y"] = planningData.planning_output.pose.position.y;
+  // trajectory
+  Json::Value trajectory, trajectorySplines;
+  trajectory["id"] = static_cast<int>(planningData.planning_output.trajectory.id);
+  trajectory["cost"] = planningData.planning_output.trajectory.cost;
+  trajectory["safety_cost"] = planningData.planning_output.trajectory.safety_cost;
+  trajectory["lateral_cost"] = planningData.planning_output.trajectory.lateral_cost;
+  trajectory["smoothness_cost"] = planningData.planning_output.trajectory.smoothness_cost;
+  trajectory["consistency_cost"] = planningData.planning_output.trajectory.consistency_cost;
+  trajectory["garbage_cost"] = planningData.planning_output.trajectory.garbage_cost;
 
-  for (const auto &spline : planningData.planning_trajectory.splines) {
+  for (const auto &spline : planningData.planning_output.trajectory.splines) {
     Json::Value item;
 
     item["xb_x"] = spline.xb.x;
@@ -509,16 +514,10 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
     item["yb_z"] = spline.yb.z;
     item["yb_w"] = spline.yb.w;
 
-    planningTrajectorySplines.append(item);
+    trajectorySplines.append(item);
   }
-  planningTrajectory["splines"] = planningTrajectorySplines;
-
-  // planning output
-  Json::Value planningOutput;
-  planningOutput["decision"] = static_cast<int>(planningData.planning_output.decision);
-  planningOutput["velocity"] = planningData.planning_output.velocity;
-  planningOutput["pose_position_x"] = planningData.planning_output.pose.position.x;
-  planningOutput["pose_position_y"] = planningData.planning_output.pose.position.y;
+  trajectory["splines"] = trajectorySplines;
+  planningOutput["trajectory"] = trajectory;
 
   // all data
   Json::Value data;
@@ -532,7 +531,6 @@ void QPlanningWidget::saveDataToJsonFile(const std::string &strFileName,
   data["decision_state"] = decisionState;
   data["cost_weight"] = costWeight;
   data["planning_trajectory_candidates"] = planningTrajectoryCandidates;
-  data["planning_trajectory"] = planningTrajectory;
   data["planning_output"] = planningOutput;
   data["scenario_type"] = static_cast<int>(planningData.scenario_type);
   data["debug_info"] = planningData.debug_info;
@@ -560,7 +558,6 @@ void QPlanningWidget::parseDataFromJson(
   Json::Value decisionState = data["decision_state"];
   Json::Value costWeight = data["cost_weight"];
   Json::Value planningTrajectoryCandidates = data["planning_trajectory_candidates"];
-  Json::Value planningTrajectory = data["planning_trajectory"];
   Json::Value planningOutput = data["planning_output"];
   planningData.scenario_type = static_cast<uint8_t>(data["scenario_type"].asInt());
   planningData.debug_info = data["debug_info"].asString();
@@ -792,8 +789,8 @@ void QPlanningWidget::parseDataFromJson(
   planningData.preprocess_decision = static_cast<uint8_t>(decisionState["preprocess_decision"].asInt());
   planningData.safe_stop_decision = static_cast<uint8_t>(decisionState["safe_stop_decision"].asInt());
   planningData.traffic_light_decision = static_cast<uint8_t>(decisionState["traffic_light_decision"].asInt());
-  planningData.radar_decision = static_cast<uint8_t>(decisionState["radar_decision"].asInt());
-  planningData.ultrasonic_decision = static_cast<uint8_t>(decisionState["ultrasonic_decision"].asInt());
+  planningData.radar_target_decision = static_cast<uint8_t>(decisionState["radar_decision"].asInt());
+  planningData.ultrasonic_target_decision = static_cast<uint8_t>(decisionState["ultrasonic_decision"].asInt());
   planningData.lidar_target_decision = static_cast<uint8_t>(decisionState["lidar_target_decision"].asInt());
   planningData.front_target_decision = static_cast<uint8_t>(decisionState["front_target_decision"].asInt());
   planningData.route_decision = static_cast<uint8_t>(decisionState["route_decision"].asInt());
@@ -840,8 +837,9 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // planning trajectory
-  auto &planning_trajectory = planningData.planning_trajectory;
+  auto &planning_trajectory = planningData.planning_output.trajectory;
 
+  Json::Value planningTrajectory = planningOutput["trajectory"];
   planning_trajectory.id = static_cast<uint8_t>(planningTrajectory["id"].asInt());
   planning_trajectory.cost = planningTrajectory["cost"].asDouble();
   planning_trajectory.safety_cost = planningTrajectory["safety_cost"].asDouble();
@@ -868,7 +866,6 @@ void QPlanningWidget::parseDataFromJson(
   }
 
   // planning output
-  planningData.planning_output.decision = static_cast<uint8_t>(planningOutput["decision"].asInt());
   planningData.planning_output.velocity = planningOutput["velocity"].asFloat();
   planningData.planning_output.pose.position.x = planningOutput["pose_position_x"].asDouble();
   planningData.planning_output.pose.position.y = planningOutput["pose_position_y"].asDouble();
@@ -1058,7 +1055,7 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
         + value[QPlanningCostWidget::Consistency] * candidates[i].consistency_cost
         + value[QPlanningCostWidget::Garbage] * candidates[i].garbage_cost;
   }
-  using type_candidates = decltype(planningData.planning_trajectory);
+  using type_candidates = decltype(planningData.planning_output.trajectory);
   std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,
             const type_candidates &val2){
     return val.cost < val2.cost;
@@ -1089,17 +1086,17 @@ debug_tool::ads_PlanningData4Debug QPlanningWidget::calcPlanningPathWitCost(
   }
 
   if (index != -1) {
-    planningData.planning_trajectory = candidates[index];
+    planningData.planning_output.trajectory = candidates[index];
   }
   else {
-    planningData.planning_trajectory.id = 0;
-    planningData.planning_trajectory.cost = 0;
-    planningData.planning_trajectory.safety_cost = 0;
-    planningData.planning_trajectory.lateral_cost = 0;
-    planningData.planning_trajectory.smoothness_cost = 0;
-    planningData.planning_trajectory.consistency_cost = 0;
-    planningData.planning_trajectory.garbage_cost = 0;
-    planningData.planning_trajectory.splines.clear();
+    planningData.planning_output.trajectory.id = 0;
+    planningData.planning_output.trajectory.cost = 0;
+    planningData.planning_output.trajectory.safety_cost = 0;
+    planningData.planning_output.trajectory.lateral_cost = 0;
+    planningData.planning_output.trajectory.smoothness_cost = 0;
+    planningData.planning_output.trajectory.consistency_cost = 0;
+    planningData.planning_output.trajectory.garbage_cost = 0;
+    planningData.planning_output.trajectory.splines.clear();
   }
 
   return planningData;

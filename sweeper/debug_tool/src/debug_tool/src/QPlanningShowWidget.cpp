@@ -551,7 +551,7 @@ void QPlanningShowWidget::drawPlanningPoint(QPainter &painter)
   else {
     double arch_len = 0.0;
     QPointF ptfStart, ptfEnd, ptfControl1, ptfControl2;
-    for (const auto &spline : m_planningData.planning_trajectory.splines) {
+    for (const auto &spline : m_planningData.planning_output.trajectory.splines) {
       ptfStart = QPointF(spline.xb.x, spline.yb.x);
       ptfEnd = QPointF(spline.xb.w, spline.yb.w);
       ptfControl1 = QPointF(spline.xb.y, spline.yb.y);
@@ -601,7 +601,7 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
   painter.save();
   painter.setPen(pen);
 
-  const auto &val_planning_splines = m_planningData.planning_trajectory.splines;
+  const auto &val_planning_splines = m_planningData.planning_output.trajectory.splines;
   this->drawBezierLine(painter, val_planning_splines);
   painter.restore();
 
@@ -615,7 +615,7 @@ void QPlanningShowWidget::drawPlanningSplines(QPainter &painter)
 
     QPointF ptf(val_planning_splines[size_splines - 1].xb.w,
         val_planning_splines[size_splines - 1].yb.w);
-    painter.drawText(m_transform.map(ptf), QString::number(m_planningData.planning_trajectory.id));
+    painter.drawText(m_transform.map(ptf), QString::number(m_planningData.planning_output.trajectory.id));
 
     painter.restore();
   }
@@ -680,7 +680,7 @@ void QPlanningShowWidget::drawPlanningCandidatesSplines(QPainter &painter)
     }
   }
 
-  int planning_id = m_planningData.planning_trajectory.id;
+  int planning_id = m_planningData.planning_output.trajectory.id;
   if (size_candidates > 10) {
     using type_candidates = decltype(candidates[0]);
     std::sort(candidates.begin(), candidates.end(), [](const type_candidates &val,

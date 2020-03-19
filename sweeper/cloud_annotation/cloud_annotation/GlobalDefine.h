@@ -6,13 +6,19 @@
 #include <cmath>
 #include <QLineF>
 
-struct Point
+struct Item
+{
+  int32_t id;
+};
+
+struct Point : public Item
 {
   double x;
   double y;
   double z;
 
   Point & operator = (const Point &point) {
+    this->id = point.id;
     this->x = point.x;
     this->y = point.y;
     this->z = point.z;
@@ -21,7 +27,7 @@ struct Point
   }
 };
 
-struct Road
+struct Road : public Item
 {
   enum {
     ALL = -1,
@@ -35,6 +41,7 @@ struct Road
   std::vector<Point> reference;
 
   Road & operator = (const Road &road) {
+    this->id = road.id;
     this->left_side.clear();
     for (auto &point : road.left_side) {
       this->left_side.push_back(point);
@@ -52,7 +59,7 @@ struct Road
   }
 };
 
-struct RoadSegment
+struct RoadSegment : public Item
 {
   enum {
     ROAD,
@@ -64,6 +71,7 @@ struct RoadSegment
   std::map<int, Road> roads;
 
   RoadSegment & operator = (const RoadSegment &segment) {
+    this->id = segment.id;
     this->type = segment.type;
     this->roads.clear();
     for (const auto &road : segment.roads) {
@@ -72,7 +80,7 @@ struct RoadSegment
   }
 };
 
-struct TrafficLight
+struct TrafficLight : public Item
 {
   enum {
     UNKNOWN_SIGN,
@@ -82,20 +90,26 @@ struct TrafficLight
   };
 
   int type;
-  Point point;
+  std::vector<Point> points;
 
   TrafficLight & operator = (const TrafficLight &light) {
+    this->id = light.id;
     this->type = light.type;
-    this->point = light.point;
+    this->points = light.points;
   }
 };
 
-struct Crossing
+struct Crossing : public Item
 {
   std::vector<Point> points;
+
+  Crossing & operator = (const Crossing &crossing) {
+    this->id = crossing.id;
+    this->points = crossing.points;
+  }
 };
 
-struct Marking
+struct Marking : public Item
 {
   enum MARKING_TYPE {
     UNKNOWN_MARK,
@@ -113,12 +127,13 @@ struct Marking
   Point point;
 
   Marking & operator = (const Marking &marking) {
+    this->id = marking.id;
     this->type = marking.type;
     this->point = marking.point;
   }
 };
 
-struct HdMapRaw
+struct HdMapRaw : public Item
 {
   std::vector<RoadSegment> road_segments;
   std::vector<TrafficLight> traffic_lights;
@@ -129,7 +144,12 @@ struct HdMapRaw
   std::vector<Marking> markings;
   std::vector<Point> signs;
 
+  int32_t id_selected{-1};
+
   HdMapRaw & operator = (const HdMapRaw &hdmap) {
+    this->id = hdmap.id;
+    this->id_selected = hdmap.id_selected;
+
     this->road_segments.clear();
     for (const auto &segment : hdmap.road_segments) {
       this->road_segments.push_back(segment);

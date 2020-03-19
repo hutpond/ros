@@ -28,8 +28,8 @@ void QDecisionState::setData(const debug_tool::ads_PlanningData4Debug &data)
   m_pLblDecision[1]->setText(getDecisionText(data.preprocess_decision));
   m_pLblDecision[2]->setText(getDecisionText(data.safe_stop_decision));
   m_pLblDecision[3]->setText(getDecisionText(data.traffic_light_decision));
-  m_pLblDecision[4]->setText(getDecisionText(data.radar_decision));
-  m_pLblDecision[5]->setText(getDecisionText(data.ultrasonic_decision));
+  m_pLblDecision[4]->setText(getDecisionText(data.radar_target_decision));
+  m_pLblDecision[5]->setText(getDecisionText(data.ultrasonic_target_decision));
   m_pLblDecision[6]->setText(getDecisionText(data.lidar_target_decision));
   m_pLblDecision[7]->setText(getDecisionText(data.front_target_decision));
   m_pLblDecision[8]->setText(getDecisionText(data.route_decision));

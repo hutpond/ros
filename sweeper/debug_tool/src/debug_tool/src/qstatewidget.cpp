@@ -34,10 +34,4 @@ void QStateWidget::resizeEvent(QResizeEvent *)
 
 void QStateWidget::setData(const debug_tool::ads_PlanningData4Debug &data)
 {
-  int index = static_cast<int>(data.planning_output.decision);
-  if (index >= 0 && index < StateCount) {
-    for (int i = 0; i < StateCount; ++i) {
-      m_pWdgItem[i]->setStateOn(i == index);
-    }
-  }
 }

@@ -271,7 +271,7 @@ QString QPlanningParamWidget::createTrajectoryString(
   constexpr int presice = 3;
   QString text = "id, cost, safety, lateral, smoothness, consistency, garbage: \n";
 
-  const auto &val_planning_trajectory = data.planning_trajectory;
+  const auto &val_planning_trajectory = data.planning_output.trajectory;
   text += QString(
         "old %1,  %2,  %3,  %4,  %5,  %6,  %7").
       arg(val_planning_trajectory.id).
@@ -283,7 +283,7 @@ QString QPlanningParamWidget::createTrajectoryString(
       arg(val_planning_trajectory.garbage_cost, 0, 'f', presice);
   text.append("\n");
 
-  const auto &val_planning_trajectory_cost = data_cost.planning_trajectory;
+  const auto &val_planning_trajectory_cost = data_cost.planning_output.trajectory;
   text += QString(
         "new %1,  %2,  %3,  %4,  %5,  %6,  %7").
       arg(val_planning_trajectory_cost.id).

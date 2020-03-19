@@ -39,8 +39,8 @@ uint8 overall_decision
 uint8 preprocess_decision
 uint8 safe_stop_decision
 uint8 traffic_light_decision
-uint8 radar_decision
-uint8 ultrasonic_decision
+uint8 radar_target_decision
+uint8 ultrasonic_target_decision
 uint8 lidar_target_decision
 uint8 front_target_decision
 uint8 route_decision
@@ -53,7 +53,6 @@ float64 consistency_cost_weight
 float64 garbage_cost_weight
 
 ads_planning_trajectory[] planning_trajectory_candidates
-ads_planning_trajectory planning_trajectory
 ads_planning_output planning_output
 
 uint8 scenario_type

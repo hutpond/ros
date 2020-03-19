@@ -31,6 +31,11 @@ public:
     , index_(0)
     , map_type_(map_type)
     , text_(text) {
+    id_ = s_id_number_ ++;
+  }
+
+  int id() {
+    return id_;
   }
 
   void setIndex(int index) {
@@ -52,10 +57,13 @@ public:
   }
 
 private:
+  int id_;
   int index_;
   int map_type_;
   QString text_;
   Point point_;
+
+  static int s_id_number_;
 };
 
 class QHdMapWidget : public QWidget
@@ -77,13 +85,13 @@ protected:
 
   int childCount(int);
   void createTreeMenu();
-
-  void updateSelectedHdMap(QTreeMapItem *);
+  void addRoadSideTree(Road &);
 
 protected:
   void onCustomContextMenuRequested(const QPoint &);
   void onAddRoadSegment();
   void onAddRoad();
+  void onCalcRoadSide();
 
   void onAddTrafficLight();
   void onAddCrossing();
@@ -108,6 +116,7 @@ private:
   QMenu *menu_item_;
   QMenu *menu_points_;
 
+  QAction *action_calc_side_;
   QAction *action_add_load_;
   QAction *action_delete_;
   QAction *action_delete_all_;

@@ -28,7 +28,10 @@ public:
   void setOrigin(const Point &);
   void setHdMap(const HdMapRaw &);
   const HdMapRaw & hdMap() const;
+  void setSelectedItem(int);
   void clear();
+
+  void calcRoadSide(double, double, Road *);
 
 protected:
   void calcLlaFromEnu(QSharedPointer<MapPoint>);

@@ -165,10 +165,6 @@ void QPointsShowWidget::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   this->draw(GL_RENDER);
-  this->drawReference();
-
-  /// axis
-  this->drawCoordinates();
 
 //  if (lighting_enabled_)
 //    glDisable(GL_NORMALIZE);
@@ -183,8 +179,6 @@ void QPointsShowWidget::draw(GLenum)
 {
   pcl::PointXYZ beg = QCloudPoints::instance().beginPoint();
   pcl::PointXYZ end = QCloudPoints::instance().endPoint();
-  pcl::PointXYZ begDispaly = QCloudPoints::instance().beginPointDisplay();
-  pcl::PointXYZ endDispaly = QCloudPoints::instance().endPointDisplay();
 
   pcl::PointXYZ center = pcl::PointXYZ(
         (end.x + beg.x) / 2,
@@ -234,8 +228,28 @@ void QPointsShowWidget::draw(GLenum)
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview_);
   glGetDoublev(GL_PROJECTION_MATRIX, projection_);
 
+  // reference
+  this->drawReference();
+
+  // axis
+  this->drawCoordinates();
+
+  // point cloud
+  this->drawPointCloud();
+
+  // hdmap
+  this->drawHdMap();
+}
+
+void QPointsShowWidget::drawPointCloud()
+{
   /// cloud points
   if (show_cloud_point_flag_) {
+    pcl::PointXYZ beg = QCloudPoints::instance().beginPoint();
+    pcl::PointXYZ end = QCloudPoints::instance().endPoint();
+    pcl::PointXYZ begDispaly = QCloudPoints::instance().beginPointDisplay();
+    pcl::PointXYZ endDispaly = QCloudPoints::instance().endPointDisplay();
+
     glPointSize(1.0f);
     auto points = QCloudPoints::instance().points();
     const size_t sizePoints = points->size();
@@ -254,14 +268,22 @@ void QPointsShowWidget::draw(GLenum)
     }
     glEnd();
   }
+}
 
-  /// hdmap
+void QPointsShowWidget::drawHdMap()
+{
   const auto &hdmap = QCloudPoints::instance().hdMap();
+
   for (const auto &segment : hdmap.road_segments) {
     for (const auto &road : segment.roads) {
       glPointSize(5.0f);
       glBegin(GL_POINTS);
-      glColor3f(1.0, 0, 0);
+      if (hdmap.id_selected == segment.id) {
+        glColor3f(1.0, 0, 0);
+      }
+      else {
+        glColor3f(0.53, 0, 0.67);
+      }
       for (const auto &point : road.second.left_side) {
         glVertex3f(point.x, point.y, point.z);
       }
@@ -276,7 +298,12 @@ void QPointsShowWidget::draw(GLenum)
       if (road.second.left_side.size() > 1) {
         glLineWidth(3.0f);
         glBegin(GL_LINE_STRIP);
-        glColor3f(1.0, 0.0, 1.0);
+        if (hdmap.id_selected == road.second.id) {
+          glColor3f(1.0, 0, 0);
+        }
+        else {
+          glColor3f(0.53, 0, 0.67);
+        }
         for (const auto &point : road.second.left_side) {
           glVertex3f(point.x, point.y, point.z);
         }
@@ -286,47 +313,85 @@ void QPointsShowWidget::draw(GLenum)
       if (road.second.right_side.size() > 1) {
         glLineWidth(3.0f);
         glBegin(GL_LINE_STRIP);
-        glColor3f(1.0, 0.0, 1.0);
+        if (hdmap.id_selected == road.second.id) {
+          glColor3f(1.0, 0, 0);
+        }
+        else {
+          glColor3f(0.53, 0, 0.67);
+        }
         for (const auto &point : road.second.right_side) {
           glVertex3f(point.x, point.y, point.z);
         }
         glEnd();
       }
+    }
 
-      if (road.second.reference.size() > 1) {
-        glLineWidth(3.0f);
-        glBegin(GL_LINE_STRIP);
-        glColor3f(1.0, 0.0, 1.0);
-        for (const auto &point : road.second.reference) {
-          glVertex3f(point.x, point.y, point.z);
-        }
-        glEnd();
+    if (hdmap.id_selected == segment.id) {
+      int start_index = segment.central_start_index;
+      int end_index = segment.central_end_index;
+      const auto &reference = QCloudPoints::instance().reference();
+      glLineWidth(3.0f);
+      glBegin(GL_LINE_STRIP);
+      glColor3f(1.0, 0, 0);
+      for (int i = start_index; i < end_index; ++i) {
+        glVertex3f(reference[i]->east, reference[i]->north, reference[i]->up);
       }
+      glEnd();
     }
   }
 
   // traffic lights
-  glPointSize(5.0f);
-  glBegin(GL_POINTS);
-  glColor3f(1.0, 0, 0);
   for (const auto &light : hdmap.traffic_lights) {
-    glVertex3f(light.point.x, light.point.y, light.point.z);
+    glPointSize(5.0f);
+    glBegin(GL_POINTS);
+    if (hdmap.id_selected == light.id) {
+      glColor3f(1.0, 0, 0);
+    }
+    else {
+      glColor3f(0.53, 0, 0.67);
+    }
+    for (const auto &point : light.points) {
+      glVertex3f(point.x, point.y, point.z);
+    }
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glLineWidth(3.0f);
+    if (hdmap.id_selected == light.id) {
+      glColor3f(1.0, 0, 0);
+    }
+    else {
+      glColor3f(0.53, 0, 0.67);
+    }
+    for (const auto &point : light.points) {
+      glVertex3f(point.x, point.y, point.z);
+    }
+    glEnd();
   }
-  glEnd();
 
   // crossings
   for (const auto &crossing : hdmap.crossings) {
     glPointSize(5.0f);
     glBegin(GL_POINTS);
-    glColor3f(1.0, 0, 0);
+    if (hdmap.id_selected == crossing.id) {
+      glColor3f(1.0, 0, 0);
+    }
+    else {
+      glColor3f(0.53, 0, 0.67);
+    }
     for (const auto &point : crossing.points) {
       glVertex3f(point.x, point.y, point.z);
     }
     glEnd();
 
-    glLineWidth(3.0f);
     glBegin(GL_LINE_LOOP);
-    glColor3f(1.0, 0.0, 1.0);
+    glLineWidth(3.0f);
+    if (hdmap.id_selected == crossing.id) {
+      glColor3f(1.0, 0, 0);
+    }
+    else {
+      glColor3f(0.53, 0, 0.67);
+    }
     for (const auto &point : crossing.points) {
       glVertex3f(point.x, point.y, point.z);
     }
@@ -337,7 +402,7 @@ void QPointsShowWidget::draw(GLenum)
 void QPointsShowWidget::drawReference()
 {
   const auto &reference = QCloudPoints::instance().reference();
-  glLineWidth(3.0f);
+  glLineWidth(1.0f);
   glBegin(GL_LINE_STRIP);
   glColor3f(0.0, 0.0, 0.0);
   for (const auto &point : reference) {

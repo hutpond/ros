@@ -6,6 +6,7 @@ QSegmentValue::QSegmentValue(QWidget *parent) :
   ui(new Ui::QSegmentValue)
 {
   ui->setupUi(this);
+  connect(ui->pushButton, SIGNAL(clicked()), this, SIGNAL(saveData()));
 }
 
 QSegmentValue::~QSegmentValue()
