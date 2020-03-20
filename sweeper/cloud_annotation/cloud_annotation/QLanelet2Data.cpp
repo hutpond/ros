@@ -8,6 +8,8 @@
 #include <lanelet2_projection/UTM.h>
 
 #include "GlobalDefine.h"
+#include "gps.h"
+#include "ExampleHelpers.h"
 
 QLanelet2Data & QLanelet2Data::instance()
 {
@@ -27,62 +29,88 @@ void QLanelet2Data::setOrigin(const Point &point)
   origin_point_.ele = point.z;
 }
 
-void QLanelet2Data::setMapData(const HdMapRaw &)
+void QLanelet2Data::saveOsmMapFile(const QString &name, const HdMapRaw &hdmap)
 {
-  lanelet::LineString3d left = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 0, 2, 1.1},
-                                  lanelet::Point3d{lanelet::utils::getId(), 1, 2, 1.1},
-                                  lanelet::Point3d{lanelet::utils::getId(), 2, 2, 2.1}});
-  lanelet::LineString3d right = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 0, 0, 1.2},
-                                  lanelet::Point3d{lanelet::utils::getId(), 1, 0, 1.2},
-                                  lanelet::Point3d{lanelet::utils::getId(), 2, 0, 2.2}});
-  lanelet::Lanelet lanelet = lanelet::Lanelet(lanelet::utils::getId(), left, right);
+  // road & area
+  lanelet::Lanelets lanelets;
+  lanelet::Areas areas;
+  for (const auto &segment : hdmap.road_segments) {
+    if (segment.type == RoadSegment::ROAD) {
+      for (const auto &road_item : segment.roads) {
+        const auto &left_side = road_item.second.left_side;
+        lanelet::LineString3d left = lanelet::LineString3d(lanelet::utils::getId());
+        for (const auto &point : left_side) {
+          Point lla = this->calcLlaFromEnu(point);
+          left.push_back(
+                lanelet::Point3d{lanelet::utils::getId(), lla.x, lla.y, lla.z});
+        }
 
-  lanelet::LineString3d top = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 0, 2, 1.3},
-                                  lanelet::Point3d{lanelet::utils::getId(), 1, 2, 1.3},
-                                  lanelet::Point3d{lanelet::utils::getId(), 2, 2, 2.3}});
-  right = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 2, 0, 1.4},
-                         lanelet::Point3d{lanelet::utils::getId(), 2, 1, 1.4},
-                         lanelet::Point3d{lanelet::utils::getId(), 2, 2, 2.4}});
-  right = right.invert();
-  lanelet::LineString3d bottom = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 0, 0, 1.5},
-                                  lanelet::Point3d{lanelet::utils::getId(), 1, 0, 1.5},
-                                  lanelet::Point3d{lanelet::utils::getId(), 2, 0, 2.5}});
-  bottom = bottom.invert();
-  left = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 0, 0, 1.6},
-                                  lanelet::Point3d{lanelet::utils::getId(), 1, 0, 1.6},
-                                  lanelet::Point3d{lanelet::utils::getId(), 2, 0, 2.6}});
-  lanelet::Area area = lanelet::Area(lanelet::utils::getId(), {top});
+        const auto &right_side = road_item.second.right_side;
+        lanelet::LineString3d right = lanelet::LineString3d(lanelet::utils::getId());
+        for (const auto &point : right_side) {
+          Point lla = this->calcLlaFromEnu(point);
+          right.push_back(
+                lanelet::Point3d{lanelet::utils::getId(), lla.x, lla.y, lla.z});
+        }
 
+        lanelet::Lanelet lanelet = lanelet::Lanelet(lanelet::utils::getId(), left, right);
+        lanelets.push_back(lanelet);
+      }
+    }
+    else {
+      lanelet::Area area = lanelet::Area(lanelet::utils::getId());
+      lanelet::LineStrings3d bound = lanelet::LineStrings3d(lanelet::utils::getId());
+      for (const auto &road_item : segment.roads) {
+        const auto &left_side = road_item.second.left_side;
+        lanelet::LineString3d line = lanelet::LineString3d(lanelet::utils::getId());
+        for (const auto &point : left_side) {
+          Point lla = this->calcLlaFromEnu(point);
+          line.push_back(
+                lanelet::Point3d{lanelet::utils::getId(), lla.x, lla.y, lla.z});
+        }
+        bound.push_back(line);
+      }
+      area.setOuterBound(bound);
+      std::vector<lanelet::LineStrings3d> bounds;
+      area.setInnerBounds(bounds);
+      areas.push_back(area);
+    }
+  }
 
-  lanelet::LineString3d trafficLight = lanelet::LineString3d(
-        lanelet::utils::getId(), {lanelet::Point3d{lanelet::utils::getId(), 3, 0, 1.7},
-                                  lanelet::Point3d{lanelet::utils::getId(), 3, 1, 1.7},
-                                  lanelet::Point3d{lanelet::utils::getId(), 3, 2, 2}});
-  lanelet::TrafficLight::Ptr light = lanelet::TrafficLight::make(
-        lanelet::utils::getId(), {}, {trafficLight});
+  // traffic light
+  for (const auto &light : hdmap.traffic_lights) {
 
-  lanelet.addRegulatoryElement(light);
+  }
 
-  lanelet_map_.add(lanelet);
-//  lanelet_map_.add(area);
-//  lanelet_map_ = *lanelet::utils::createMap({lanelet}, {area});
+  auto map = lanelet::utils::createMap(lanelets, areas);
+
+  //lanelet::projection::Projector projector(lanelet::Origin(origin_point_));
+  std::string file_name = name.toStdString() + ".osm";
+  lanelet::write(file_name, *map, lanelet::Origin(origin_point_));
+
+  file_name = name.toStdString() + ".bin";
+  lanelet::write(file_name, *map, lanelet::Origin(origin_point_));
+  lanelet::LaneletMapPtr map_load = lanelet::load(file_name, lanelet::Origin(origin_point_));
 }
 
-void QLanelet2Data::saveOsmMapFile(const QString &name)
+Point QLanelet2Data::calcLlaFromEnu(const Point &point)
 {
-//  lanelet::projection::Projector projector(lanelet::Origin(origin_point_));
-  std::string file_name = name.toStdString();
-  lanelet::write(file_name, lanelet_map_, lanelet::Origin(origin_point_));
+  Point lla;
 
+  GpsTran gps_tran(origin_point_.lon, origin_point_.lat, origin_point_.ele);
 
-  lanelet::LaneletMapPtr map = lanelet::load(file_name, lanelet::Origin(origin_point_));
-  int index = file_name.find_last_of('/');
-  file_name = file_name.substr(0, index + 1) + "A_" + file_name.substr(index + 1);
-  lanelet::write(file_name, *map, lanelet::Origin(origin_point_));
+  GpsDataType gps;
+  NedDataType ned;
+
+  ned.y_east = point.x;
+  ned.x_north = point.y;
+  ned.z_down = - point.z;
+
+  gps_tran.fromNedToGps(gps, ned);
+
+  lla.x = gps.longitude;
+  lla.y = gps.latitude;
+  lla.z = gps.altitude;
+
+  return lla;
 }

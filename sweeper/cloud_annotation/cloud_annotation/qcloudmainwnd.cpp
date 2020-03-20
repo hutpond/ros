@@ -239,10 +239,9 @@ void QCloudMainWnd::saveProject()
   QString fileName = this->projectSubName()+ ".hdmap";
   m_pWdgHdMap->saveHdMapData(fileName);
 
-  fileName = this->projectSubName()+ ".osm";
-  HdMapRaw hdmap;
-  QLanelet2Data::instance().setMapData(hdmap);
-  QLanelet2Data::instance().saveOsmMapFile(fileName);
+  fileName = this->projectSubName();
+  const HdMapRaw &hdmap = QCloudPoints::instance().hdMap();
+  QLanelet2Data::instance().saveOsmMapFile(fileName, hdmap);
 }
 
 void QCloudMainWnd::closeProject()

@@ -37,6 +37,9 @@ public:
   int id() {
     return id_;
   }
+  static void zeroIdNumber() {
+    s_id_number_ = 0;
+  }
 
   void setIndex(int index) {
     index_ = index;

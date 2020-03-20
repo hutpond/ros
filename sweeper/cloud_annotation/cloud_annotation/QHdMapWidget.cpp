@@ -51,6 +51,7 @@ void QHdMapWidget::clear()
   for (int i = size_childs - 1; i >= 0; --i) {
     root_item_->removeChild(root_item_->child(i));
   }
+  QTreeMapItem::zeroIdNumber();
 }
 
 void QHdMapWidget::saveHdMapData(const QString &fileName)
@@ -98,7 +99,8 @@ void QHdMapWidget::saveHdMapData(const QString &fileName)
             json_point["x"] = point.x;
             json_point["y"] = point.y;
             json_point["z"] = point.z;
-            if (item_road_side->mapType() == Road::LEFT) {
+            if (item_road_side->mapType() == Road::LEFT ||
+                item_road_side->mapType() == Road::OUTLINE) {
               json_left_side.append(json_point);
             }
             else if (item_road_side->mapType() == Road::RIGHT) {
@@ -309,7 +311,7 @@ bool QHdMapWidget::parseHdMapData(const QString &fileName)
               item_road, ItemTypeRoadSide, Road::OUTLINE, "Outline");
         item_reference->setIndex(0);
 
-        Json::Value json_reference = json_roads[j]["reference"];
+        Json::Value json_reference = json_roads[j]["left"];
         const int size_points = json_reference.size();
         for (int k = 0; k < size_points; ++k) {
           Json::Value &json_point = json_reference[k];

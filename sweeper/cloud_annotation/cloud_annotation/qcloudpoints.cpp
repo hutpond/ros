@@ -180,14 +180,14 @@ void QCloudPoints::calcRoadSide(double left_w, double right_w, Road *road)
   left_side.clear();
   right_side.clear();
 
-  for (int i = index_start; i <= index_end; ++i) {
+  for (int i = index_start; i < index_end; ++i) {
     QPointF ptf = QPointF(reference_[i]->east, reference_[i]->north);
     QLineF linef, linef_left, linef_right;
     if (i == index_start) {
       linef = QLineF(reference_[i]->east, reference_[i]->north,
           reference_[i + 1]->east, reference_[i + 1]->north);
     }
-    else if (i == index_end) {
+    else if (i == index_end - 1) {
       linef = QLineF(reference_[i - 1]->east, reference_[i - 1]->north,
           reference_[i]->east, reference_[i]->north);
     }
