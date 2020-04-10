@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>image/state_off.svg</file>
         <file>image/state_on.svg</file>
+        <file>image/car.svg</file>
+        <file>image/human.svg</file>
     </qresource>
 </RCC>

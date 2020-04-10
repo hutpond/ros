@@ -25,21 +25,13 @@ include_directories(/usr/include/eigen3)
 add_message_files (
   FILES
   ads_PlanningData4Debug.msg
-  ads_Radar28fTargetColl.msg
-  ads_Radar73fTargetColl.msg
   ads_RadarTarget.msg
-  ads_ReferencePoint.msg
   ads_Spline.msg
-  ads_TargetPoint.msg
   ads_TrackTarget.msg
-  ads_TrackTargetColl.msg
   ads_UltraSonicTarget.msg
-  ads_UltraSonicTargetColl.msg
   ads_Vec4f.msg
   ads_planning_output.msg
-  ads_pubcurb.msg
   ads_garbage_detection.msg
-  ads_littersensor_data.msg
   ads_planning_trajectory.msg
   ads_Point.msg
   )

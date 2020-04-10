@@ -66,6 +66,7 @@ protected:
   void xyToSl(const QPointF &, double &s, double &l);
   void slToXy(const double s, const double l, QPointF &);
   QPolygonF createSlPgf(const QPointF &, double, double, bool = false);
+  double maxXOfReference();
 
   void addTracksToData();
   void addGarbageToData();

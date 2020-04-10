@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QtMath>
+#include <QSvgRenderer>
 #include "GlobalDefine.h"
 #include "QCostValueWidget.h"
 #include "QEditToolsWidget.h"
@@ -958,7 +959,7 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
 {
   const auto &TRACKS = m_planningData.fusion_results;
   const int SIZE = static_cast<int>(m_planningData.fusion_results.size());
-  const int SIZE_REF = static_cast<int>(m_planningData.reference_points.size());
+  const auto &reference = m_planningData.reference_points;
 
   painter.save();
   QPen pen;
@@ -968,50 +969,38 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
   painter.setPen(pen);
 
   for (int i = 0; i < SIZE; ++i) {
+    int8_t type = TRACKS[i].TARGET_TYPE;
     QPolygonF pgf;
     for (const auto &point : TRACKS[i].edge_points) {
       pgf << QPointF(point.x, point.y);
     }
 
     bool contains = m_bFlagShowAllTargets;
-    const qreal x_max = 10.0 + m_planningData.head_point.x;
     if (!m_bFlagShowAllTargets) {
       foreach (const QPointF &ptf, pgf) {
-        int indexLeft = -1;
-        int indexRight = -1;
-
-        // find x range
-        for (int j = 0; j < SIZE_REF - 1; ++j) {
-          if (indexLeft != -1 && indexRight != -1) {
-            break;
-          }
-          if (m_ptfsLeftRoadSide[j].x() > x_max || m_ptfsRightRoadSide[j].x() > x_max) {
-            break;
-          }
-          if (indexLeft == -1 && ptf.x() > m_ptfsLeftRoadSide[j].x() &&
-              ptf.x() <= m_ptfsLeftRoadSide[j + 1].x()) {
-            indexLeft = j;
-          }
-          if (indexRight == -1 && ptf.x() > m_ptfsRightRoadSide[j].x() &&
-              ptf.x() <= m_ptfsRightRoadSide[j + 1].x()) {
-            indexRight = j;
-          }
-        }
-        if (indexLeft == -1 && indexRight == -1) {
-          continue;
-        }
-        // check y range
-        contains = ( (indexLeft != -1 && ptf.y() <= m_ptfsLeftRoadSide[indexLeft].y()) &&
-                     (indexRight != -1 && ptf.y() >= m_ptfsRightRoadSide[indexRight].y()) );
-        if (contains) {
+        double s, l;
+        this->xyToSl(ptf, s, l);
+        int index = this->findReferenceIndex(ptf.x(), ptf.y());
+        if (s <= 11.0 && l <= reference[index].left_road_width &&
+            l >= -reference[index].right_road_width) {
+          contains = true;
           break;
         }
       }
     }
     if (contains) {
       pgf = m_transform.map(pgf);
-      painter.drawPolygon(pgf);
-      painter.drawText(pgf.boundingRect(), Qt::AlignCenter, QString::number(i));
+      QRectF rectf = pgf.boundingRect();
+      if (type == 0) {
+        QSvgRenderer render(QString(":image/human.svg"));
+        render.render(&painter, rectf);
+      } else if (type == 1 || type == 2 || type == 3 || type == 5 || type == 7) {
+        QSvgRenderer render(QString(":image/car.svg"));
+        render.render(&painter, rectf);
+      } else {
+        painter.drawPolygon(pgf);
+      }
+      painter.drawText(rectf, Qt::AlignCenter, QString::number(i));
     }
   }
 
@@ -1397,4 +1386,21 @@ void QPlanningShowWidget::addGarbageToData()
   garbage_results.push_back(garbage);
   ++ m_nNewGarbageCount;
   m_ptfTargets.clear();
+}
+
+double QPlanningShowWidget::maxXOfReference()
+{
+  const auto points = m_planningData.reference_points;
+  double max_x = -1000.0;
+  QPointF ptf;
+  for (const auto &point : points) {
+    this->slToXy(point.s, point.l, ptf);
+    if (ptf.x() > max_x) {
+      max_x = ptf.x();
+    }
+    if (point.s >= 10.0) {
+      break;
+    }
+  }
+  return max_x;
 }
