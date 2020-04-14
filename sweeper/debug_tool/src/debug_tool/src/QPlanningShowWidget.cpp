@@ -965,7 +965,7 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
   QPen pen;
   pen.setColor(Qt::darkMagenta);
   pen.setStyle(Qt::SolidLine);
-  painter.setFont(QFont("Times", 10));
+  painter.setFont(QFont("Times", 11));
   painter.setPen(pen);
 
   for (int i = 0; i < SIZE; ++i) {
@@ -989,6 +989,10 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
       }
     }
     if (contains) {
+      pen.setColor(Qt::darkMagenta);
+      painter.setPen(pen);
+      painter.setBrush(Qt::NoBrush);
+
       pgf = m_transform.map(pgf);
       QRectF rectf = pgf.boundingRect();
       if (type == 0) {
@@ -1000,7 +1004,49 @@ void QPlanningShowWidget::drawTrackTargetWithPoints(QPainter &painter)
       } else {
         painter.drawPolygon(pgf);
       }
-      painter.drawText(rectf, Qt::AlignCenter, QString::number(i));
+
+      pen.setColor(Qt::black);
+      painter.setPen(pen);
+      QString text = QString("%1:%2").arg(TRACKS[i].TRACK_ID).arg(TRACKS[i].DEVICE_SOURCE);
+      painter.drawText(rectf, Qt::AlignCenter, text);
+
+      // velocity, source
+      if (qAbs(TRACKS[i].SX) >= 0.01) {
+        QLineF linef;
+        linef.setP1(rectf.center());
+        double length = 30;
+        constexpr double VAL = 0.05;
+        if (TRACKS[i].SX >= VAL) {
+          length += 2 * TRACKS[i].SX / VAL;
+        }
+        length /= m_fDisplayRatio;
+        linef.setLength(length);
+        linef.setAngle(90 + qAsin(TRACKS[i].DIRX / TRACKS[i].SX));
+
+        pen.setColor(Qt::darkMagenta);
+        painter.setPen(pen);
+        painter.drawLine(linef);
+
+        // velocity value
+        painter.drawText(linef.p2(), QString::number(TRACKS[i].SX, 'f', 2));
+
+        // arrow
+        QPolygonF ptfArrow;
+        ptfArrow << linef.p2();
+
+        QPointF ptf = linef.pointAt((length - 20) / length);
+        QLineF linef2;
+        linef2.setP1(ptf);
+        linef2.setLength(3);
+
+        linef2.setAngle(linef.normalVector().angle());
+        ptfArrow << linef2.p2();
+
+        linef2.setAngle(linef.normalVector().angle() + 180);
+        ptfArrow << linef2.p2();
+        painter.setBrush(Qt::black);
+        painter.drawPolygon(ptfArrow);
+      }
     }
   }
 
