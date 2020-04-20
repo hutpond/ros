@@ -1,2 +1,0 @@
-ads_CameraCurb[]       curb
-ads_CameraLane[]       lanes

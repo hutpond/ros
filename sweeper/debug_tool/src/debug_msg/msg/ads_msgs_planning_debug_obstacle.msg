@@ -1,2 +1,0 @@
-ads_msgs_planning_debug_pointENU[4] points_enu
-ads_msgs_planning_debug_pointFRENET[4] points_frenet

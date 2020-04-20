@@ -1,4 +1,0 @@
-int32 last_state
-int32 current_state
-int32 decision
-string stop_reason

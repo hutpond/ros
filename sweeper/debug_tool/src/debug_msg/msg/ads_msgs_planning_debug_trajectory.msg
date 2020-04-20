@@ -1,3 +1,0 @@
-ads_msgs_planning_debug_pointENU[] current_traj_points_enu
-ads_msgs_planning_debug_pointFRENET[] current_traj_points_frenet
-float64 cost
